@@ -3,7 +3,7 @@ Webserver:
 
 Web design: (up for discussion)
 	Jinja2 for the HTML + integration with Flask
-	Bootstrap for styling the HTML
+	Bulma for styling the HTML
 
 Databank:
 	PostgreSQL - database
