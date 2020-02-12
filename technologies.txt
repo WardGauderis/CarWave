@@ -1,0 +1,25 @@
+Webserver:
+	Flask for the API
+
+Web design: (up for discussion)
+	Jinja2 for the HTML + integration with Flask
+	Bulma for styling the HTML
+
+Databank:
+	PostgreSQL - database
+	Apiary to document the API
+
+DB design:
+	?
+
+API:
+	Apiary - documentation
+
+Map service:
+	OpenStreetMap
+
+Teamwork & planning:
+	Git for version control
+	Trello
+	FB/Discord - communication
+
