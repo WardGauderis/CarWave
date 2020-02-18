@@ -17,6 +17,7 @@ API:
 
 Map service:
 	Geopy
+	Leaflet
 	Open Street Map
 
 Teamwork & planning:
