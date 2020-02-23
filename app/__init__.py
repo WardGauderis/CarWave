@@ -1,11 +1,11 @@
 from flask import Flask
 from flask_bootstrap import Bootstrap
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
+from .models import db
+
 
 bootstrap = Bootstrap()
-db = SQLAlchemy()
 migrate = Migrate()
 
 

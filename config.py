@@ -7,5 +7,5 @@ class Config:
     """
 
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URI') or 'postgresql://app@localhost/CarWave or whatever postgres uri is'
+        'DATABASE_URI') or 'postgresql://app@localhost/carwave_db?user=postgres&password=password'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
