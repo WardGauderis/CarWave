@@ -1,6 +1,15 @@
-# from app import db
-from test import db
+# TODO: remove
+
+import os
 from datetime import datetime
+
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+db = SQLAlchemy(app)
+
 
 """
 File with the database models described using SQLAlchemy
@@ -15,7 +24,9 @@ belongs_to = db.Table(
     "belongs_to",
     db.metadata,
     db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id")),
-    db.Column("car_id", db.Integer, db.ForeignKey("cars.id")),
+    db.Column(
+        "car_license_plate", db.String, db.ForeignKey("cars.license_plate")
+    ),
 )
 
 
@@ -110,3 +121,6 @@ class Car(db.Model):
 
     def __repr__(self):
         pass
+
+
+db.create_all()
