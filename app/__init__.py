@@ -8,6 +8,7 @@ bootstrap = Bootstrap()
 db = SQLAlchemy()
 migrate = Migrate()
 
+from app import models
 
 def create_app(config=Config):
     app = Flask(__name__)
@@ -22,9 +23,8 @@ def create_app(config=Config):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
+    bootstrap.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
-
-    bootstrap.init_app(app)
 
     return app

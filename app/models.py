@@ -43,7 +43,7 @@ class Adress(db.Model):
         return '<id {}>'.format(self.adress_id)
 
 
-class Car_Links(db.Model):
+class CarLinks(db.Model):
     __tablename__ = 'car_links'
     driver_id = db.Column(db.Integer, ForeignKey("drivers.driver_id"), nullable=False, primary_key=True)
     license_plate = db.Column(db.VARCHAR, ForeignKey("cars.license_plate"), nullable=False, primary_key=True)
