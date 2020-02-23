@@ -4,6 +4,7 @@ how do database:
 - run "flask db init" in the venv (a folder called migrations should appear) (dont forget to install dependencies)
 - run "flask db migrate"
 - run "flask db upgrade"
+- the migrations folder must also be pushed to github for compatibility
 every time you change something to the database in models.py, run these last 2 commands
 
 adding/removing data:

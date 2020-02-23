@@ -1,11 +1,11 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import ForeignKey, PrimaryKeyConstraint
-
-db = SQLAlchemy()
+from app import db
+from sqlalchemy import ForeignKey
 
 """
 File with the database models described using SQLAlchemy
 """
+
+
 class Driver(db.Model):
     __tablename__ = 'drivers'
     driver_id = db.Column(db.Integer, primary_key=True)
@@ -16,6 +16,7 @@ class Driver(db.Model):
 
     def __repr__(self):
         return '<id {}>'.format(self.driver_id)
+
 
 class Passenger(db.Model):
     __tablename__ = 'passengers'
@@ -54,6 +55,7 @@ class Car_Links(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.license_plate)
 
+
 class Cars(db.Model):
     __tablename__ = 'cars'
     license_plate = db.Column(db.VARCHAR, primary_key=True)
@@ -70,13 +72,14 @@ class Cars(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.license_plate)
 
+
 class Users(db.Model):
     __tablename__ = 'users'
     user_id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.VARCHAR, nullable=False)
     last_name = db.Column(db.VARCHAR, nullable=False)
     created_at = db.Column(db.TIMESTAMP, nullable=False)
-    home_adress_id = db.Column(db.Integer,ForeignKey("adresses.adress_id"), nullable=False)
+    home_adress_id = db.Column(db.Integer, ForeignKey("adresses.adress_id"), nullable=False)
     phone_number = db.Column(db.Integer, nullable=False)
 
     def __init__(self, user_id, first_name, last_name, created_at, home_adress_id, phone_number):
@@ -90,6 +93,7 @@ class Users(db.Model):
     def __repr__(self):
         return '<id {}>'.format(self.user_id)
 
+
 class Rides(db.Model):
     __tablename__ = 'rides'
     ride_id = db.Column(db.Integer, primary_key=True)
@@ -98,8 +102,8 @@ class Rides(db.Model):
     request_time = db.Column(db.TIMESTAMP, nullable=False)
     departure_time = db.Column(db.TIMESTAMP)
     arrival_time = db.Column(db.TIMESTAMP)
-    departure_adress_id = db.Column(db.Integer,ForeignKey("adresses.adress_id"), nullable=False)
-    arrival_adress_id = db.Column(db.Integer,ForeignKey("adresses.adress_id"), nullable=False)
+    departure_adress_id = db.Column(db.Integer, ForeignKey("adresses.adress_id"), nullable=False)
+    arrival_adress_id = db.Column(db.Integer, ForeignKey("adresses.adress_id"), nullable=False)
 
     def __init__(self, ride_id, passenger_id, request_time, departure_adress_id, arrival_adress_id):
         self.ride_id = ride_id
