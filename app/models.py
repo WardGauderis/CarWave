@@ -27,7 +27,6 @@ ride_links = db.Table(
 
 # Entities
 
-# FIXME: one2one relationship link to driver & passenger
 class User(db.Model):
     __tablename__ = "users"
 
@@ -53,7 +52,7 @@ class Driver(User):
 
     id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     rating = db.Column(
-        db.Numeric(precision=1, scale=1),
+        db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
         nullable=False,
     )
@@ -74,7 +73,7 @@ class Passenger(User):
 
     id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     rating = db.Column(
-        db.Numeric(precision=1, scale=1),
+        db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
         nullable=False,
     )
