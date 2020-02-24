@@ -27,7 +27,7 @@ ride_links = db.Table(
 
 # Entities
 
-
+# FIXME: one2one relationship link to driver & passenger
 class User(db.Model):
     __tablename__ = "users"
 
