@@ -15,20 +15,14 @@ db = SQLAlchemy(app)
 File with the database models described using SQLAlchemy
 """
 
-# TODO: address & rides relationships
-
-# Relationships
-
-
-belongs_to = db.Table(
-    "belongs_to",
+car_links = db.Table(
+    "car_links",
     db.metadata,
     db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id")),
     db.Column(
         "car_license_plate", db.String, db.ForeignKey("cars.license_plate")
     ),
 )
-
 
 # Entities
 
@@ -40,12 +34,11 @@ class User(db.Model):
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))  # m2m
+    address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))  # m2one
     phone_number = db.Column(db.String)
 
     def __repr__(self):
-        # return f"<User(id={self.id}, name={self.first_name + ' ' + self.last_name})>"
-        pass
+        return f"<User(id={self.id})>"
 
 
 class Driver(User):
@@ -56,11 +49,12 @@ class Driver(User):
     __tablename__ = "drivers"
 
     id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    # FIXME: numeric, [0.0, 5.0]
     rating = db.Column(db.Integer, nullable=False)
-    cars = db.relationship("Car", secondary=belongs_to, back_populates="cars")
+    cars = db.relationship("Car", secondary=car_links, back_populates="cars")
 
     def __repr__(self):
-        pass
+        return f"<Driver(id={self.id}, rating={self.rating})>"
 
 
 class Passenger(User):
@@ -71,56 +65,57 @@ class Passenger(User):
     __tablename__ = "passengers"
 
     id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    # FIXME: numeric, [0.0, 5.0]
     rating = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
-        pass
+        return f"<Passenger(id={self.id}, rating={self.rating})>"
 
 
 class Ride(db.Model):
     __tablename__ = "rides"
 
     id = db.Column(db.Integer, primary_key=True)
-    driver_id = db.Column(  # one2m
+    driver_id = db.Column(  # TODO: many to one
         db.Integer, db.ForeignKey("drivers.id"), nullable=False
     )
-    passenger_id = db.Column(  # m2m
-        db.Integer, db.ForeignKey("passengers.id"), nullable=False
-    )
+    # passsengers?
+    passenger_id = db.Column(db.Integer, db.ForeignKey("passengers.id"))
     request_time = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False
     )
     departure_time = db.Column(db.DateTime, nullable=False)
     arrival_time = db.Column(db.DateTime)
 
+    passenger = db.relationship("Passenger", backref="passengers")
+
     def __repr__(self):
-        pass
+        return f"<Ride(id={self.id})>"
 
 
 class Address(db.Model):
     __tablename__ = "addresses"
 
     id = db.Column(db.Integer, primary_key=True)
-    # FIXME: unique. index?
     address = db.Column(db.String, unique=True, nullable=False)
 
     def __repr__(self):
-        pass
+        return f"<Address(id={self.id}, address={self.address}>"
 
 
 class Car(db.Model):
     __tablename__ = "cars"
 
     license_plate = db.Column(db.String, primary_key=True)
-    model = db.Column(db.String, nullable=True)
-    colour = db.Column(db.String, nullable=True)
+    model = db.Column(db.String, nullable=False)
+    colour = db.Column(db.String, nullable=False)
     num_passengers = db.Column(db.Integer, nullable=False)
-    owners = db.relationship(
-        "Driver", secondary=belongs_to, back_populates="drivers"
+    drivers = db.relationship(
+        "Driver", secondary=car_links, back_populates="drivers"
     )
 
     def __repr__(self):
-        pass
+        return f"<Car(license_plate={self.license_plate}, num_passengers={self.num_passengers})>"
 
 
 db.create_all()
