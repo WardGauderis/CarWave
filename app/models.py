@@ -26,7 +26,7 @@ ride_links = db.Table(
 )
 
 # Entities
-
+# TODO: https://docs.sqlalchemy.org/en/13/orm/inheritance.html#single-table-inheritance
 class User(db.Model):
     __tablename__ = "users"
 
