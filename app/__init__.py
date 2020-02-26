@@ -2,13 +2,18 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager
 from config import Config
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
 migrate = Migrate()
+login = LoginManager()
+login.login_view = 'auth.login'
+# login.login_message = 'Please log in to access this page.'
 
 from app import models
+
 
 def create_app(config=Config):
     app = Flask(__name__)

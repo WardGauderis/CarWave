@@ -1,9 +1,9 @@
 from app import db
 from sqlalchemy import ForeignKey
-
-"""
-File with the database models described using SQLAlchemy
-"""
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from flask import current_app
+import datetime
 
 
 class Driver(db.Model):
@@ -73,25 +73,42 @@ class Cars(db.Model):
         return '<id {}>'.format(self.license_plate)
 
 
-class Users(db.Model):
-    __tablename__ = 'users'
-    user_id = db.Column(db.Integer, primary_key=True)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+
     first_name = db.Column(db.VARCHAR, nullable=False)
     last_name = db.Column(db.VARCHAR, nullable=False)
-    created_at = db.Column(db.TIMESTAMP, nullable=False)
-    home_adress_id = db.Column(db.Integer, ForeignKey("adresses.adress_id"), nullable=False)
-    phone_number = db.Column(db.Integer, nullable=False)
-
-    def __init__(self, user_id, first_name, last_name, created_at, home_adress_id, phone_number):
-        self.user_id = user_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.created_at = created_at
-        self.home_adress_id = home_adress_id
-        self.phone_number = phone_number
+    created_at = db.Column(db.TIMESTAMP)
+    home_adress_id = db.Column(db.Integer, ForeignKey("adresses.adress_id"))
+    phone_number = db.Column(db.Integer)
+    email_adress = db.Column(db.String(128))
 
     def __repr__(self):
-        return '<id {}>'.format(self.user_id)
+        return '<id {}>'.format(self.id)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def from_username(username):
+        return User.query.filter_by(username=username).first()
+
+    @staticmethod
+    def from_token(token):
+        try:
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            return User.query.get(data['id'])
+        except:
+            return None
+
+    def get_token(self):
+        return jwt.encode({'id': self.id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)},
+                          current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
 
 
 class Rides(db.Model):
