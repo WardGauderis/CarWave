@@ -1,16 +1,20 @@
 from flask import request
 from app.api import bp
+# from models.User import create_user
 
 
 @bp.route('/users/register', methods=['POST'])
 def register_user():
-    username = request.form['username']
-    firstname = request.form['firstname']
-    lastname = request.form['lastname']
-    password = request.form['password']
+    username = request.form["username"]
+    firstname = request.form["firstname"]
+    lastname = request.form["lastname"]
+    password = request.form["password"]
 
     id = 0
     return {'id': id}, 201
+    # error handling?
+    # id = create_user(username=username, first_name=firstname, last_name=lastname)
+    # return {"id": id}, 201
 
 
 @bp.route('/users/auth', methods=['POST'])

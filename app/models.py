@@ -6,7 +6,7 @@ from app import db
 File with the database models described using SQLAlchemy
 """
 
-# Relationships
+# The secondary tables for many-to-many relationships
 
 
 car_links = db.Table(
@@ -25,12 +25,20 @@ ride_links = db.Table(
     db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
 )
 
+
 # Entities
-# TODO: https://docs.sqlalchemy.org/en/13/orm/inheritance.html#single-table-inheritance
+
+
 class User(db.Model):
+    """
+    TODO: do we need a way to deal with the password?
+    """
+
+    # __abstract__ = True
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, unique=True, nullable=False)
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
@@ -39,11 +47,23 @@ class User(db.Model):
 
     address = db.relationship("Address")
 
+    @staticmethod
+    # def new(**kwargs) -> int:
+    def create_user(**kwargs) -> int:
+        # TODO: does performance matter?
+        user = User(**kwargs)
+        db.session.add(user)
+        db.session.commit()
+        return user.id
+
     def __repr__(self):
         return f"<User(id={self.id})>"
 
 
-class Driver(User):
+# TODO: Keep tracking of the # of ratings received? Need a way to update it, e.g. num_ratings
+
+
+class Driver(db.Model):
     """
     Driver is a User
     """
@@ -64,7 +84,7 @@ class Driver(User):
         return f"<Driver(id={self.id}, rating={self.rating})>"
 
 
-class Passenger(User):
+class Passenger(db.Model):
     """
     Passenger is a User
     """
@@ -97,12 +117,23 @@ class Ride(db.Model):
         db.DateTime, default=datetime.utcnow, nullable=False
     )
     departure_time = db.Column(db.DateTime, nullable=False)
+    departure_adress_id = db.Column(
+        db.Integer, db.ForeignKey("adresses.adress_id"), nullable=False
+    )
     arrival_time = db.Column(db.DateTime)
+    arrival_adress_id = db.Column(
+        db.Integer, db.ForeignKey("adresses.adress_id"), nullable=False
+    )
 
     driver = db.relationship("Driver", back_populates="rides")
+    # FIXME: implement Thomas' idea
     passengers = db.relationship(
         "Passenger", secondary=ride_links, back_populates="rides"
     )
+
+    @staticmethod
+    def new(**kwargs):
+        pass
 
     def __repr__(self):
         return f"<Ride(id={self.id})>"
