@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
-git pull && flask db migrate && flask db upgrade
+(. env/bin/activate || . venv/bin/activate) && git pull && flask db migrate && flask db upgrade
 
