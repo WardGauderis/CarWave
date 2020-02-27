@@ -89,6 +89,10 @@ class Driver(db.Model):
 
     def __repr__(self):
         return f"<Driver(id={self.id}, rating={self.rating})>"
+    
+    @property
+    def user(self) -> User:
+        return User.query.filter(User.id == self.id).one_or_none()
 
 
 # class Passenger(User):
@@ -125,12 +129,12 @@ class Ride(db.Model):
         db.DateTime, default=datetime.utcnow, nullable=False
     )
     departure_time = db.Column(db.DateTime, nullable=False)
-    departure_adress_id = db.Column(
-        db.Integer, db.ForeignKey("adresses.adress_id"), nullable=False
+    departure_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
     )
     arrival_time = db.Column(db.DateTime)
-    arrival_adress_id = db.Column(
-        db.Integer, db.ForeignKey("adresses.adress_id"), nullable=False
+    arrival_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
     )
 
     driver = db.relationship("Driver", back_populates="rides")
