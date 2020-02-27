@@ -1,8 +1,6 @@
-from flask_login import current_user, login_required, login_user
 from flask_httpauth import HTTPTokenAuth
 from app.models import User
 from app.errors.errors import api_error
-from functools import wraps
 from flask import g
 
 token_auth = HTTPTokenAuth('Bearer')
