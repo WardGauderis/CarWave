@@ -57,10 +57,11 @@ class User(db.Model):
     @staticmethod
     def create_user(**kwargs) -> int:
         try:
-            kwargs["password_hash"] = generate_password_hash(kwargs["password"])
-            kwargs.pop("password")
+            kwargs["password_hash"] = generate_password_hash(
+                kwargs.pop("password")
+            )
         except KeyError:
-            raise ValueError("To register a user must supply a password")
+            raise ValueError("No 'password' keyword argument was supplied")
 
         user = User(**kwargs)
         db.session.add(user)
@@ -113,15 +114,12 @@ class Driver(db.Model):
         nullable=False,
     )
 
+    user = db.relationship("User")
     rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
 
     def __repr__(self):
         return f"<Driver(id={self.id}, rating={self.rating})>"
-
-    @property
-    def user(self) -> User:
-        return User.query.filter_by(id=self.id).one_or_none()
 
 
 class Passenger(db.Model):
@@ -138,16 +136,13 @@ class Passenger(db.Model):
         nullable=False,
     )
 
+    user = db.relationship("User")
     rides = db.relationship(
         "Ride", secondary=ride_links, back_populates="passengers"
     )
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
-
-    @property
-    def user(self) -> User:
-        return User.query.filter_by(id=self.id).one_or_none()
 
 
 class Ride(db.Model):
