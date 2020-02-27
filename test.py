@@ -1,24 +1,20 @@
-# TODO: remove
-
 import os
 from datetime import datetime
 from random import uniform
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DEBUG_DATABASE_URI")
 db = SQLAlchemy(app)
 
-# TODO: db.session.rollback() to roll back from a bad DB commit
-
 """
 File with the database models described using SQLAlchemy
 """
 
-# Relationships
-
+# The secondary tables for the many-to-many relationships
 
 car_links = db.Table(
     "car_links",
@@ -38,15 +34,15 @@ ride_links = db.Table(
 
 
 # Entities
+
+
 class User(db.Model):
-    """
-    TODO: do we need a way to deal with the password?
-    """
-    # __abstract__ = True
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, nullable=False)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
@@ -55,21 +51,29 @@ class User(db.Model):
 
     address = db.relationship("Address")
 
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username})>"
+
     @staticmethod
     def create_user(**kwargs) -> int:
-        for key, value in kwargs.items():
-            print(f"{key}: {value}")
+        try:
+            kwargs["password_hash"] = generate_password_hash(kwargs["password"])
+            kwargs.pop("password")
+        except KeyError:
+            raise ValueError("To register a user must supply a password")
 
         user = User(**kwargs)
         db.session.add(user)
         db.session.commit()
         return user.id
 
-    def __repr__(self):
-        return f"<User(id={self.id})>"
+    def set_password(self, password: str):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str):
+        return check_password_hash(self.password_hash, password)
 
 
-# class Driver(User):
 class Driver(db.Model):
     """
     Driver is a User
@@ -89,13 +93,12 @@ class Driver(db.Model):
 
     def __repr__(self):
         return f"<Driver(id={self.id}, rating={self.rating})>"
-    
+
     @property
     def user(self) -> User:
-        return User.query.filter(User.id == self.id).one_or_none()
+        return User.query.filter_by(id=self.id).one_or_none()
 
 
-# class Passenger(User):
 class Passenger(db.Model):
     """
     Passenger is a User
@@ -116,6 +119,10 @@ class Passenger(db.Model):
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
+
+    @property
+    def user(self) -> User:
+        return User.query.filter_by(id=self.id).one_or_none()
 
 
 class Ride(db.Model):
@@ -143,7 +150,7 @@ class Ride(db.Model):
     )
 
     def __repr__(self):
-        return f"<Ride(id={self.id})>"
+        return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
 
 class Address(db.Model):
@@ -178,18 +185,36 @@ def main():
 
     db.create_all()
 
-    users = [
-        User(username="a", first_name="John", last_name="Smith"),
-        User(username="b", first_name="Jane", last_name="Doe"),
-        User(username="c", first_name="Barack", last_name="Obama"),
-        User(username="d", first_name="Ada", last_name="Lovelace"),
-        User(username="e", first_name="Edsger", last_name="Dijkstra"),
-    ]
-
-    for user in users:
-        db.session.add(user)
-
-    db.session.commit()
+    User.create_user(
+        username="dbsrxvqujuce",
+        password="$N:K]r3",
+        first_name="John",
+        last_name="Smith",
+    )
+    User.create_user(
+        username="xwhxycctuyce",
+        password="]2[xrCh>",
+        first_name="Jane",
+        last_name="Doe",
+    )
+    User.create_user(
+        username="qrtdavjtzhwu",
+        password="F37ZLv,W",
+        first_name="Barack",
+        last_name="Obama",
+    )
+    User.create_user(
+        username="vsvvkeqgkczp",
+        password="N%2^t<4_",
+        first_name="Ada",
+        last_name="Lovelace",
+    )
+    User.create_user(
+        username="tvjkgyphhtfw",
+        password='Py88"B:$',
+        first_name="Edsger",
+        last_name="Dijkstra",
+    )
 
     passengers = [
         Passenger(id=1, rating=uniform(0.0, 5.0)),

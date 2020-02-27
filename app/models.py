@@ -1,13 +1,20 @@
-from datetime import datetime
+import datetime
+
+import jwt
+from flask import current_app
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
 
 """
 File with the database models described using SQLAlchemy
+
+TODO:
+    - Add more ease of use functions for fulfilling API requests and the like
+    - Ride <-> Passenger
 """
 
-# The secondary tables for many-to-many relationships
-
+# The secondary tables for the many-to-many relationships
 
 car_links = db.Table(
     "car_links",
@@ -30,15 +37,12 @@ ride_links = db.Table(
 
 
 class User(db.Model):
-    """
-    TODO: do we need a way to deal with the password?
-    """
-
-    # __abstract__ = True
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, nullable=False)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
@@ -47,20 +51,52 @@ class User(db.Model):
 
     address = db.relationship("Address")
 
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username})>"
+
     @staticmethod
-    # def new(**kwargs) -> int:
     def create_user(**kwargs) -> int:
-        # TODO: does performance matter?
+        try:
+            kwargs["password_hash"] = generate_password_hash(kwargs["password"])
+            kwargs.pop("password")
+        except KeyError:
+            raise ValueError("To register a user must supply a password")
+
         user = User(**kwargs)
         db.session.add(user)
         db.session.commit()
         return user.id
 
-    def __repr__(self):
-        return f"<User(id={self.id})>"
+    def set_password(self, password: str):
+        self.password_hash = generate_password_hash(password)
 
+    def check_password(self, password: str):
+        return check_password_hash(self.password_hash, password)
 
-# TODO: Keep tracking of the # of ratings received? Need a way to update it, e.g. num_ratings
+    @staticmethod
+    def from_username(username):
+        return User.query.filter_by(username=username).one_or_none()
+
+    @staticmethod
+    def from_token(token):
+        try:
+            data = jwt.decode(
+                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+            )
+            return User.query.get(data["id"])
+        except:
+            return None
+
+    def get_token(self):
+        return jwt.encode(
+            {
+                "id": self.id,
+                "exp": datetime.datetime.utcnow()
+                + datetime.timedelta(minutes=30),
+            },
+            current_app.config["SECRET_KEY"],
+            algorithm="HS256",
+        ).decode("utf-8")
 
 
 class Driver(db.Model):
@@ -82,6 +118,10 @@ class Driver(db.Model):
 
     def __repr__(self):
         return f"<Driver(id={self.id}, rating={self.rating})>"
+
+    @property
+    def user(self) -> User:
+        return User.query.filter_by(id=self.id).one_or_none()
 
 
 class Passenger(db.Model):
@@ -105,6 +145,10 @@ class Passenger(db.Model):
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
 
+    @property
+    def user(self) -> User:
+        return User.query.filter_by(id=self.id).one_or_none()
+
 
 class Ride(db.Model):
     __tablename__ = "rides"
@@ -117,26 +161,21 @@ class Ride(db.Model):
         db.DateTime, default=datetime.utcnow, nullable=False
     )
     departure_time = db.Column(db.DateTime, nullable=False)
-    departure_adress_id = db.Column(
-        db.Integer, db.ForeignKey("adresses.adress_id"), nullable=False
+    departure_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
     )
     arrival_time = db.Column(db.DateTime)
-    arrival_adress_id = db.Column(
-        db.Integer, db.ForeignKey("adresses.adress_id"), nullable=False
+    arrival_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
     )
 
     driver = db.relationship("Driver", back_populates="rides")
-    # FIXME: implement Thomas' idea
     passengers = db.relationship(
         "Passenger", secondary=ride_links, back_populates="rides"
     )
 
-    @staticmethod
-    def new(**kwargs):
-        pass
-
     def __repr__(self):
-        return f"<Ride(id={self.id})>"
+        return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
 
 class Address(db.Model):
