@@ -30,14 +30,16 @@
           </ul>
         </li>
         <li>
-          <a href="">Map</a>
+          <a href="./map">Map</a>
         </li>
         <li>
           <a href="#">Services</a>
         </li>
-        <li class="active">
-          <a href="./login">Login</a>
-        </li>
+          {% if current_user.is_anonymous %}
+              <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+          {% else %}
+              <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+          {% endif %}
       </ul>
     </nav>
   </div>
