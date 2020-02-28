@@ -27,6 +27,8 @@ def create_app(config=Config):
     app.register_blueprint(errors_bp)
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
+    from app.map import bp as map_bp
+    app.register_blueprint(map_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)
