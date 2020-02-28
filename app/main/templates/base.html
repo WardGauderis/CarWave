@@ -4,6 +4,11 @@
     CarWave{% if title %} - {{ title }}{% endif %}
 {% endblock %}
 
+{% block styles %}
+    {% block app_styles %}
+    {% endblock %}
+{% endblock %}
+
 {% block navbar %}
 {% endblock %}
 
@@ -15,4 +20,6 @@
 {% endblock %}
 
 {% block scripts %}
+    {% block app_scripts %}
+    {% endblock %}
 {% endblock %}
