@@ -1,9 +1,10 @@
-from app import db
+from app import db, login
 from sqlalchemy import ForeignKey
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from flask import current_app
 import datetime
+from flask_login import UserMixin
 
 
 class Driver(db.Model):
@@ -73,7 +74,7 @@ class Cars(db.Model):
         return '<id {}>'.format(self.license_plate)
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
@@ -109,6 +110,10 @@ class User(db.Model):
     def get_token(self):
         return jwt.encode({'id': self.id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)},
                           current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+
+    @login.user_loader
+    def load_user(id):
+        return User.query.get(int(id))
 
 
 class Rides(db.Model):
