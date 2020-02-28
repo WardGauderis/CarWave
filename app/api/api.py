@@ -1,5 +1,8 @@
 from flask import request, abort
 from app.api import bp
+from app.auth.auth import token_auth
+from app.models import User
+from app import db
 
 
 @bp.route('/users/register', methods=['POST'])
@@ -7,13 +10,18 @@ def register_user():
     json = request.get_json() or {}
     try:
         username = json['username']
-        firstname = json['firstname']
-        lastname = json['lastname']
+        first_name = json['firstname']
+        last_name = json['lastname']
         password = json['password']
     except KeyError:
         abort(400, 'invalid format')
 
-    id = 0
+    user = User(username=username, first_name=first_name, last_name=last_name)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+    id = user.id
     return {'id': id}, 201
 
 
@@ -26,19 +34,19 @@ def authorize_user():
     except KeyError:
         abort(400, 'invalid format')
 
-    accepted = True
-    if accepted:
-        token = ''
+    user = User.from_username(username)
+    if user is not None and user.check_password(password):
+        token = user.get_token()
         return {'token': token}, 200
     else:
         abort(401, 'invalid authorization')
 
 
 @bp.route('/drives', methods=['POST'])
+@token_auth.login_required
 def register_drive():
     json = request.get_json() or {}
     try:
-        token = request.headers['Authorization']
         start = json['from']
         stop = json['to']
         passenger_places = json['passenger-places']
@@ -79,12 +87,8 @@ def get_passengers(drive_id):
 
 
 @bp.route('/drives/<int:drive_id>/passenger-requests', methods=['GET', 'POST'])
+@token_auth.login_required
 def get_passenger_requests(drive_id):
-    try:
-        token = request.headers['Authorization']
-    except KeyError:
-        abort(401, 'invalid authorization')
-
     if request.method == 'GET':
         accepted = True
         if accepted:
@@ -92,7 +96,7 @@ def get_passenger_requests(drive_id):
             username = ''
             status = ''
             time_created = ''
-            return [{'id': id, 'username': username, 'status': status, 'time-created': time_created}], 200
+            return {'id': id, 'username': username, 'status': status, 'time-created': time_created}, 200
         else:
             abort(401, 'invalid authorization')
     else:
@@ -110,12 +114,8 @@ def get_passenger_requests(drive_id):
 
 
 @bp.route('/drives/<int:drive_id>/passenger-requests/<int:user_id>', methods=['POST'])
+@token_auth.login_required
 def accept_passenger_request(drive_id, user_id):
-    try:
-        token = request.headers['Authorization']
-    except KeyError:
-        abort(401, 'invalid authorization')
-
     accepted = True
     if accepted:
         json = request.get_json() or {}

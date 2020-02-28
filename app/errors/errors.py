@@ -1,5 +1,6 @@
 from flask import jsonify, request
 from werkzeug.http import HTTP_STATUS_CODES
+from werkzeug.exceptions import HTTPException
 from app.errors import bp
 
 
@@ -16,11 +17,7 @@ def api_error(status_code, description=None):
     return response
 
 
-@bp.app_errorhandler(400)
-@bp.app_errorhandler(401)
-@bp.app_errorhandler(404)
-@bp.app_errorhandler(405)
-@bp.app_errorhandler(500)
+@bp.app_errorhandler(HTTPException)
 def not_found(error):
     if json_error():
         return api_error(error.code, error.description)
