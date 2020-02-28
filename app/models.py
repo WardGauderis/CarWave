@@ -78,9 +78,9 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    first_name = db.Column(db.String(64), nullable=False)
+    last_name = db.Column(db.String(64), nullable=False)
 
-    first_name = db.Column(db.VARCHAR, nullable=False)
-    last_name = db.Column(db.VARCHAR, nullable=False)
     created_at = db.Column(db.TIMESTAMP)
     home_adress_id = db.Column(db.Integer, ForeignKey("adresses.adress_id"))
     phone_number = db.Column(db.Integer)
