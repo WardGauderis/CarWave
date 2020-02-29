@@ -12,6 +12,9 @@ File with the database models described using SQLAlchemy
 TODO:
     - Add more ease of use functions for fulfilling API requests and the like
     - Ride <-> Passenger
+    - Get rides as a passenger or driver for a user
+    - Extract common attributes/functions out of Passenger/Driver
+    - Handle passenger requests for a certain driver
 """
 
 # The secondary tables for the many-to-many relationships
@@ -57,6 +60,7 @@ class User(db.Model):
     @staticmethod
     def create_user(**kwargs) -> int:
         try:
+            # TODO: in api, the password should have a minimum length of say, 8 characters
             kwargs["password_hash"] = generate_password_hash(
                 kwargs.pop("password")
             )
@@ -114,7 +118,7 @@ class Driver(db.Model):
         nullable=False,
     )
 
-    user = db.relationship("User")
+    user = db.relationship("User", backref=db.backref("driver", uselist=False))
     rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
 
@@ -136,7 +140,9 @@ class Passenger(db.Model):
         nullable=False,
     )
 
-    user = db.relationship("User")
+    user = db.relationship(
+        "User", backref=db.backref("passenger", uselist=False)
+    )
     rides = db.relationship(
         "Ride", secondary=ride_links, back_populates="passengers"
     )
