@@ -8,6 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DEBUG_DATABASE_URI")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
 """
@@ -64,7 +65,7 @@ class User(db.Model):
     @staticmethod
     def create_user(**kwargs) -> int:
         try:
-            # TODO: in api, the password should have a minimum length of say, 8 characters
+            # TODO: Reject passwords shorter than a specified length. probably in the form
             kwargs["password_hash"] = generate_password_hash(
                 kwargs.pop("password")
             )
@@ -98,9 +99,9 @@ class Driver(db.Model):
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        nullable=False,
+        nullable=True,
     )
-    # FIXME: num_ratings
+    num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship("User", backref=db.backref("driver", uselist=False))
     rides = db.relationship("Ride", back_populates="driver")
@@ -121,9 +122,9 @@ class Passenger(db.Model):
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        nullable=False,
+        nullable=True,
     )
-    # FIXME: num_ratings
+    num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
         "User", backref=db.backref("passenger", uselist=False)
@@ -144,16 +145,11 @@ class Ride(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # TODO: make (driver_id, car_license_plate) a unique key. composite foreign key?
     driver_id = db.Column(
         db.Integer, db.ForeignKey("drivers.id"), nullable=False
     )
-    # TODO: also check the car actually belongs to the driver
     car_license_plate = db.Column(
         db.String, db.ForeignKey("cars.license_plate"), nullable=False
-    )
-    db.ForeignKeyConstraint(
-        ["driver_id", "car_license_plate"], ["drivers.id", "cars.license_plate"]
     )
 
     request_time = db.Column(
@@ -176,6 +172,18 @@ class Ride(db.Model):
     requests = db.relationship(
         "Passenger", secondary=passenger_requests, back_populates="requests"
     )
+
+    def __init__(self, **kwargs):
+        try:
+            driver = Driver.query.get(kwargs["driver_id"])
+            car = Car.query.get(kwargs["car_license_plate"])
+        except KeyError:
+            raise ValueError("Invalid driver_id or car_license_plate args")
+
+        if car not in driver.cars:
+            raise ValueError("The driver cannot use a car they do not own for a ride")
+
+        super(Ride, self).__init__(**kwargs)
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
@@ -283,9 +291,7 @@ def main():
 
     db.session.commit()
 
-    user = User.from_username("xwhxycctuyce")
-    assert len(user.driver.cars) == 0
-    user.driver.cars.append(
+    User.from_username("xwhxycctuyce").driver.cars.append(
         Car(
             license_plate="8-ABC-001",
             model="Opel Corsa",
@@ -293,20 +299,30 @@ def main():
             num_passengers=5,
         )
     )
-    # bad, but just a placeholder so I can test things
-    db.session.add(
-        Address(
-            address="UA - Campus Middelheim, België, Middelheimlaan 1, 2020 Antwerpen"
-        )
-    )
+
     db.session.commit()
     rides = [
-        Ride(driver_id=5, car_license_plate="5-THX-435"),
+        # Ride(driver_id=5, car_license_plate="5-THX-435"), # should fail
         Ride(driver_id=2, car_license_plate="8-ABC-001"),
     ]
     for ride in rides:
         db.session.add(ride)
         db.session.commit()
+
+    User.query.get(5).driver.cars.append(Car.query.get("5-THX-435"))
+    db.session.commit()
+
+    # should fail
+    # db.session.add(Ride(driver_id=5, car_license_plate="1-QDE-002"))
+    # db.session.commit()
+
+    # should work
+    db.session.add(Ride(driver_id=5, car_license_plate="5-THX-435"))
+    db.session.commit()
+
+    ride = Ride.query.get(2)
+    ride.requests.append(Passenger.query.get(4))
+    db.session.commit()
 
 
 if __name__ == "__main__":
