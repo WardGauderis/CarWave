@@ -13,6 +13,7 @@ TODO:
     - Add more ease of use functions for fulfilling API requests and the like
     - Get rides as a passenger or driver for a user
     - Handle passenger requests for a certain driver
+    - How to delete a passenger request?
 """
 
 # The secondary tables for the many-to-many relationships
@@ -87,6 +88,27 @@ class User(db.Model):
     def from_username(username: str):
         return User.query.filter_by(username=username).one_or_none()
 
+    @staticmethod
+    def from_token(token):
+        try:
+            data = jwt.decode(
+                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+            )
+            return User.query.get(data["id"])
+        except:
+            return None
+
+    def get_token(self):
+        return jwt.encode(
+            {
+                "id": self.id,
+                "exp": datetime.datetime.utcnow()
+                + datetime.timedelta(minutes=30),
+            },
+            current_app.config["SECRET_KEY"],
+            algorithm="HS256",
+        ).decode("utf-8")
+
 
 class Driver(db.Model):
     """
@@ -95,7 +117,12 @@ class Driver(db.Model):
 
     __tablename__ = "drivers"
 
-    id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        primary_key=True,
+        ondelete="CASCADE",
+    )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
@@ -103,7 +130,10 @@ class Driver(db.Model):
     )
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
-    user = db.relationship("User", backref=db.backref("driver", uselist=False))
+    user = db.relationship(
+        "User",
+        backref=db.backref("driver", uselist=False, passive_deletes=True),
+    )
     rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
 
@@ -118,16 +148,23 @@ class Passenger(db.Model):
 
     __tablename__ = "passengers"
 
-    id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        primary_key=True,
+        ondelete="CASCADE",
+    )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
+        default=None,
         nullable=True,
     )
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
-        "User", backref=db.backref("passenger", uselist=False)
+        "User",
+        backref=db.backref("passenger", uselist=False, passive_deletes=True),
     )
     rides = db.relationship(
         "Ride", secondary=ride_links, back_populates="passengers"
@@ -155,7 +192,6 @@ class Ride(db.Model):
     request_time = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False
     )
-    # TODO: addresses need relationships
     # departure_time = db.Column(db.DateTime, nullable=False)
     # departure_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
@@ -166,8 +202,12 @@ class Ride(db.Model):
     # )
 
     driver = db.relationship("Driver", back_populates="rides")
+    car = db.relationship("Car")
+    departure_address = db.relationship("Address")
+    arrival_address = db.relationship("Address")
     passengers = db.relationship(
         "Passenger", secondary=ride_links, back_populates="rides"
+        # FIXME: constraint, len(passengers) < car.num_passengers
     )
     requests = db.relationship(
         "Passenger", secondary=passenger_requests, back_populates="requests"
@@ -181,7 +221,9 @@ class Ride(db.Model):
             raise ValueError("Invalid driver_id or car_license_plate args")
 
         if car not in driver.cars:
-            raise ValueError("The driver cannot use a car they do not own for a ride")
+            raise ValueError(
+                "The driver cannot use a car they do not own for a ride"
+            )
 
         super(Ride, self).__init__(**kwargs)
 
@@ -193,7 +235,7 @@ class Address(db.Model):
     __tablename__ = "addresses"
 
     id = db.Column(db.Integer, primary_key=True)
-    address = db.Column(db.String, unique=True, nullable=False)
+    address = db.Column(db.String, unique=True, index=True, nullable=False)
 
     def __repr__(self):
         return f"<Address(id={self.id}, address={self.address}>"
@@ -203,11 +245,13 @@ class Car(db.Model):
     __tablename__ = "cars"
 
     license_plate = db.Column(db.String, primary_key=True)
-    # FIXME: Length restrictions
-    model = db.Column(db.String, nullable=False)
-    colour = db.Column(db.String, nullable=False)  # FIXME: enum?
-    # TODO: driver counts as one of the passengers
-    num_passengers = db.Column(db.Integer, nullable=False)
+    model = db.Column(db.String(128), nullable=False)
+    # Enum?
+    colour = db.Column(db.String(32), nullable=False)
+    # TODO: # of passengers driver counts as one of the passengers
+    num_passengers = db.Column(
+        db.Integer, db.CheckConstraint("num_passengers >= 2"), nullable=False
+    )
 
     drivers = db.relationship(
         "Driver", secondary=car_links, back_populates="cars"

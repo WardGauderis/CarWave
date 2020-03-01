@@ -20,24 +20,40 @@ File with the database models described using SQLAlchemy
 car_links = db.Table(
     "car_links",
     db.metadata,
-    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id")),
     db.Column(
-        "car_license_plate", db.String, db.ForeignKey("cars.license_plate")
+        "driver_id", db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE")
+    ),
+    db.Column(
+        "car_license_plate",
+        db.String,
+        db.ForeignKey("cars.license_plate", ondelete="CASCADE"),
     ),
 )
 
 ride_links = db.Table(
     "ride_links",
     db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id")),
-    db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
+    db.Column(
+        "ride_id", db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE")
+    ),
+    db.Column(
+        "passenger_id",
+        db.Integer,
+        db.ForeignKey("passengers.id", ondelete="CASCADE"),
+    ),
 )
 
 passenger_requests = db.Table(
     "passenger_requests",
     db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id")),
-    db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
+    db.Column(
+        "ride_id", db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE")
+    ),
+    db.Column(
+        "passenger_id",
+        db.Integer,
+        db.ForeignKey("passengers.id", ondelete="CASCADE"),
+    ),
 )
 
 
@@ -95,7 +111,11 @@ class Driver(db.Model):
 
     __tablename__ = "drivers"
 
-    id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
@@ -103,7 +123,10 @@ class Driver(db.Model):
     )
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
-    user = db.relationship("User", backref=db.backref("driver", uselist=False))
+    user = db.relationship(
+        "User",
+        backref=db.backref("driver", passive_deletes=True, uselist=False),
+    )
     rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
 
@@ -118,7 +141,11 @@ class Passenger(db.Model):
 
     __tablename__ = "passengers"
 
-    id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
@@ -127,7 +154,8 @@ class Passenger(db.Model):
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
-        "User", backref=db.backref("passenger", uselist=False)
+        "User",
+        backref=db.backref("passenger", passive_deletes=True, uselist=False),
     )
     rides = db.relationship(
         "Ride", secondary=ride_links, back_populates="passengers"
@@ -140,37 +168,49 @@ class Passenger(db.Model):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
 
 
+# TODO: if we delete a ride, also delete all requests that belong to it
 class Ride(db.Model):
     __tablename__ = "rides"
 
     id = db.Column(db.Integer, primary_key=True)
 
+    # TODO: how do we want to handle these cases? Cascade probably isn't a good option.
     driver_id = db.Column(
-        db.Integer, db.ForeignKey("drivers.id"), nullable=False
+        db.Integer,
+        db.ForeignKey("drivers.id", ondelete="CASCADE"),
+        nullable=False,
     )
     car_license_plate = db.Column(
-        db.String, db.ForeignKey("cars.license_plate"), nullable=False
+        db.String,
+        db.ForeignKey("cars.license_plate", ondelete="CASCADE"),
+        nullable=False,
     )
 
     request_time = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False
     )
-    # TODO: addresses need relationships
     # departure_time = db.Column(db.DateTime, nullable=False)
-    # departure_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
+    departure_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
+    )
     # arrival_time = db.Column(db.DateTime)
-    # arrival_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
+    arrival_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
+    )
 
     driver = db.relationship("Driver", back_populates="rides")
+    departure_address = db.relationship(
+        "Address", foreign_keys=[departure_address_id]
+    )
+
+    arrival_address = db.relationship(
+        "Address", foreign_keys=[arrival_address_id]
+    )
     passengers = db.relationship(
         "Passenger", secondary=ride_links, back_populates="rides"
     )
     requests = db.relationship(
-        "Passenger", secondary=passenger_requests, back_populates="requests"
+        "Passenger", secondary=passenger_requests, back_populates="requests",
     )
 
     def __init__(self, **kwargs):
@@ -181,7 +221,9 @@ class Ride(db.Model):
             raise ValueError("Invalid driver_id or car_license_plate args")
 
         if car not in driver.cars:
-            raise ValueError("The driver cannot use a car they do not own for a ride")
+            raise ValueError(
+                "The driver cannot use a car they do not own for a ride"
+            )
 
         super(Ride, self).__init__(**kwargs)
 
@@ -203,11 +245,13 @@ class Car(db.Model):
     __tablename__ = "cars"
 
     license_plate = db.Column(db.String, primary_key=True)
-    # FIXME: Length restrictions
-    model = db.Column(db.String, nullable=False)
-    colour = db.Column(db.String, nullable=False)  # FIXME: enum?
-    # TODO: driver counts as one of the passengers
-    num_passengers = db.Column(db.Integer, nullable=False)
+    model = db.Column(db.String(128), nullable=False)
+    # Enum?
+    colour = db.Column(db.String(32), nullable=False)
+    # TODO: # of passengers driver counts as one of the passengers
+    num_passengers = db.Column(
+        db.Integer, db.CheckConstraint("num_passengers >= 2"), nullable=False
+    )
 
     drivers = db.relationship(
         "Driver", secondary=car_links, back_populates="cars"
@@ -262,36 +306,36 @@ def main():
     for passenger in passengers:
         db.session.add(passenger)
 
-    drivers = [
-        Driver(id=2, rating=uniform(0.0, 5.0)),
-        Driver(id=3, rating=uniform(0.0, 5.0)),
-        Driver(id=5, rating=uniform(0.0, 5.0)),
-    ]
-
-    for driver in drivers:
-        db.session.add(driver)
-
-    cars = [
-        Car(
-            license_plate="1-QDE-002",
-            model="Volkswagen Golf",
-            colour="Red",
-            num_passengers=5,
-        ),
-        Car(
-            license_plate="5-THX-435",
-            model="Renault Clio",
-            colour="Black",
-            num_passengers=5,
-        ),
-    ]
-
-    for car in cars:
-        db.session.add(car)
-
+    db.session.add_all(
+        [
+            Driver(id=2, rating=uniform(0.0, 5.0)),
+            Driver(id=3, rating=uniform(0.0, 5.0)),
+            Driver(id=5, rating=uniform(0.0, 5.0)),
+        ]
+    )
+    db.session.add_all(
+        [
+            Car(
+                license_plate="1-QDE-002",
+                model="Volkswagen Golf",
+                colour="Red",
+                num_passengers=5,
+            ),
+            Car(
+                license_plate="5-THX-435",
+                model="Renault Clio",
+                colour="Black",
+                num_passengers=5,
+            ),
+            Address(
+                address="Universiteit Antwerpen, Campus Middelheim, Middelheimlaan 1, 2020 Antwerpen "
+            ),
+        ]
+    )
     db.session.commit()
 
-    User.from_username("xwhxycctuyce").driver.cars.append(
+    driver1 = User.from_username("xwhxycctuyce").driver
+    driver1.cars.append(
         Car(
             license_plate="8-ABC-001",
             model="Opel Corsa",
@@ -301,15 +345,22 @@ def main():
     )
 
     db.session.commit()
-    rides = [
-        # Ride(driver_id=5, car_license_plate="5-THX-435"), # should fail
-        Ride(driver_id=2, car_license_plate="8-ABC-001"),
-    ]
-    for ride in rides:
-        db.session.add(ride)
-        db.session.commit()
 
-    User.query.get(5).driver.cars.append(Car.query.get("5-THX-435"))
+    db.session.add_all(
+        [
+            # Ride(driver_id=5, car_license_plate="5-THX-435"), # should fail
+            Ride(
+                driver_id=2,
+                car_license_plate="8-ABC-001",
+                departure_address_id=1,
+                arrival_address_id=1,
+            ),
+        ]
+    )
+    db.session.commit()
+
+    driver2 = User.query.get(5).driver
+    driver2.cars.append(Car.query.get("5-THX-435"))
     db.session.commit()
 
     # should fail
@@ -317,11 +368,22 @@ def main():
     # db.session.commit()
 
     # should work
-    db.session.add(Ride(driver_id=5, car_license_plate="5-THX-435"))
+    db.session.add(
+        Ride(
+            driver_id=5,
+            car_license_plate="5-THX-435",
+            departure_address_id=1,
+            arrival_address_id=1,
+        )
+    )
     db.session.commit()
 
     ride = Ride.query.get(2)
-    ride.requests.append(Passenger.query.get(4))
+    ride.requests.append([Passenger.query.get(4), Passenger.query.get(1)])
+    db.session.commit()
+
+    ride_requests = Ride.query.get(2).requests
+    ride_requests.remove(Passenger.query.get(1))
     db.session.commit()
 
 
