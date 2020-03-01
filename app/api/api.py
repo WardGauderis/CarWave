@@ -1,3 +1,5 @@
+import sys
+
 from flask import abort, request
 
 from app import db
@@ -17,16 +19,17 @@ def register_user():
     except KeyError:
         abort(400, "invalid format")
 
-    # FIXME(Hayaan/groep): creation of a user with an already existing username?
     id = User.create_user(
         username=username, first_name=first_name, last_name=last_name, password=password
     )
-    return {"id": id}, 201
+    if id is None:
+        abort(400, "this username is already in use")
+    return ({"id": id}, 201)
 
 
 @bp.route("/users/auth", methods=["POST"])
 def authorize_user():
-    json = request.get_json() or {}
+    json = request.get_json()
     try:
         username = json["username"]
         password = json["password"]
@@ -35,17 +38,17 @@ def authorize_user():
 
     user = User.from_username(username)
     if user is not None and user.check_password(password):
-        token = user.get_token()
-        return {"token": token}, 200
+        return {"token": user.get_token()}, 200
     else:
         abort(401, "invalid authorization")
 
-
+# FIXME: never seems to get past to login check
 @bp.route("/drives", methods=["POST"])
 @token_auth.login_required
 def register_drive():
     json = request.get_json() or {}
     try:
+        # token = json[]
         start = json["from"]
         stop = json["to"]
         passenger_places = json["passenger-places"]
@@ -56,10 +59,16 @@ def register_drive():
     accepted = True  # TODO(Ward): condition?
     if accepted:
         # TODO: wie kan rides aanmaken? driver, passenger of beide?
+        # driver = User.from_token(json)
+        # ride = Ride(
+        #     driver_id=driver.id,
+        #     car_license_plate = car.id # FIXME
+            
+        # )
         id = 0
         driver_id = 0
         passenger_ids = []
-        location = f"/drives/{0}"
+
         return (
             {
                 "id": id,
@@ -71,7 +80,7 @@ def register_drive():
                 "arrive-by": arrive_by,
             },
             201,
-            {"Location": location},
+            {"Location": f"/drives/{id}"},
         )
     else:
         abort(401, "invalid authorization")
@@ -94,7 +103,7 @@ def get_drive(drive_id: int):
             "passenger-places": 0,  # FIXME(Hayaan): test whether it uses repr or str
             "from": 0,
             "start": 0,
-            "arrive-by": ride.arrival_time,
+            # "arrive-by": ride.arrival_time,
         },
         200,
     )

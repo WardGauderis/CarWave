@@ -3,7 +3,6 @@ from flask_bootstrap import Bootstrap
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from app import models
 from config import Config
 from flask_login import LoginManager
 
@@ -13,7 +12,6 @@ migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
 # login.login_message = 'Please log in to access this page.'
-
 
 
 def create_app(config=Config):

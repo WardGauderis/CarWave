@@ -1,11 +1,12 @@
-import datetime
-
-from flask import current_app
-from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime, timedelta
 
 import jwt
-from app import db, login
+from flask import current_app
 from flask_login import UserMixin
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from app import db, login
 
 """
 File with the database models described using SQLAlchemy
@@ -59,7 +60,7 @@ class User(UserMixin, db.Model):
     email_adress = db.Column(db.String(128))
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
     phone_number = db.Column(db.String(32))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
     address = db.relationship("Address")
 
@@ -74,10 +75,15 @@ class User(UserMixin, db.Model):
         except KeyError:
             raise ValueError("No 'password' keyword argument was supplied")
 
-        user = User(**kwargs)
-        db.session.add(user)
-        db.session.commit()
-        return user.id
+        try:
+            user = User(**kwargs)
+            db.session.add(user)
+            db.session.commit()
+            return user.id
+        except IntegrityError:
+            db.session.rollback()
+            # TODO: log error
+            return None
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -103,7 +109,7 @@ class User(UserMixin, db.Model):
         return jwt.encode(
             {
                 "id": self.id,
-                "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
+                "exp": datetime.utcnow() + timedelta(minutes=30),
             },
             current_app.config["SECRET_KEY"],
             algorithm="HS256",
@@ -118,7 +124,7 @@ class Driver(db.Model):
     __tablename__ = "drivers"
 
     id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), primary_key=True, ondelete="CASCADE",
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
@@ -145,7 +151,7 @@ class Passenger(db.Model):
     __tablename__ = "passengers"
 
     id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), primary_key=True, ondelete="CASCADE",
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
@@ -173,24 +179,24 @@ class Ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
+    driver = db.relationship("Driver", back_populates="rides")
     car_license_plate = db.Column(
         db.String, db.ForeignKey("cars.license_plate"), nullable=False
     )
+    car = db.relationship("Car")
 
-    request_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     # departure_time = db.Column(db.DateTime, nullable=False)
     # departure_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
     # )
+    # departure_address = db.relationship("Address")
     # arrival_time = db.Column(db.DateTime)
     # arrival_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
     # )
+    # arrival_address = db.relationship("Address")
 
-    driver = db.relationship("Driver", back_populates="rides")
-    car = db.relationship("Car")
-    departure_address = db.relationship("Address")
-    arrival_address = db.relationship("Address")
     passengers = db.relationship(
         "Passenger",
         secondary=ride_links,
