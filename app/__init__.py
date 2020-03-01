@@ -3,13 +3,18 @@ from flask_bootstrap import Bootstrap
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
+from app import models
 from config import Config
+from flask_login import LoginManager
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
 migrate = Migrate()
+login = LoginManager()
+login.login_view = 'auth.login'
+# login.login_message = 'Please log in to access this page.'
 
-from app import models
+
 
 def create_app(config=Config):
     app = Flask(__name__)
@@ -23,9 +28,12 @@ def create_app(config=Config):
     app.register_blueprint(errors_bp)
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
+    from app.map import bp as map_bp
+    app.register_blueprint(map_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
+    login.init_app(app)
 
     return app

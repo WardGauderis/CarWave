@@ -1,11 +1,11 @@
 import datetime
 
-import jwt
 from flask import current_app
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db
-from sqlalchemy import ForeignKey
+import jwt
+from app import db, login
+from flask_login import UserMixin
 
 """
 File with the database models described using SQLAlchemy
@@ -23,9 +23,7 @@ car_links = db.Table(
     "car_links",
     db.metadata,
     db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id")),
-    db.Column(
-        "car_license_plate", db.String, db.ForeignKey("cars.license_plate")
-    ),
+    db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate")),
 )
 
 ride_links = db.Table(
@@ -46,17 +44,18 @@ passenger_requests = db.Table(
 # Entities
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
 
-    first_name = db.Column(db.String, nullable=False)
-    last_name = db.Column(db.String, nullable=False)
+    first_name = db.Column(db.String(64), nullable=False)
+    last_name = db.Column(db.String(64), nullable=False)
+    email_adress = db.Column(db.String(128))
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
-    phone_number = db.Column(db.String)
+    phone_number = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     address = db.relationship("Address")
@@ -68,9 +67,7 @@ class User(db.Model):
     def create_user(**kwargs) -> int:
         try:
             # TODO: Reject passwords shorter than a specified length. probably in the form
-            kwargs["password_hash"] = generate_password_hash(
-                kwargs.pop("password")
-            )
+            kwargs["password_hash"] = generate_password_hash(kwargs.pop("password"))
         except KeyError:
             raise ValueError("No 'password' keyword argument was supplied")
 
@@ -103,8 +100,7 @@ class User(db.Model):
         return jwt.encode(
             {
                 "id": self.id,
-                "exp": datetime.datetime.utcnow()
-                + datetime.timedelta(minutes=30),
+                "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
             },
             current_app.config["SECRET_KEY"],
             algorithm="HS256",
@@ -119,10 +115,7 @@ class Driver(db.Model):
     __tablename__ = "drivers"
 
     id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id"),
-        primary_key=True,
-        ondelete="CASCADE",
+        db.Integer, db.ForeignKey("users.id"), primary_key=True, ondelete="CASCADE",
     )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
@@ -132,8 +125,7 @@ class Driver(db.Model):
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
-        "User",
-        backref=db.backref("driver", uselist=False, passive_deletes=True),
+        "User", backref=db.backref("driver", uselist=False, passive_deletes=True),
     )
     rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
@@ -150,10 +142,7 @@ class Passenger(db.Model):
     __tablename__ = "passengers"
 
     id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id"),
-        primary_key=True,
-        ondelete="CASCADE",
+        db.Integer, db.ForeignKey("users.id"), primary_key=True, ondelete="CASCADE",
     )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
@@ -164,12 +153,9 @@ class Passenger(db.Model):
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
-        "User",
-        backref=db.backref("passenger", uselist=False, passive_deletes=True),
+        "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
     )
-    rides = db.relationship(
-        "Ride", secondary=ride_links, back_populates="passengers"
-    )
+    rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
     requests = db.relationship(
         "Ride", secondary=passenger_requests, back_populates="requests"
     )
@@ -183,16 +169,12 @@ class Ride(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    driver_id = db.Column(
-        db.Integer, db.ForeignKey("drivers.id"), nullable=False
-    )
+    driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
     car_license_plate = db.Column(
         db.String, db.ForeignKey("cars.license_plate"), nullable=False
     )
 
-    request_time = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False
-    )
+    request_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     # departure_time = db.Column(db.DateTime, nullable=False)
     # departure_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
@@ -207,7 +189,9 @@ class Ride(db.Model):
     departure_address = db.relationship("Address")
     arrival_address = db.relationship("Address")
     passengers = db.relationship(
-        "Passenger", secondary=ride_links, back_populates="rides"
+        "Passenger",
+        secondary=ride_links,
+        back_populates="rides"
         # FIXME: constraint, len(passengers) < car.num_passengers
     )
     requests = db.relationship(
@@ -222,9 +206,7 @@ class Ride(db.Model):
             raise ValueError("Invalid driver_id or car_license_plate args")
 
         if car not in driver.cars:
-            raise ValueError(
-                "The driver cannot use a car they do not own for a ride"
-            )
+            raise ValueError("The driver cannot use a car they do not own for a ride")
 
         super(Ride, self).__init__(**kwargs)
 
@@ -254,9 +236,7 @@ class Car(db.Model):
         db.Integer, db.CheckConstraint("num_passengers >= 2"), nullable=False
     )
 
-    drivers = db.relationship(
-        "Driver", secondary=car_links, back_populates="cars"
-    )
+    drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, num_passengers={self.num_passengers})>"
