@@ -5,6 +5,7 @@ from flask import current_app
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db
+from sqlalchemy import ForeignKey
 
 """
 File with the database models described using SQLAlchemy
