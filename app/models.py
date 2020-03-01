@@ -15,6 +15,7 @@ TODO:
     - Get rides as a passenger or driver for a user
     - Handle passenger requests for a certain driver
     - How to delete a passenger request?
+    - Serialise models to JSON for the API requests?
 """
 
 # The secondary tables for the many-to-many relationships
@@ -33,6 +34,8 @@ ride_links = db.Table(
     db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
 )
 
+# TODO: add request status else we have no way to track declined requests
+# enum {PENDING, DECLINED}, ACCEPTED -> added to ride.passengers so no need
 passenger_requests = db.Table(
     "passenger_requests",
     db.metadata,
@@ -212,6 +215,10 @@ class Ride(db.Model):
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
+
+    @staticmethod
+    def get_ride(ride_id: int):
+        return Ride.query.get(ride_id)
 
 
 class Address(db.Model):

@@ -1,9 +1,11 @@
 import os
 from datetime import datetime
+from json import dumps
 from random import uniform
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -20,9 +22,7 @@ File with the database models described using SQLAlchemy
 car_links = db.Table(
     "car_links",
     db.metadata,
-    db.Column(
-        "driver_id", db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE")
-    ),
+    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE")),
     db.Column(
         "car_license_plate",
         db.String,
@@ -33,26 +33,18 @@ car_links = db.Table(
 ride_links = db.Table(
     "ride_links",
     db.metadata,
+    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE")),
     db.Column(
-        "ride_id", db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE")
-    ),
-    db.Column(
-        "passenger_id",
-        db.Integer,
-        db.ForeignKey("passengers.id", ondelete="CASCADE"),
+        "passenger_id", db.Integer, db.ForeignKey("passengers.id", ondelete="CASCADE"),
     ),
 )
 
 passenger_requests = db.Table(
     "passenger_requests",
     db.metadata,
+    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE")),
     db.Column(
-        "ride_id", db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE")
-    ),
-    db.Column(
-        "passenger_id",
-        db.Integer,
-        db.ForeignKey("passengers.id", ondelete="CASCADE"),
+        "passenger_id", db.Integer, db.ForeignKey("passengers.id", ondelete="CASCADE"),
     ),
 )
 
@@ -80,18 +72,27 @@ class User(db.Model):
 
     @staticmethod
     def create_user(**kwargs) -> int:
+        """
+        Returns the id of the newly created user if succesful.
+        
+        If a duplicate username is supplied, the session gets rolled back and
+        the function returns None.
+        """
         try:
             # TODO: Reject passwords shorter than a specified length. probably in the form
-            kwargs["password_hash"] = generate_password_hash(
-                kwargs.pop("password")
-            )
+            kwargs["password_hash"] = generate_password_hash(kwargs.pop("password"))
         except KeyError:
             raise ValueError("No 'password' keyword argument was supplied")
 
-        user = User(**kwargs)
-        db.session.add(user)
-        db.session.commit()
-        return user.id
+        try:
+            user = User(**kwargs)
+            db.session.add(user)
+            db.session.commit()
+            return user.id
+        except IntegrityError as e:
+            db.session.rollback()
+            # TODO: log error
+            return None
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -112,9 +113,7 @@ class Driver(db.Model):
     __tablename__ = "drivers"
 
     id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="CASCADE"),
-        primary_key=True,
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
@@ -124,14 +123,16 @@ class Driver(db.Model):
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
-        "User",
-        backref=db.backref("driver", passive_deletes=True, uselist=False),
+        "User", backref=db.backref("driver", passive_deletes=True, uselist=False),
     )
     rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
 
     def __repr__(self):
         return f"<Driver(id={self.id}, rating={self.rating})>"
+
+    def to_json(self):
+        return dumps({"id": self.id, "username": self.user.username}, ensure_ascii=True)
 
 
 class Passenger(db.Model):
@@ -142,9 +143,7 @@ class Passenger(db.Model):
     __tablename__ = "passengers"
 
     id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="CASCADE"),
-        primary_key=True,
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
     rating = db.Column(
         db.Numeric(precision=2, scale=1),
@@ -154,18 +153,26 @@ class Passenger(db.Model):
     num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
-        "User",
-        backref=db.backref("passenger", passive_deletes=True, uselist=False),
+        "User", backref=db.backref("passenger", passive_deletes=True, uselist=False),
     )
-    rides = db.relationship(
-        "Ride", secondary=ride_links, back_populates="passengers"
-    )
+    rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
     requests = db.relationship(
         "Ride", secondary=passenger_requests, back_populates="requests"
     )
 
+    def __str__(self):
+        return f"""
+            \{
+                "id": {self.id},
+                "username": {self.user.username}
+            \}
+        """
+
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
+
+    def to_json(self):
+        return dumps({"id": self.id, "username": self.user.username}, ensure_ascii=True)
 
 
 # TODO: if we delete a ride, also delete all requests that belong to it
@@ -176,9 +183,7 @@ class Ride(db.Model):
 
     # TODO: how do we want to handle these cases? Cascade probably isn't a good option.
     driver_id = db.Column(
-        db.Integer,
-        db.ForeignKey("drivers.id", ondelete="CASCADE"),
-        nullable=False,
+        db.Integer, db.ForeignKey("drivers.id", ondelete="CASCADE"), nullable=False,
     )
     car_license_plate = db.Column(
         db.String,
@@ -186,9 +191,7 @@ class Ride(db.Model):
         nullable=False,
     )
 
-    request_time = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False
-    )
+    request_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     # departure_time = db.Column(db.DateTime, nullable=False)
     departure_address_id = db.Column(
         db.Integer, db.ForeignKey("addresses.id"), nullable=False
@@ -199,13 +202,9 @@ class Ride(db.Model):
     )
 
     driver = db.relationship("Driver", back_populates="rides")
-    departure_address = db.relationship(
-        "Address", foreign_keys=[departure_address_id]
-    )
+    departure_address = db.relationship("Address", foreign_keys=[departure_address_id])
 
-    arrival_address = db.relationship(
-        "Address", foreign_keys=[arrival_address_id]
-    )
+    arrival_address = db.relationship("Address", foreign_keys=[arrival_address_id])
     passengers = db.relationship(
         "Passenger", secondary=ride_links, back_populates="rides"
     )
@@ -221,9 +220,7 @@ class Ride(db.Model):
             raise ValueError("Invalid driver_id or car_license_plate args")
 
         if car not in driver.cars:
-            raise ValueError(
-                "The driver cannot use a car they do not own for a ride"
-            )
+            raise ValueError("The driver cannot use a car they do not own for a ride")
 
         super(Ride, self).__init__(**kwargs)
 
@@ -253,14 +250,13 @@ class Car(db.Model):
         db.Integer, db.CheckConstraint("num_passengers >= 2"), nullable=False
     )
 
-    drivers = db.relationship(
-        "Driver", secondary=car_links, back_populates="cars"
-    )
+    drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, num_passengers={self.num_passengers})>"
 
 
+# TODO: move out to unit tests?
 def main():
     db.reflect()
     db.drop_all()
@@ -291,6 +287,13 @@ def main():
         first_name="Ada",
         last_name="Lovelace",
     )
+    User.create_user(
+        username="tvjkgyphhtfw",
+        password='Py88"B:$',
+        first_name="Edsger",
+        last_name="Dijkstra",
+    )
+    # Duplicate username, what happens?
     User.create_user(
         username="tvjkgyphhtfw",
         password='Py88"B:$',
@@ -379,7 +382,8 @@ def main():
     db.session.commit()
 
     ride = Ride.query.get(2)
-    ride.requests.append([Passenger.query.get(4), Passenger.query.get(1)])
+    ride.requests.append(Passenger.query.get(4))
+    ride.requests.append(Passenger.query.get(1))
     db.session.commit()
 
     ride_requests = Ride.query.get(2).requests
