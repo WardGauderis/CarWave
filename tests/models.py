@@ -10,8 +10,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db
-
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -70,7 +68,7 @@ class User(UserMixin, db.Model):
     email_adress = db.Column(db.String(128))
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
     phone_number = db.Column(db.String(32))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
     address = db.relationship("Address")
 
@@ -85,10 +83,15 @@ class User(UserMixin, db.Model):
         except KeyError:
             raise ValueError("No 'password' keyword argument was supplied")
 
-        user = User(**kwargs)
-        db.session.add(user)
-        db.session.commit()
-        return user.id
+        try:
+            user = User(**kwargs)
+            db.session.add(user)
+            db.session.commit()
+            return user
+        except IntegrityError:
+            db.session.rollback()
+            # TODO: log error
+            return None
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -107,15 +110,12 @@ class User(UserMixin, db.Model):
                 token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
             )
             return User.query.get(data["id"])
-        except:
+        except jwt.DecodeError:
             return None
 
     def get_token(self):
         return jwt.encode(
-            {
-                "id": self.id,
-                "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
-            },
+            {"id": self.id, "exp": datetime.utcnow() + timedelta(minutes=30)},
             current_app.config["SECRET_KEY"],
             algorithm="HS256",
         ).decode("utf-8")
@@ -177,6 +177,9 @@ class Passenger(db.Model):
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
 
+    def to_json(self):
+        return {"id": self.id, "username": self.user.username}
+
 
 class Ride(db.Model):
     __tablename__ = "rides"
@@ -185,20 +188,34 @@ class Ride(db.Model):
 
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
     driver = db.relationship("Driver", back_populates="rides")
-
-    car_license_plate = db.Column(db.String, db.ForeignKey("cars.license_plate"), nullable=False)
+    passenger_places = db.Column(
+        db.Integer,
+        # TODO: river counts as one so there should be space for at least one more
+        # TODO: len(ride.passengers) <= passenger_places
+        db.CheckConstraint("passenger_places >= 2"),
+        nullable=False,
+    )
+    # TODO
+    # Addable at a later date, but must check car's # of passenger places is
+    # greater or equal to the ride's # of passengers
+    car_license_plate = db.Column(
+        db.String(16),
+        db.ForeignKey("cars.license_plate"),
+        # db.CheckConstraint("passenger_places <= car"),
+        nullable=True,
+    )
     car = db.relationship("Car")
 
-    request_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     # departure_time = db.Column(db.DateTime, nullable=False)
     # departure_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
     # )
-    # arrival_time = db.Column(db.DateTime)
+    # departure_address = db.relationship("Address")
+    arrival_time = db.Column(db.DateTime, nullable=False)
     # arrival_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
     # )
-    # departure_address = db.relationship("Address")
     # arrival_address = db.relationship("Address")
 
     passengers = db.relationship(
@@ -211,32 +228,52 @@ class Ride(db.Model):
         "Passenger", secondary=passenger_requests, back_populates="requests"
     )
 
-    def __init__(self, **kwargs):
-        try:
-            driver = Driver.query.get(kwargs["driver_id"])
-            car = Car.query.get(kwargs["car_license_plate"])
-        except KeyError:
-            raise ValueError("Invalid driver_id or car_license_plate args")
-
-        if car not in driver.cars:
-            raise ValueError("The driver cannot use a car they do not own for a ride")
-
-
-        super(Ride, self).__init__(**kwargs)
+    # FIXME(Hayaan): Not needed so long as car is a nullable field (API spec).
+    # def __init__(self, **kwargs):
+    #     try:
+    #         driver = Driver.query.get(kwargs["driver_id"])
+    #         car = Car.query.get(kwargs["car_license_plate"])
+    #     except KeyError:
+    #         raise ValueError("Invalid driver_id or car_license_plate args")
+    #
+    #     if car not in driver.cars:
+    #         raise ValueError("The driver cannot use a car they do not own for a ride")
+    #
+    #     super(Ride, self).__init__(**kwargs)
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
     @staticmethod
+    def create_ride(**kwargs):
+        try:
+            ride = Ride(**kwargs)
+            db.session.add(ride)
+            db.session.commit()
+            return ride
+        except IntegrityError:
+            db.session.rollback()
+            # TODO: log error
+            return None
+
+    @staticmethod
     def get_ride(ride_id: int):
         return Ride.query.get(ride_id)
+
+    # FIXME: should be replaceable with a CheckConstraint
+    def add_car(self, car) -> bool:
+        if self.passenger_places < car.passenger_places:
+            return False
+        self.car = car
+        db.session.commit()
+        return True
 
 
 class Address(db.Model):
     __tablename__ = "addresses"
 
     id = db.Column(db.Integer, primary_key=True)
-    address = db.Column(db.String, unique=True, index=True, nullable=False)
+    address = db.Column(db.String(256), unique=True, index=True, nullable=False)
 
     def __repr__(self):
         return f"<Address(id={self.id}, address={self.address}>"
@@ -245,19 +282,19 @@ class Address(db.Model):
 class Car(db.Model):
     __tablename__ = "cars"
 
-    license_plate = db.Column(db.String, primary_key=True)
+    license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
     # Enum?
     colour = db.Column(db.String(32), nullable=False)
     # TODO: # of passengers driver counts as one of the passengers
-    num_passengers = db.Column(
-        db.Integer, db.CheckConstraint("num_passengers >= 2"), nullable=False
+    passenger_places = db.Column(
+        db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
 
     drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
 
     def __repr__(self):
-        return f"<Car(license_plate={self.license_plate}, num_passengers={self.num_passengers})>"
+        return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
 
 
 # TODO: move out to unit tests?
@@ -326,13 +363,13 @@ def main():
                 license_plate="1-QDE-002",
                 model="Volkswagen Golf",
                 colour="Red",
-                num_passengers=5,
+                passenger_places=5,
             ),
             Car(
                 license_plate="5-THX-435",
                 model="Renault Clio",
                 colour="Black",
-                num_passengers=5,
+                passenger_places=5,
             ),
             Address(
                 address="Universiteit Antwerpen, Campus Middelheim, Middelheimlaan 1, 2020 Antwerpen "
@@ -345,9 +382,9 @@ def main():
     driver1.cars.append(
         Car(
             license_plate="8-ABC-001",
-            model="Opel Corsa",
+            model="Audi R8",
             colour="White",
-            num_passengers=5,
+            passenger_places=2,
         )
     )
 
@@ -358,7 +395,9 @@ def main():
             # Ride(driver_id=5, car_license_plate="5-THX-435"), # should fail
             Ride(
                 driver_id=2,
+                passenger_places=3,
                 car_license_plate="8-ABC-001",
+                arrival_time="2020-02-12T10:00:00.00",
                 # departure_address_id=1,
                 # arrival_address_id=1,
             ),
@@ -378,6 +417,8 @@ def main():
     db.session.add(
         Ride(
             driver_id=5,
+            passenger_places=3,
+            arrival_time="2020-02-12T10:00:00.00",
             car_license_plate="5-THX-435",
             # departure_address_id=1,
             # arrival_address_id=1,
@@ -392,6 +433,11 @@ def main():
 
     ride_requests = Ride.query.get(2).requests
     ride_requests.remove(Passenger.query.get(1))
+    db.session.commit()
+
+    ride = Ride.query.get(1)
+    ride.passengers.append(Passenger.query.get(4))
+    ride.passengers.append(Passenger.query.get(1))
     db.session.commit()
 
 

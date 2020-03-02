@@ -1,11 +1,10 @@
-import sys
+import json
 
-from flask import abort, request
+from flask import Response, abort, request
 
-from app import db
 from app.api import bp
 from app.auth.auth import token_auth
-from app.models import Car, Driver, Passenger, Ride, User
+from app.models import Ride, User
 
 
 @bp.route("/users/register", methods=["POST"])
@@ -17,81 +16,84 @@ def register_user():
         last_name = json["lastname"]
         password = json["password"]
     except KeyError:
-        abort(400, "invalid format")
+        abort(400, "Invalid format")
 
-    id = User.create_user(
+    user = User.create_user(
         username=username, first_name=first_name, last_name=last_name, password=password
     )
-    if id is None:
-        abort(400, "this username is already in use")
-    return ({"id": id}, 201)
+    if user is None:
+        abort(400, "This username is already in use")
+    return {"id": user.id}, 201
 
 
 @bp.route("/users/auth", methods=["POST"])
 def authorize_user():
-    json = request.get_json()
+    json = request.get_json() or {}
     try:
         username = json["username"]
         password = json["password"]
     except KeyError:
-        abort(400, "invalid format")
+        abort(400, "Invalid format")
 
     user = User.from_username(username)
     if user is not None and user.check_password(password):
-        return {"token": user.get_token()}, 200
+        token = user.get_token()
+        return {"token": token}, 200
     else:
-        abort(401, "invalid authorization")
+        abort(401, "Invalid authorization")
 
-# FIXME: never seems to get past to login check
+
 @bp.route("/drives", methods=["POST"])
 @token_auth.login_required
 def register_drive():
+    # Strip 'Bearer ' prefix
+    token = request.headers.environ["HTTP_AUTHORIZATION"][7:]
     json = request.get_json() or {}
     try:
-        # token = json[]
         start = json["from"]
         stop = json["to"]
         passenger_places = json["passenger-places"]
         arrive_by = json["arrive-by"]
     except KeyError:
-        abort(400, "invalid format")
+        abort(400, "Invalid format")
 
     accepted = True  # TODO(Ward): condition?
     if accepted:
         # TODO: wie kan rides aanmaken? driver, passenger of beide?
-        # driver = User.from_token(json)
-        # ride = Ride(
-        #     driver_id=driver.id,
-        #     car_license_plate = car.id # FIXME
-            
-        # )
-        id = 0
-        driver_id = 0
-        passenger_ids = []
-
+        user = User.from_token(token)
+        if user.driver is None:
+            abort(400, "Rides can only be created by drivers")
+        ride = Ride.create_ride(
+            driver_id=user.id,
+            passenger_places=passenger_places,
+            arrival_time=arrive_by
+        )
         return (
             {
-                "id": id,
-                "driver-id": driver_id,
-                "passenger-ids": passenger_ids,
-                "passenger-places": passenger_places,
-                "from": start,
-                "to": stop,
-                "arrive-by": arrive_by,
+                "id": ride.id,
+                "driver-id": ride.driver_id,
+                "passenger-ids": [  # altijd leeg bij registration, neem ik aan?
+                    passenger.id for passenger in ride.passengers
+                ],
+                "passenger-places": ride.passenger_places,
+                # "from": address[ride.arrival_address_id],
+                # "to": address[ride.departure_address_id],
+                "arrive-by": ride.arrival_time,
             },
             201,
-            {"Location": f"/drives/{id}"},
+            {"Location": f"/drives/{ride.id}"}
         )
     else:
-        abort(401, "invalid authorization")
+        abort(401, "Invalid authorization")
 
 
+# FIXME: addressen
 @bp.route("/drives/<int:drive_id>", methods=["GET"])
 def get_drive(drive_id: int):
     ride = Ride.get_ride(drive_id)
 
     if ride is None:
-        abort(400, "invalid drive id")
+        abort(400, "Invalid drive id")
 
     return (
         {
@@ -99,33 +101,14 @@ def get_drive(drive_id: int):
             "driver-id": ride.driver_id,
             "passenger-ids": [
                 passenger.id for passenger in ride.passengers
-            ],  # FIXME(Hayaan)
-            "passenger-places": 0,  # FIXME(Hayaan): test whether it uses repr or str
-            "from": 0,
-            "start": 0,
-            # "arrive-by": ride.arrival_time,
+            ],
+            "passenger-places": ride.passenger_places,
+            "from": -1,
+            "start": -1,
+            "arrive-by": ride.arrival_time,
         },
         200,
     )
-    # id = 0
-    # driver_id = 0
-    # passenger_ids = []
-    # passenger_places = 0
-    # start = [0, 0]
-    # stop = [0, 0]
-    # arrive_by = ""
-    # return (
-    #     {
-    #         "id": id,
-    #         "driver-id": driver_id,
-    #         "passenger-ids": passenger_ids,
-    #         "passenger-places": passenger_places,
-    #         "from": start,
-    #         "to": stop,
-    #         "arrive-by": arrive_by,
-    #     },
-    #     200,
-    # )
 
 
 @bp.route("/drives/<int:drive_id>/passengers", methods=["GET"])
@@ -133,11 +116,12 @@ def get_passengers(drive_id):
     ride = Ride.get_ride(drive_id)
 
     if ride is None:
-        abort(400, "invalid drive id")
+        abort(400, "Invalid drive id")
 
-    return (
-        [passenger.to_json() for passenger in ride.passengers],
-        200,
+    return Response(
+        json.dumps([passenger.to_json() for passenger in ride.passengers]),
+        status=200,
+        mimetype="application/json"
     )
 
 
@@ -145,23 +129,26 @@ def get_passengers(drive_id):
 @token_auth.login_required
 def get_passenger_requests(drive_id):
     if request.method == "GET":
-        accepted = True
-        if accepted:
-            ride = Ride.get_ride(drive_id)
-            return (
-                [
+        token = request.headers.environ["HTTP_AUTHORIZATION"][7:]
+        ride = Ride.get_ride(drive_id)
+        user = User.from_token(token)
+        if ride.driver_id == user.id:
+            return Response(
+                json.dumps([
                     {
                         "id": passenger.id,
                         "username": passenger.user.username,
-                        "status": "pending",  # FIXME(Hayaan)
-                        "time-created": passenger.user.created_at,
+                        # FIXME(Hayaan): shift to enum, e.g. passenger.request.status
+                        "status": "pending",
+                        "time-created": passenger.user.created_at.isoformat(),
                     }
-                    for passenger in ride.passengers
-                ],
-                200,
+                    for passenger in ride.requests
+                ]),
+                status=200,
+                mimetype="application/json"
             )
         else:
-            abort(401, "invalid authorization")
+            abort(401, "Invalid authorization")
     else:  # POST
         # TODO(Hayaan): still need to add a function for this
         accepted = True
@@ -182,7 +169,7 @@ def get_passenger_requests(drive_id):
                 {"Location": location},
             )
         else:
-            abort(401, "invalid authorization")
+            abort(401, "Invalid authorization")
 
 
 @bp.route("/drives/<int:drive_id>/passenger-requests/<int:user_id>", methods=["POST"])
@@ -194,7 +181,7 @@ def accept_passenger_request(drive_id, user_id):
         try:
             action = json["action"]
         except KeyError:
-            abort(400, "invalid format")
+            abort(400, "Invalid format")
 
         id = 0
         username = ""
@@ -212,7 +199,7 @@ def accept_passenger_request(drive_id, user_id):
             200,
         )
     else:
-        abort(401, "invalid authorization")
+        abort(401, "Invalid authorization")
 
 
 @bp.route("/drives/search", methods=["GET"])
@@ -224,7 +211,7 @@ def search_drive():
         stop = json["to"]
         arrive_by = json["arrive-by"]
     except KeyError:
-        abort(400, "invalid format")
+        abort(400, "Invalid format")
 
     id = 0
     driver_id = 0

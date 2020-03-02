@@ -6,7 +6,7 @@ from flask_login import UserMixin
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db, login
+from app import db
 
 """
 File with the database models described using SQLAlchemy
@@ -79,7 +79,7 @@ class User(UserMixin, db.Model):
             user = User(**kwargs)
             db.session.add(user)
             db.session.commit()
-            return user.id
+            return user
         except IntegrityError:
             db.session.rollback()
             # TODO: log error
@@ -102,15 +102,12 @@ class User(UserMixin, db.Model):
                 token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
             )
             return User.query.get(data["id"])
-        except:
+        except jwt.DecodeError:
             return None
 
     def get_token(self):
         return jwt.encode(
-            {
-                "id": self.id,
-                "exp": datetime.utcnow() + timedelta(minutes=30),
-            },
+            {"id": self.id, "exp": datetime.utcnow() + timedelta(minutes=30)},
             current_app.config["SECRET_KEY"],
             algorithm="HS256",
         ).decode("utf-8")
@@ -171,6 +168,9 @@ class Passenger(db.Model):
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
+    
+    def to_json(self):
+        return {"id": self.id, "username": self.user.username}
 
 
 class Ride(db.Model):
@@ -180,8 +180,21 @@ class Ride(db.Model):
 
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
     driver = db.relationship("Driver", back_populates="rides")
+    passenger_places = db.Column(
+        db.Integer,
+        # TODO: river counts as one so there should be space for at least one more
+        # TODO: len(ride.passengers) <= passenger_places
+        db.CheckConstraint("passenger_places >= 2"),
+        nullable=False,
+    )
+    # TODO
+    # Addable at a later date, but must check car's # of passenger places is
+    # greater or equal to the ride's # of passengers
     car_license_plate = db.Column(
-        db.String, db.ForeignKey("cars.license_plate"), nullable=False
+        db.String(16),
+        db.ForeignKey("cars.license_plate"),
+        # db.CheckConstraint("passenger_places <= car"),
+        nullable=True,
     )
     car = db.relationship("Car")
 
@@ -191,7 +204,7 @@ class Ride(db.Model):
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
     # )
     # departure_address = db.relationship("Address")
-    # arrival_time = db.Column(db.DateTime)
+    arrival_time = db.Column(db.DateTime, nullable=False)
     # arrival_address_id = db.Column(
     #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
     # )
@@ -207,31 +220,52 @@ class Ride(db.Model):
         "Passenger", secondary=passenger_requests, back_populates="requests"
     )
 
-    def __init__(self, **kwargs):
-        try:
-            driver = Driver.query.get(kwargs["driver_id"])
-            car = Car.query.get(kwargs["car_license_plate"])
-        except KeyError:
-            raise ValueError("Invalid driver_id or car_license_plate args")
-
-        if car not in driver.cars:
-            raise ValueError("The driver cannot use a car they do not own for a ride")
-
-        super(Ride, self).__init__(**kwargs)
+    # FIXME(Hayaan): Not needed so long as car is a nullable field (API spec).
+    # def __init__(self, **kwargs):
+    #     try:
+    #         driver = Driver.query.get(kwargs["driver_id"])
+    #         car = Car.query.get(kwargs["car_license_plate"])
+    #     except KeyError:
+    #         raise ValueError("Invalid driver_id or car_license_plate args")
+    #
+    #     if car not in driver.cars:
+    #         raise ValueError("The driver cannot use a car they do not own for a ride")
+    #
+    #     super(Ride, self).__init__(**kwargs)
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
     @staticmethod
+    def create_ride(**kwargs):
+        try:
+            ride = Ride(**kwargs)
+            db.session.add(ride)
+            db.session.commit()
+            return ride
+        except IntegrityError:
+            db.session.rollback()
+            # TODO: log error
+            return None
+
+    @staticmethod
     def get_ride(ride_id: int):
         return Ride.query.get(ride_id)
+
+    # FIXME: should be replaceable with a CheckConstraint
+    def add_car(self, car) -> bool:
+        if self.passenger_places < car.passenger_places:
+            return False
+        self.car = car
+        db.session.commit()
+        return True
 
 
 class Address(db.Model):
     __tablename__ = "addresses"
 
     id = db.Column(db.Integer, primary_key=True)
-    address = db.Column(db.String, unique=True, index=True, nullable=False)
+    address = db.Column(db.String(256), unique=True, index=True, nullable=False)
 
     def __repr__(self):
         return f"<Address(id={self.id}, address={self.address}>"
@@ -240,16 +274,16 @@ class Address(db.Model):
 class Car(db.Model):
     __tablename__ = "cars"
 
-    license_plate = db.Column(db.String, primary_key=True)
+    license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
     # Enum?
     colour = db.Column(db.String(32), nullable=False)
     # TODO: # of passengers driver counts as one of the passengers
-    num_passengers = db.Column(
-        db.Integer, db.CheckConstraint("num_passengers >= 2"), nullable=False
+    passenger_places = db.Column(
+        db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
 
     drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
 
     def __repr__(self):
-        return f"<Car(license_plate={self.license_plate}, num_passengers={self.num_passengers})>"
+        return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
