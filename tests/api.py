@@ -26,37 +26,37 @@ BASE_URL = "http://127.0.0.1:5000"
 
 # AUTH
 
-# r2 = requests.post(
-#     f"{BASE_URL}/users/auth",
-#     headers={"Content-Type": "application/json"},
-#     data=json.dumps({"username": "qrtdavjtzhwu", "password": "F37ZLv,W"}),
-# )
+r21 = requests.post(
+    f"{BASE_URL}/users/auth",
+    headers={"Content-Type": "application/json"},
+    data=json.dumps({"username": "qrtdavjtzhwu", "password": "F37ZLv,W"}),
+)
 
-r2 = requests.post(
+r22 = requests.post(
     f"{BASE_URL}/users/auth",
     headers={"Content-Type": "application/json"},
     data=json.dumps({"username": "tvjkgyphhtfw", "password": "Py88\"B:$"}),
 )
 
-print(r2.reason)
-print(r2.request.body)
+print(r22.reason)
+print(r22.request.body)
 
 # POST RIDE
-TOKEN = r2.json()["token"]
+TOKEN = r22.json()["token"]
 BEARER_AUTH = f"Bearer {TOKEN}"
 
-# r3 = requests.post(
-#     f"{BASE_URL}/drives",
-#     headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
-#     data=json.dumps(
-#         {
-#             "from": [51.130215, 4.571509],
-#             "to": [51.18417, 4.41931],
-#             "passenger-places": 3,
-#             "arrive-by": "2020-02-12T10:00:00.00",
-#         }
-#     ),
-# )
+r3 = requests.post(
+    f"{BASE_URL}/drives",
+    headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
+    data=json.dumps(
+        {
+            "from": [51.130215, 4.571509],
+            "to": [51.18417, 4.41931],
+            "passenger-places": 3,
+            "arrive-by": "2020-02-12T10:00:00.00",
+        }
+    ),
+)
 
 
 # GET SPECIFIC RIDE
@@ -74,4 +74,3 @@ r6 = requests.get(
     headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
 )
 print(r6.json())
-
