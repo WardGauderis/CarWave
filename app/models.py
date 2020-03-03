@@ -24,24 +24,32 @@ TODO:
 car_links = db.Table(
     "car_links",
     db.metadata,
-    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id")),
-    db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate")),
+    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id"), primary_key=True),
+    db.Column(
+        "car_license_plate",
+        db.String,
+        db.ForeignKey("cars.license_plate"),
+        primary_key=True,
+    ),
 )
 
 ride_links = db.Table(
     "ride_links",
     db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id")),
-    db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
+    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
+    db.Column(
+        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
+    ),
 )
 
-# TODO: add request status else we have no way to track declined requests
-# enum {PENDING, DECLINED}, ACCEPTED -> added to ride.passengers so no need
 passenger_requests = db.Table(
     "passenger_requests",
     db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id")),
-    db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
+    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
+    db.Column(
+        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
+    ),
+    db.Column("status", db.Enum("pending", "declined", name="status_enum")),
 )
 
 
@@ -58,11 +66,9 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
     email_adress = db.Column(db.String(128))
-    address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
+    address_id = db.Column(db.Integer)
     phone_number = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
-
-    address = db.relationship("Address")
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
@@ -82,7 +88,6 @@ class User(UserMixin, db.Model):
             return user
         except IntegrityError:
             db.session.rollback()
-            # TODO: log error
             return None
 
     def set_password(self, password: str):
@@ -168,7 +173,7 @@ class Passenger(db.Model):
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
-    
+
     def to_json(self):
         return {"id": self.id, "username": self.user.username}
 
@@ -182,7 +187,7 @@ class Ride(db.Model):
     driver = db.relationship("Driver", back_populates="rides")
     passenger_places = db.Column(
         db.Integer,
-        # TODO: river counts as one so there should be space for at least one more
+        # TODO: driver counts as one so there should be space for at least one more
         # TODO: len(ride.passengers) <= passenger_places
         db.CheckConstraint("passenger_places >= 2"),
         nullable=False,
@@ -199,16 +204,14 @@ class Ride(db.Model):
     car = db.relationship("Car")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    # departure_time = db.Column(db.DateTime, nullable=False)
-    # departure_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
-    # departure_address = db.relationship("Address")
+    departure_time = db.Column(db.DateTime, nullable=False)
+    departure_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
+    )
     arrival_time = db.Column(db.DateTime, nullable=False)
-    # arrival_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
-    # arrival_address = db.relationship("Address")
+    arrival_address_id = db.Column(
+        db.Integer, db.ForeignKey("addresses.id"), nullable=False
+    )
 
     passengers = db.relationship(
         "Passenger",
@@ -219,19 +222,6 @@ class Ride(db.Model):
     requests = db.relationship(
         "Passenger", secondary=passenger_requests, back_populates="requests"
     )
-
-    # FIXME(Hayaan): Not needed so long as car is a nullable field (API spec).
-    # def __init__(self, **kwargs):
-    #     try:
-    #         driver = Driver.query.get(kwargs["driver_id"])
-    #         car = Car.query.get(kwargs["car_license_plate"])
-    #     except KeyError:
-    #         raise ValueError("Invalid driver_id or car_license_plate args")
-    #
-    #     if car not in driver.cars:
-    #         raise ValueError("The driver cannot use a car they do not own for a ride")
-    #
-    #     super(Ride, self).__init__(**kwargs)
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
@@ -245,7 +235,6 @@ class Ride(db.Model):
             return ride
         except IntegrityError:
             db.session.rollback()
-            # TODO: log error
             return None
 
     @staticmethod
@@ -261,14 +250,14 @@ class Ride(db.Model):
         return True
 
 
-class Address(db.Model):
-    __tablename__ = "addresses"
+# class Address(db.Model):
+#     __tablename__ = "addresses"
 
-    id = db.Column(db.Integer, primary_key=True)
-    address = db.Column(db.String(256), unique=True, index=True, nullable=False)
+#     id = db.Column(db.Integer, primary_key=True)
+#     address = db.Column(db.String(256), unique=True, index=True, nullable=False)
 
-    def __repr__(self):
-        return f"<Address(id={self.id}, address={self.address}>"
+#     def __repr__(self):
+#         return f"<Address(id={self.id}, address={self.address}>"
 
 
 class Car(db.Model):
