@@ -1,12 +1,20 @@
-from datetime import datetime, timedelta
+from sqlalchemy.exc import IntegrityError
+import os
+from datetime import datetime
+from json import dumps
+from random import uniform
 
-import jwt
-from flask import current_app
+from flask import Flask
 from flask_login import UserMixin
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
+
 
 """
 File with the database models described using SQLAlchemy
@@ -168,7 +176,7 @@ class Passenger(db.Model):
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
-    
+
     def to_json(self):
         return {"id": self.id, "username": self.user.username}
 
@@ -287,3 +295,151 @@ class Car(db.Model):
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+
+
+# TODO: move out to unit tests?
+def main():
+    db.reflect()
+    db.drop_all()
+
+    db.create_all()
+
+    User.create_user(
+        username="dbsrxvqujuce",
+        password="$N:K]r3",
+        first_name="John",
+        last_name="Smith",
+    )
+    User.create_user(
+        username="xwhxycctuyce",
+        password="]2[xrCh>",
+        first_name="Jane",
+        last_name="Doe",
+    )
+    User.create_user(
+        username="qrtdavjtzhwu",
+        password="F37ZLv,W",
+        first_name="Barack",
+        last_name="Obama",
+    )
+    User.create_user(
+        username="vsvvkeqgkczp",
+        password="N%2^t<4_",
+        first_name="Ada",
+        last_name="Lovelace",
+    )
+    User.create_user(
+        username="tvjkgyphhtfw",
+        password='Py88"B:$',
+        first_name="Edsger",
+        last_name="Dijkstra",
+    )
+    # Duplicate username, what happens?
+    # User.create_user(
+    #     username="tvjkgyphhtfw",
+    #     password='Py88"B:$',
+    #     first_name="Edsger",
+    #     last_name="Dijkstra",
+    # )
+
+    passengers = [
+        Passenger(id=1, rating=uniform(0.0, 5.0)),
+        Passenger(id=4, rating=uniform(0.0, 5.0)),
+    ]
+
+    for passenger in passengers:
+        db.session.add(passenger)
+
+    db.session.add_all(
+        [
+            Driver(id=2, rating=uniform(0.0, 5.0)),
+            Driver(id=3, rating=uniform(0.0, 5.0)),
+            Driver(id=5, rating=uniform(0.0, 5.0)),
+        ]
+    )
+    db.session.add_all(
+        [
+            Car(
+                license_plate="1-QDE-002",
+                model="Volkswagen Golf",
+                colour="Red",
+                passenger_places=5,
+            ),
+            Car(
+                license_plate="5-THX-435",
+                model="Renault Clio",
+                colour="Black",
+                passenger_places=5,
+            ),
+            Address(
+                address="Universiteit Antwerpen, Campus Middelheim, Middelheimlaan 1, 2020 Antwerpen "
+            ),
+        ]
+    )
+    db.session.commit()
+
+    driver1 = User.from_username("xwhxycctuyce").driver
+    driver1.cars.append(
+        Car(
+            license_plate="8-ABC-001",
+            model="Audi R8",
+            colour="White",
+            passenger_places=2,
+        )
+    )
+
+    db.session.commit()
+
+    db.session.add_all(
+        [
+            # Ride(driver_id=5, car_license_plate="5-THX-435"), # should fail
+            Ride(
+                driver_id=2,
+                passenger_places=3,
+                car_license_plate="8-ABC-001",
+                arrival_time="2020-02-12T10:00:00.00",
+                # departure_address_id=1,
+                # arrival_address_id=1,
+            ),
+        ]
+    )
+    db.session.commit()
+
+    driver2 = User.query.get(5).driver
+    driver2.cars.append(Car.query.get("5-THX-435"))
+    db.session.commit()
+
+    # should fail
+    # db.session.add(Ride(driver_id=5, car_license_plate="1-QDE-002"))
+    # db.session.commit()
+
+    # should work
+    db.session.add(
+        Ride(
+            driver_id=5,
+            passenger_places=3,
+            arrival_time="2020-02-12T10:00:00.00",
+            car_license_plate="5-THX-435",
+            # departure_address_id=1,
+            # arrival_address_id=1,
+        )
+    )
+    db.session.commit()
+
+    ride = Ride.query.get(2)
+    ride.requests.append(Passenger.query.get(4))
+    ride.requests.append(Passenger.query.get(1))
+    db.session.commit()
+
+    ride_requests = Ride.query.get(2).requests
+    ride_requests.remove(Passenger.query.get(1))
+    db.session.commit()
+
+    ride = Ride.query.get(1)
+    ride.passengers.append(Passenger.query.get(4))
+    ride.passengers.append(Passenger.query.get(1))
+    db.session.commit()
+
+
+if __name__ == "__main__":
+    main()
