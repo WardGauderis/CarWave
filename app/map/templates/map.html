@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_styles %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet-routing-machine.css') }}"/>
+
+    <style>
+        .leaflet-control-container .leaflet-top .leaflet-control-zoom a.leaflet-control-zoom-in {
+            border: 0;
+            background: #333333;
+            color: #bbbbbb;
+        }
+
+        .leaflet-control-container .leaflet-top .leaflet-control-zoom a.leaflet-control-zoom-out {
+            border: 0;
+            background: #333333;
+            color: #bbbbbb;
+        }
+    </style>
+
+{% endblock %}
+
+{% block app_content %}
+    <h1>Choose route</h1>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(form) }}
+        </div>
+    </div>
+
+    <h2 id="route1"></h2>
+    <h2 id="route2"></h2>
+
+    <div id="map" style="height: 720px;"></div>
+{% endblock %}
+
+{% block app_scripts %}
+
+    <script src="{{ url_for('.static', filename='leaflet.js') }}"></script>
+    <script src="{{ url_for('.static', filename='geocoder-control.js') }}"></script>
+    <script src="{{ url_for('.static', filename='leaflet-routing-machine.js') }}"></script>
+
+    <script type="text/javascript">
+        let map = L.map('map');
+
+        L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
+
+        let control = L.Routing.control({
+            waypoints: [
+                L.latLng(51.1842, 4.4212),
+                L.latLng(51.17, 4.2)
+            ],
+            show: false,
+            routeWhileDragging: true,
+            routeDragInterval: 200,
+            showAlternatives: true,
+            addWaypoints: false,
+            router: L.Routing.mapbox('pk.eyJ1IjoiZnVua3ltYW5pYWMiLCJhIjoiY2s2dDZzeGlxMG1lNzNmcGdoZGljdnp0bCJ9.5WI4sA19cj8iCPNkZemm9Q'),
+            lineOptions: {
+                styles: [{color: '#769ad4', opacity: 0.15, weight: 9},
+                    {color: '#769ad4', opacity: 0.8, weight: 6},
+                    {color: '#769ad4', opacity: 1, weight: 2}]
+            },
+
+            altLineOptions: {
+                styles: [{color: '#b0c5e6', opacity: 0.15, weight: 9},
+                    {color: '#b0c5e6', opacity: 0.8, weight: 6},
+                    {color: '#b0c5e6', opacity: 1, weight: 2}]
+            },
+        }).on('routesfound', function (result) {
+            const routes = result.routes;
+            if (routes.length >= 1) {
+                const dist1 = (routes[0].summary.totalDistance / 1000).toFixed(1);
+                const time1 = (routes[0].summary.totalTime / 60).toFixed(0);
+                document.getElementById("route1").innerHTML = "route 1: " + dist1 + "km - " + time1 + "min";
+            } else {
+                document.getElementById("route2").innerHTML = "";
+            }
+
+            if (routes.length >= 2) {
+                const dist2 = (routes[1].summary.totalDistance / 1000).toFixed(1);
+                const time2 = (routes[1].summary.totalTime / 60).toFixed(0);
+                document.getElementById("route2").innerHTML = "route 2: " + dist2 + "km - " + time2 + "min";
+            } else {
+                document.getElementById("route2").innerHTML = "";
+            }
+        }).addTo(map);
+
+        control._container.style.display = "None";
+
+        /*
+        let request = new XMLHttpRequest();
+
+        request.open('POST', "https://api.openrouteservice.org/v2/isochrones/driving-car");
+
+        request.setRequestHeader('Accept', 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8');
+        request.setRequestHeader('Content-Type', 'application/json');
+        request.setRequestHeader('Authorization', '5b3ce3597851110001cf624885c0861fe326429698f95aa3d19c9613');
+
+        request.onreadystatechange = function ()
+        {
+            if (this.readyState === 4)
+            {
+                const data = JSON.parse(this.responseText);
+                L.geoJSON(data, {
+                style: function (feature)
+                {
+                    return {color: feature.properties.color};
+                }}
+                ).bindPopup(function (layer)
+                {
+                    return layer.feature.properties.description;
+                }
+                ).addTo(map);
+            }
+        };
+
+        const way_point = control.getWaypoints()[0].latLng;
+        const body = '{"locations":[[' + way_point.lng + ',' + way_point.lat + ']],"range":[300,200]}';
+        request.send(body);
+        */
+
+        // {x} and {y} are the coordinates of where you are on the map
+        // {z} is the zoom level
+        // {s} is the subdomain of cartodb
+        L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
+
+    </script>
+{% endblock %}
