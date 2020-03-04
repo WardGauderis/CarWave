@@ -6,7 +6,7 @@ from flask_login import UserMixin
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db
+from app import db, login
 
 """
 File with the database models described using SQLAlchemy
@@ -113,6 +113,11 @@ class User(UserMixin, db.Model):
         ).decode("utf-8")
 
 
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+
 class Driver(db.Model):
     """
     Driver is a User
@@ -168,7 +173,7 @@ class Passenger(db.Model):
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
-    
+
     def to_json(self):
         return {"id": self.id, "username": self.user.username}
 
