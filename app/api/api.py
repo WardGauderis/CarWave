@@ -72,9 +72,7 @@ def register_drive():
             {
                 "id": ride.id,
                 "driver-id": ride.driver_id,
-                "passenger-ids": [  # altijd leeg bij registration, neem ik aan?
-                    passenger.id for passenger in ride.passengers
-                ],
+                "passenger-ids": [],
                 "passenger-places": ride.passenger_places,
                 # "from": address[ride.arrival_address_id],
                 # "to": address[ride.departure_address_id],
