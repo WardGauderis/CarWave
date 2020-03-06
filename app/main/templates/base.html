@@ -15,6 +15,7 @@
 {% endblock %}
 
 {% block content %}
+    <link rel="shortcut icon" href="{{ url_for('main.static', filename='favicon.ico') }}">
     <div class="container">
         {% with messages = get_flashed_messages() %}
             {% if messages %}
