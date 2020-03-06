@@ -28,6 +28,8 @@ def create_app(config=Config):
     app.register_blueprint(main_bp)
     from app.map import bp as map_bp
     app.register_blueprint(map_bp)
+    from app.text import bp as text_bp
+    app.register_blueprint(text_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)
