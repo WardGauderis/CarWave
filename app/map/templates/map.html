@@ -3,7 +3,8 @@
 {% block app_styles %}
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet-routing-machine.css') }}"/>
-    <link rel="Stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css"/>
+{#    <link rel="Stylesheet" href="{{ url_for('.static', filename='jquery-ui.min.css') }}"/>#}
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 
     <style>
     .leaflet-control-container .leaflet-top .leaflet-control-zoom a.leaflet-control-zoom-in
@@ -28,7 +29,12 @@
 
     <div class="ui-widget">
         <label for="from"> </label>
-        <input id="from">
+        <input id="from" placeholder="from">
+    </div>
+
+    <div class="ui-widget">
+        <label for="to"> </label>
+        <input id="to" placeholder="to">
     </div>
 
     <h2 id="routes"></h2>
@@ -41,26 +47,22 @@
     <script src="{{ url_for('.static', filename='leaflet.js') }}"></script>
     <script src="{{ url_for('.static', filename='geocoder-control.js') }}"></script>
     <script src="{{ url_for('.static', filename='leaflet-routing-machine.js') }}"></script>
-    <script src="{{ url_for('.static', filename='jquery-3.4.1.min.js') }}"></script>
-    <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js" ></script>
+    <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <script type="text/javascript">
-        if (jQuery.ui) {
-            alert("Success");
-        }
+
 
         let map = L.map('map', {
             minZoom: 2,
             maxZoom: 20
         });
 
+        // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
 
         let control = L.Routing.control({
-            waypoints: [
-                    L.latLng(51.1842, 4.4212),
-                    L.latLng(51.17, 4.2)
-                  ],
+            waypoints: [null, null],
             show: false,
             routeWhileDragging: true,
             routeDragInterval: 200,
@@ -103,37 +105,95 @@
         // {s} is the subdomain of cartodb
         L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
 
-        let from = document.getElementById("from");
-        from.onchange = function()
-        {
-            addWaypoint(from.value)
-         };
+        let fromOptions = [];
 
-        $( function()
-        {
-            $("#from").autocomplete({
-                source: function (request, response) {
-                    request.replace(/\s/g, '+');
-                    alert('yeah');
-
-                    $.ajax({
-                        url: "https://nominatim.openstreetmap.org/search?q=" + request + "&format=geojson",
-                        type: "GET",
-                        success: function (xhr) {
-                            response(xhr);
-                        },
-                        error: function (xhr) {
-                            alert(xhr);
+        $( "#from" ).autocomplete({
+            delay: 500,
+            minLength: 3,
+            source: function (request, response)
+            {
+                request.term.replace(/\s/g, '+');
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/search?q=" + request.term + "&format=geojson",
+                    type: "GET",
+                    success: function (xhr)
+                    {
+                        fromOptions = [];
+                        let tempOptions = [];
+                        for(let i = 0; i < xhr.features.length; i++)
+                        {
+                            const name = xhr.features[0].properties.display_name;
+                            const lnglat = xhr.features[0].geometry.coordinates;
+                            fromOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]})
+                            tempOptions.push(name);
                         }
-                    });
-                },
-                response: function (response)
-                {
-                    alert('yaya');
-                }
-            });
+                        response(tempOptions);
+                    },
+                    error: function (xhr)
+                    {
+                        alert(xhr);
+                    }
+                });
+            },
+            select: function (event, ui)
+            {
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/search?q=" + ui.item.label + "&format=geojson",
+                    type: "GET",
+                    success: function (xhr)
+                    {
+                        const lnglat = xhr.features[0].geometry.coordinates;
+                        control.spliceWaypoints(0, 1, L.latLng(lnglat[1], lnglat[0]));
+                    },
+                    error: function (xhr) {
+                        alert(xhr);
+                    }
+                })
+            }
         });
 
+        // copy pasta
+        $( "#to" ).autocomplete({
+            delay: 500,
+            minLength: 3,
+            source: function (request, response)
+            {
+                request.term.replace(/\s/g, '+');
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/search?q=" + request.term + "&format=geojson",
+                    type: "GET",
+                    success: function (xhr)
+                    {
+                        console.log(xhr);
+                        let options = [];
+                        for(let i = 0; i < xhr.features.length; i++)
+                        {
+                            options.push(xhr.features[i].properties.display_name);
+                        }
+                        response(options);
+                    },
+                    error: function (xhr)
+                    {
+                        alert(xhr);
+                    }
+                });
+            },
+            select: function (event, ui)
+            {
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/search?q=" + ui.item.label + "&format=geojson",
+                    type: "GET",
+                    success: function (xhr)
+                    {
+                        const lnglat = xhr.features[0].geometry.coordinates;
+                        control.spliceWaypoints(1, 1, L.latLng(lnglat[1], lnglat[0]));
+                    },
+                    error: function (xhr) {
+                        alert(xhr);
+                    }
+                })
+            }
+        });
 
     </script>
 {% endblock %}
