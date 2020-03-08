@@ -1,6 +1,6 @@
 import json
 
-from flask import Response, abort, request
+from flask import Response, abort, request, g
 
 from app.api import bp
 from app.auth.auth import token_auth
@@ -46,8 +46,6 @@ def authorize_user():
 @bp.route("/drives", methods=["POST"])
 @token_auth.login_required
 def register_drive():
-    # Strip 'Bearer ' prefix
-    token = request.headers.environ["HTTP_AUTHORIZATION"][7:]
     json = request.get_json() or {}
     try:
         start = json["from"]
@@ -57,34 +55,30 @@ def register_drive():
     except KeyError:
         abort(400, "Invalid format")
 
-    accepted = True  # TODO(Ward): condition?
-    if accepted:
-        # TODO: wie kan rides aanmaken? driver, passenger of beide?
-        user = User.from_token(token)
-        if user.driver is None:
-            abort(400, "Rides can only be created by drivers")
-        ride = Ride.create_ride(
-            driver_id=user.id,
-            passenger_places=passenger_places,
-            arrival_time=arrive_by
-        )
-        return (
-            {
-                "id": ride.id,
-                "driver-id": ride.driver_id,
-                "passenger-ids": [  # altijd leeg bij registration, neem ik aan?
-                    passenger.id for passenger in ride.passengers
-                ],
-                "passenger-places": ride.passenger_places,
-                # "from": address[ride.arrival_address_id],
-                # "to": address[ride.departure_address_id],
-                "arrive-by": ride.arrival_time,
-            },
-            201,
-            {"Location": f"/drives/{ride.id}"}
-        )
-    else:
-        abort(401, "Invalid authorization")
+    # TODO: wie kan rides aanmaken? driver, passenger of beide?
+    # enkel als driver stel ik voor (voor de api van de opdracht is elke user authomatisch een driver) - Ward
+
+    # if user.driver is None:
+    #     abort(400, "Rides can only be created by drivers")
+    user = g.current_user
+    ride = Ride.create_ride(
+        driver_id=user.id,
+        passenger_places=passenger_places,
+        arrival_time=arrive_by
+    )
+    return (
+        {
+            "id": ride.id,
+            "driver-id": ride.driver_id,
+            "passenger-ids": [],
+            "passenger-places": ride.passenger_places,
+            # "from": address[ride.arrival_address_id],
+            # "to": address[ride.departure_address_id],
+            "arrive-by": ride.arrival_time,
+        },
+        201,
+        {"Location": f"/drives/{ride.id}"}
+    )
 
 
 # FIXME: addressen
@@ -129,9 +123,8 @@ def get_passengers(drive_id):
 @token_auth.login_required
 def get_passenger_requests(drive_id):
     if request.method == "GET":
-        token = request.headers.environ["HTTP_AUTHORIZATION"][7:]
         ride = Ride.get_ride(drive_id)
-        user = User.from_token(token)
+        user = g.current_user
         if ride.driver_id == user.id:
             return Response(
                 json.dumps([
@@ -174,9 +167,10 @@ def get_passenger_requests(drive_id):
 
 @bp.route("/drives/<int:drive_id>/passenger-requests/<int:user_id>", methods=["POST"])
 @token_auth.login_required
-def accept_passenger_request(drive_id, user_id):
-    accepted = True
-    if accepted:
+def accept_passenger_request(drive_id, user_id):    #TODO accept user
+    ride = Ride.get_ride(drive_id)
+    user = g.current_user
+    if ride.driver_id == user.id:
         json = request.get_json() or {}
         try:
             action = json["action"]
@@ -202,7 +196,7 @@ def accept_passenger_request(drive_id, user_id):
         abort(401, "Invalid authorization")
 
 
-@bp.route("/drives/search", methods=["GET"])
+@bp.route("/drives/search", methods=["GET"])    #TODO search drive
 def search_drive():
     json = request.get_json() or {}
     try:

@@ -1,0 +1,7 @@
+https://www.color-hex.com/color-palette/83351
+
+#0e0f3b dark-blue       standard background
+#07407b less-dark-blue  box background
+#7fcdee light-blue      box background²
+#f7931e orange          highlights
+#ffffff white           text
