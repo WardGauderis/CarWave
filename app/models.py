@@ -42,15 +42,30 @@ ride_links = db.Table(
     ),
 )
 
-passenger_requests = db.Table(
-    "passenger_requests",
-    db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
-    db.Column(
-        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
-    ),
-    db.Column("status", db.Enum("pending", "declined", name="status_enum")),
-)
+
+class PassengerRequest(db.Model):
+    __tablename__ = "passenger_requests"
+    ___tableargs__ = [
+        # TODO: CheckConstraint, not present in ride_links
+        # TODO: CheckConstraint, not the same
+    ]
+
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
+    passenger_id = db.Column(
+        db.Integer, db.ForeignKey("passengers.id"), primary_key=True
+    )
+    status = db.Column(
+        db.Enum("pending", "declined", name="status_enum"),
+        default="pending",
+        nullable=False,
+    )
+
+    ride = db.relationship(
+        "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
+    )
+    passenger = db.relationship(
+        "Passenger", backref=db.backref("passengers", cascade="all, delete-orphan")
+    )
 
 
 # Entities
@@ -68,6 +83,14 @@ class User(UserMixin, db.Model):
     email_adress = db.Column(db.String(128))
     address_id = db.Column(db.Integer)
     phone_number = db.Column(db.String(32))
+    age = db.Column(db.Integer, db.CheckConstraint("13 <= age AND age <= 200"))
+    gender = db.Column(
+        db.Enum("male", "female", "other", name="gender_enum"),
+        default="male",
+        nullable=False,
+    )
+    # TODO: Gravatar?
+    # profile_picture = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
     def __repr__(self):
@@ -119,21 +142,44 @@ class User(UserMixin, db.Model):
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
-            {'reset_password': self.id, 'exp': datetime.utcnow() + timedelta(expires_in)},
-            current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+            {
+                "reset_password": self.id,
+                "exp": datetime.utcnow() + timedelta(expires_in),
+            },
+            current_app.config["SECRET_KEY"],
+            algorithm="HS256",
+        ).decode("utf-8")
 
     @staticmethod
     def verify_reset_password_token(token):
         try:
-            id = jwt.decode(token, current_app.config['SECRET_KEY'],
-                            algorithms=['HS256'])['reset_password']
-        except:
-            return
+            id = jwt.decode(
+                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+            )["reset_password"]
+        except jwt.DecodeError:
+            return None
         return User.query.get(id)
+
 
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+
+class Review(db.Model):
+    __tablename__ = "reviews"
+
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(
+        db.Numeric(precision=2, scale=1),
+        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
+        nullable=False,
+    )
+    text = db.Column(db.String(256), nullable=True)
+    reviewee_id = db.Column(db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"))
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"))
+
+    # TODO: can't review yourself
 
 
 class Driver(db.Model):
@@ -146,12 +192,6 @@ class Driver(db.Model):
     id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
         "User", backref=db.backref("driver", uselist=False, passive_deletes=True),
@@ -173,22 +213,12 @@ class Passenger(db.Model):
     id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        default=None,
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
         "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
     )
     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
-    requests = db.relationship(
-        "Ride", secondary=passenger_requests, back_populates="requests"
-    )
-
+    requests = db.relationship("Ride", secondary="passenger_requests")
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
 
@@ -204,11 +234,7 @@ class Ride(db.Model):
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
     driver = db.relationship("Driver", back_populates="rides")
     passenger_places = db.Column(
-        db.Integer,
-        # TODO: driver counts as one so there should be space for at least one more
-        # TODO: len(ride.passengers) <= passenger_places
-        db.CheckConstraint("passenger_places >= 2"),
-        nullable=False,
+        db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
     # TODO
     # Addable at a later date, but must check car's # of passenger places is
@@ -232,14 +258,9 @@ class Ride(db.Model):
     )
 
     passengers = db.relationship(
-        "Passenger",
-        secondary=ride_links,
-        back_populates="rides"
-        # FIXME: constraint, len(passengers) < car.num_passengers
+        "Passenger", secondary="ride_links", back_populates="rides"
     )
-    requests = db.relationship(
-        "Passenger", secondary=passenger_requests, back_populates="requests"
-    )
+    requests = db.relationship("Passenger", secondary="passenger_requests")
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
@@ -268,16 +289,6 @@ class Ride(db.Model):
         return True
 
 
-# class Address(db.Model):
-#     __tablename__ = "addresses"
-
-#     id = db.Column(db.Integer, primary_key=True)
-#     address = db.Column(db.String(256), unique=True, index=True, nullable=False)
-
-#     def __repr__(self):
-#         return f"<Address(id={self.id}, address={self.address}>"
-
-
 class Car(db.Model):
     __tablename__ = "cars"
 
@@ -290,7 +301,7 @@ class Car(db.Model):
         db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
 
-    drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
+    drivers = db.relationship("Driver", secondary="car_links", back_populates="cars")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"

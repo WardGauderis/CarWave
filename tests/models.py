@@ -48,20 +48,30 @@ ride_links = db.Table(
     ),
 )
 
-passenger_requests = db.Table(
-    "passenger_requests",
-    db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
-    db.Column(
-        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
-    ),
-    db.Column(
-        "status",
+
+class PassengerRequest(db.Model):
+    __tablename__ = "passenger_requests"
+    ___tableargs__ = [
+        # TODO: CheckConstraint, not present in ride_links
+        # TODO: CheckConstraint, not the same
+    ]
+
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
+    passenger_id = db.Column(
+        db.Integer, db.ForeignKey("passengers.id"), primary_key=True
+    )
+    status = db.Column(
         db.Enum("pending", "declined", name="status_enum"),
-        nullable=False,
         default="pending",
-    ),
-)
+        nullable=False,
+    )
+
+    ride = db.relationship(
+        "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
+    )
+    passenger = db.relationship(
+        "Passenger", backref=db.backref("passengers", cascade="all, delete-orphan")
+    )
 
 
 # Entities
@@ -79,6 +89,14 @@ class User(UserMixin, db.Model):
     email_adress = db.Column(db.String(128))
     address_id = db.Column(db.Integer)
     phone_number = db.Column(db.String(32))
+    age = db.Column(db.Integer, db.CheckConstraint("13 <= age AND age <= 200"))
+    gender = db.Column(
+        db.Enum("male", "female", "other", name="gender_enum"),
+        default="male",
+        nullable=False,
+    )
+    # TODO: Gravatar?
+    # profile_picture = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
     def __repr__(self):
@@ -112,6 +130,22 @@ class User(UserMixin, db.Model):
         return User.query.filter_by(username=username).one_or_none()
 
 
+class Review(db.Model):
+    __tablename__ = "reviews"
+
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(
+        db.Numeric(precision=2, scale=1),
+        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
+        nullable=False,
+    )
+    text = db.Column(db.String(256), nullable=True)
+    reviewee_id = db.Column(db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"))
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"))
+
+    # TODO: can't review yourself
+
+
 class Driver(db.Model):
     """
     Driver is a User
@@ -122,12 +156,6 @@ class Driver(db.Model):
     id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
         "User", backref=db.backref("driver", uselist=False, passive_deletes=True),
@@ -149,21 +177,12 @@ class Passenger(db.Model):
     id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
     )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        default=None,
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
 
     user = db.relationship(
         "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
     )
     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
-    requests = db.relationship(
-        "Ride", secondary=passenger_requests, back_populates="requests"
-    )
+    requests = db.relationship("Ride", secondary="passenger_requests")
 
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
@@ -180,11 +199,7 @@ class Ride(db.Model):
     driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
     driver = db.relationship("Driver", back_populates="rides")
     passenger_places = db.Column(
-        db.Integer,
-        # TODO: driver counts as one so there should be space for at least one more
-        # TODO: len(ride.passengers) <= passenger_places
-        db.CheckConstraint("passenger_places >= 2"),
-        nullable=False,
+        db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
     # TODO
     # Addable at a later date, but must check car's # of passenger places is
@@ -198,24 +213,13 @@ class Ride(db.Model):
     car = db.relationship("Car")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    # departure_time = db.Column(db.DateTime, nullable=False)
-    # departure_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
-    arrival_time = db.Column(db.DateTime, nullable=False)
-    # arrival_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
+    departure_time = db.Column(db.DateTime, nullable=True)
+    arrival_time = db.Column(db.DateTime, nullable=True)
 
     passengers = db.relationship(
-        "Passenger",
-        secondary=ride_links,
-        back_populates="rides"
-        # FIXME: constraint, len(passengers) < car.num_passengers
+        "Passenger", secondary="ride_links", back_populates="rides"
     )
-    requests = db.relationship(
-        "Passenger", secondary=passenger_requests, back_populates="requests"
-    )
+    requests = db.relationship("Passenger", secondary="passenger_requests")
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
@@ -249,20 +253,17 @@ class Car(db.Model):
 
     license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
-    # Enum?
     colour = db.Column(db.String(32), nullable=False)
-    # TODO: # of passengers driver counts as one of the passengers
     passenger_places = db.Column(
         db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
 
-    drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
+    drivers = db.relationship("Driver", secondary="car_links", back_populates="cars")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
 
 
-# TODO: move out to unit tests?
 def main():
     db.reflect()
     db.drop_all()
@@ -307,21 +308,12 @@ def main():
     #     last_name="Dijkstra",
     # )
 
-    passengers = [
-        Passenger(id=1, rating=uniform(0.0, 5.0)),
-        Passenger(id=4, rating=uniform(0.0, 5.0)),
-    ]
+    passengers = [Passenger(id=1), Passenger(id=4)]
 
     for passenger in passengers:
         db.session.add(passenger)
 
-    db.session.add_all(
-        [
-            Driver(id=2, rating=uniform(0.0, 5.0)),
-            Driver(id=3, rating=uniform(0.0, 5.0)),
-            Driver(id=5, rating=uniform(0.0, 5.0)),
-        ]
-    )
+    db.session.add_all([Driver(id=2), Driver(id=3), Driver(id=5)])
     db.session.add_all(
         [
             Car(
@@ -336,9 +328,6 @@ def main():
                 colour="Black",
                 passenger_places=5,
             ),
-            # Address(
-            #     address="Universiteit Antwerpen, Campus Middelheim, Middelheimlaan 1, 2020 Antwerpen "
-            # ),
         ]
     )
     db.session.commit()
@@ -363,8 +352,6 @@ def main():
                 passenger_places=3,
                 car_license_plate="8-ABC-001",
                 arrival_time="2020-02-12T10:00:00.00",
-                # departure_address_id=1,
-                # arrival_address_id=1,
             ),
         ]
     )
@@ -385,8 +372,6 @@ def main():
             passenger_places=3,
             arrival_time="2020-02-12T10:00:00.00",
             car_license_plate="5-THX-435",
-            # departure_address_id=1,
-            # arrival_address_id=1,
         )
     )
     db.session.commit()
@@ -405,11 +390,7 @@ def main():
     ride.passengers.append(Passenger.query.get(1))
     db.session.commit()
 
-    query = (
-        db.session.query(passenger_requests)
-        .filter(passenger_requests.c.ride_id == 2)
-        .all()
-    )
+    query = db.session.query(PassengerRequest).filter_by(ride_id=2).all()
 
 
 if __name__ == "__main__":
