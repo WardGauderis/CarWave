@@ -3,7 +3,6 @@
 {% block app_styles %}
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet-routing-machine.css') }}"/>
-{#    <link rel="Stylesheet" href="{{ url_for('.static', filename='jquery-ui.min.css') }}"/>#}
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 
     <style>
@@ -31,26 +30,33 @@
 {% endblock %}
 
 {% block app_content %}
-        <h1>Choose route</h1>
 
-<div class="row">
-    <div class="ui-widget col-xs-5">
-        <label for="from"> </label>
+
+<div class="form-row">
+    <div class="ui-widget col-sm" style="padding:10px">
         <input id="from" class="form-control" placeholder="from">
     </div>
 
-    <div class="ui-widget col-xs-5">
-        <label for="to"> </label>
+    <div class="ui-widget col-sm" style="padding:10px">
         <input id="to" class="form-control" placeholder="to">
     </div>
-
-    <div class="col-xs-2">
-        <button id="reverse" type="button" class="btn btn-primary">&#8645</button>
+    <div class="col-sm-auto" style="padding:10px">
+        <button id="reverse" type="button" class="btn btn-primary" >&#8645</button>
     </div>
 </div>
-    <h2 id="routes"></h2>
 
-    <div id="map" style="height: 720px;"></div>
+<div id="map" style="height: 720px;"></div>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-body" >
+                <h5 id="route" class="card-title">No route selected</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block app_scripts %}
@@ -68,10 +74,10 @@
             maxZoom: 20
         }).setView([50.8, 4.6], 9);
 
-
-
         // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
+
+
 
         let control = L.Routing.control({
             waypoints: [null, null],
@@ -88,26 +94,20 @@
             altLineOptions: {styles: [{color: '#b0c5e6', opacity: 0.15, weight: 9},
                                       {color: '#b0c5e6', opacity: 0.8 , weight: 6},
                                       {color: '#b0c5e6', opacity: 1   , weight: 2}]},
-        }).on('routesfound', function(result)
-        {
-            const routes = result.routes;
-            let str = "";
-
-            for(let i = 0; i < routes.length; i++)
-            {
-                const dist = (routes[i].summary.totalDistance / 1000).toFixed(1);
-                const time = (routes[i].summary.totalTime / 60).toFixed(0);
-                str += "route " + i + ": " + dist + "km - " + time + "min<br>";
-
-                document.getElementById("routes").innerHTML = str;
-            }
         }).on('routingerror', function(result)
         {
-            document.getElementById("routes").innerHtml = "no route found";
+            document.getElementById("route").innerHtml = "no route found";
         }).on('routingstart', function(result)
         {
-            document.getElementById("routes").innerHtml = "calculating routes";
+            document.getElementById("route").innerHtml = "calculating route";
+        }).on('routeselected', function(result)
+        {
+            const dist = (result.route.summary.totalDistance / 1000).toFixed(1);
+            const time = (result.route.summary.totalTime / 60).toFixed(0);
+
+            document.getElementById("route").innerHTML = (time + "min (" + dist + "km)");
         }).addTo(map);
+
 
         // this hides the plan from the map
         control._container.style.display = "None";
@@ -171,7 +171,6 @@
 
         from.autocomplete({
             delay: 500,
-            minLength: 3,
             source: function (request, response)
             {
                 getNewRoutes(request, response, 'from');
@@ -185,7 +184,6 @@
         // copy pasta
         to.autocomplete({
             delay: 500,
-            minLength: 3,
             source: function (request, response)
             {
                 getNewRoutes(request, response, 'to');
