@@ -20,23 +20,34 @@
         background: #333333;
         color: #bbbbbb;
     }
+
+    {# brings the autocomplete field to teh front of the map#}
+    .ui-autocomplete
+    {
+        z-index: 9999 !important;
+    }
     </style>
 
 {% endblock %}
 
 {% block app_content %}
-    <h1>Choose route</h1>
+        <h1>Choose route</h1>
 
-    <div class="ui-widget">
+<div class="row">
+    <div class="ui-widget col-xs-5">
         <label for="from"> </label>
-        <input id="from" placeholder="from">
+        <input id="from" class="form-control" placeholder="from">
     </div>
 
-    <div class="ui-widget">
+    <div class="ui-widget col-xs-5">
         <label for="to"> </label>
-        <input id="to" placeholder="to">
+        <input id="to" class="form-control" placeholder="to">
     </div>
 
+    <div class="col-xs-2">
+        <button id="reverse" type="button" class="btn btn-primary">&#8645</button>
+    </div>
+</div>
     <h2 id="routes"></h2>
 
     <div id="map" style="height: 720px;"></div>
@@ -52,11 +63,12 @@
 
     <script type="text/javascript">
 
-
         let map = L.map('map', {
             minZoom: 2,
             maxZoom: 20
-        });
+        }).setView([50.8, 4.6], 9);
+
+
 
         // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
@@ -73,9 +85,9 @@
                                    {color: '#769ad4', opacity: 0.8 , weight: 6},
                                    {color: '#769ad4', opacity: 1   , weight: 2}]},
 
-           altLineOptions: {styles: [{color: '#b0c5e6', opacity: 0.15, weight: 9},
-                                     {color: '#b0c5e6', opacity: 0.8 , weight: 6},
-                                     {color: '#b0c5e6', opacity: 1   , weight: 2}]},
+            altLineOptions: {styles: [{color: '#b0c5e6', opacity: 0.15, weight: 9},
+                                      {color: '#b0c5e6', opacity: 0.8 , weight: 6},
+                                      {color: '#b0c5e6', opacity: 1   , weight: 2}]},
         }).on('routesfound', function(result)
         {
             const routes = result.routes;
@@ -105,95 +117,94 @@
         // {s} is the subdomain of cartodb
         L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
 
-        let fromOptions = [];
 
-        $( "#from" ).autocomplete({
+        let fromOptions = [];
+        let toOptions = [];
+
+        let getNewRoutes = function(request, response, which)
+        {
+            request.term.replace(/\s/g, '+');
+            $.ajax({
+                url: "https://nominatim.openstreetmap.org/search?q=" + request.term + "&format=geojson",
+                type: "GET",
+                success: function (xhr)
+                {
+                    let tempOptions = [];
+                    for(let i = 0; i < xhr.features.length; i++)
+                    {
+                        const name = xhr.features[i].properties.display_name;
+                        const lnglat = xhr.features[i].geometry.coordinates;
+                        tempOptions.push(name);
+                        tempOptions = [...new Set(tempOptions)];
+
+                        if(which === 'from') fromOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
+                        else if(which === 'to') toOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
+                    }
+                    response(tempOptions);
+                },
+                error: function (xhr)
+                {
+                    alert(xhr);
+                }
+            });
+        };
+
+        let updateWaypoints = function(location, which)
+        {
+            if(which === 'from')
+            {
+                const elem = fromOptions.find(elem => elem.name === location);
+                control.spliceWaypoints(0, 1, L.latLng(elem.latlng));
+            }
+            else if(which === 'to')
+            {
+                const elem = toOptions.find(elem => elem.name === location);
+                control.spliceWaypoints(1, 1, L.latLng(elem.latlng));
+            }
+        };
+
+        let from = $("#from");
+        let to = $("#to");
+
+        from.val('');
+        to.val('');
+
+        from.autocomplete({
             delay: 500,
             minLength: 3,
             source: function (request, response)
             {
-                request.term.replace(/\s/g, '+');
-                $.ajax({
-                    url: "https://nominatim.openstreetmap.org/search?q=" + request.term + "&format=geojson",
-                    type: "GET",
-                    success: function (xhr)
-                    {
-                        fromOptions = [];
-                        let tempOptions = [];
-                        for(let i = 0; i < xhr.features.length; i++)
-                        {
-                            const name = xhr.features[0].properties.display_name;
-                            const lnglat = xhr.features[0].geometry.coordinates;
-                            fromOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]})
-                            tempOptions.push(name);
-                        }
-                        response(tempOptions);
-                    },
-                    error: function (xhr)
-                    {
-                        alert(xhr);
-                    }
-                });
+                getNewRoutes(request, response, 'from');
             },
             select: function (event, ui)
             {
-                $.ajax({
-                    url: "https://nominatim.openstreetmap.org/search?q=" + ui.item.label + "&format=geojson",
-                    type: "GET",
-                    success: function (xhr)
-                    {
-                        const lnglat = xhr.features[0].geometry.coordinates;
-                        control.spliceWaypoints(0, 1, L.latLng(lnglat[1], lnglat[0]));
-                    },
-                    error: function (xhr) {
-                        alert(xhr);
-                    }
-                })
+                updateWaypoints(ui.item.label, 'from');
             }
         });
 
         // copy pasta
-        $( "#to" ).autocomplete({
+        to.autocomplete({
             delay: 500,
             minLength: 3,
             source: function (request, response)
             {
-                request.term.replace(/\s/g, '+');
-                $.ajax({
-                    url: "https://nominatim.openstreetmap.org/search?q=" + request.term + "&format=geojson",
-                    type: "GET",
-                    success: function (xhr)
-                    {
-                        console.log(xhr);
-                        let options = [];
-                        for(let i = 0; i < xhr.features.length; i++)
-                        {
-                            options.push(xhr.features[i].properties.display_name);
-                        }
-                        response(options);
-                    },
-                    error: function (xhr)
-                    {
-                        alert(xhr);
-                    }
-                });
+                getNewRoutes(request, response, 'to');
             },
             select: function (event, ui)
             {
-                $.ajax({
-                    url: "https://nominatim.openstreetmap.org/search?q=" + ui.item.label + "&format=geojson",
-                    type: "GET",
-                    success: function (xhr)
-                    {
-                        const lnglat = xhr.features[0].geometry.coordinates;
-                        control.spliceWaypoints(1, 1, L.latLng(lnglat[1], lnglat[0]));
-                    },
-                    error: function (xhr) {
-                        alert(xhr);
-                    }
-                })
+                updateWaypoints(ui.item.label, 'to');
             }
         });
+
+        document.getElementById('reverse').onclick = function()
+        {
+            let temp = to.val();
+            to.val(from.val());
+            from.val(temp);
+
+            updateWaypoints(from.val(), 'from');
+            updateWaypoints(to.val(), 'to');
+        };
 
     </script>
 {% endblock %}
