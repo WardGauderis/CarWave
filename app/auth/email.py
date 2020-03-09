@@ -17,8 +17,8 @@ def send_password_reset_email(user):
     token = user.get_reset_password_token()
     send_email('[Carwave] Reset Your Password',
                recipients=[user.email],
-               text_body=render_template('reset_password.txt',
+               text_body=render_template('reset_password_email.txt',
                                          user=user, token=token),
-               html_body=render_template('reset_password.html',
+               html_body=render_template('reset_password_email.html',
                                          user=user, token=token))
 
