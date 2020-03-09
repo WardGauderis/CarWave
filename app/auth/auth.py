@@ -67,7 +67,8 @@ def register():
             username=form.username.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
-            email=form.email,            password=form.password.data,
+            email=form.email.data,
+            password=form.password.data,
         )
         flash("Congratulations, you are now a CarWave user!")
         return redirect(url_for("auth.login"))
