@@ -1,9 +1,11 @@
 from flask import flash, g, redirect, render_template, request, url_for
 from flask_httpauth import HTTPTokenAuth
 from flask_login import current_user, login_user, logout_user
+from flask_mail import Message
 from werkzeug.urls import url_parse
 
 from app.auth import bp
+from app import mail
 from app import db
 from app.auth.forms import LoginForm, RegistrationForm
 from app.errors.errors import api_error
@@ -65,7 +67,7 @@ def register():
             username=form.username.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
-            password=form.password.data,
+            email=form.email,            password=form.password.data,
         )
         flash("Congratulations, you are now a CarWave user!")
         return redirect(url_for("auth.login"))
@@ -80,7 +82,9 @@ def reset_password_request():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             send_password_reset_email(user)
-        flash('Check your email for the instructions to reset your password')
+            flash('Check your email for the instructions to reset your password')
+        else:
+            flash('No account found with that email')
         return redirect(url_for('auth.login'))
     return render_template('reset_password_request.html',
                            title='Reset Password', form=form)
@@ -100,3 +104,11 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
+
+@bp.route('/contact/', methods=['get', 'post'])
+def contact():
+    msg = Message("Feedback", recipients=['mano.marichal@gmail.com'])
+    msg.body = render_template('test.txt')
+    mail.send(msg)
+    print("oops")
+    return redirect('auth.login')
