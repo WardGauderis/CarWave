@@ -1,83 +1,22 @@
-<style>
-.nav.navbar-nav li a
-{
-   color: #fff;
-}
+<nav class="navbar navbar-expand navbar-dark justify-content-between" style="background-color:#0e0f3b">
+      <a class="navbar-brand" href="./" style="font-size: 28px; font-family:Varela Round; color:#f7931e;padding:0">carwave</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+      </button>
 
-.navbar-default .navbar-brand {
-    color: #f7931e;
-}
-</style>
+    {% if current_user.is_anonymous %}#}
+    <a class="navbar-brand" href="{{ url_for('auth.login') }}">login</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    {% else %}
+    <a class="navbar-brand" href="{{ url_for('auth.logout') }}">login</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    {% endif %}
 
-<header class="navbar navbar-inverse" style="background-color:#0e0f3b; border:none; border-radius:0">
-        <div class="navbar-header">
-            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a href="./" class="navbar-brand">Carwave</a>
-        </div>
-        <nav class="collapse navbar-collapse bs-navbar-collapse navbar-dark" role="navigation">
-            <ul class="nav navbar-nav navbar-right">
-                <li class="nav-link">
-                    <a href="./">Home</a>
-                </li>
-                <li>
-                    <a href="{{ url_for('map.map') }}">Map</a>
-                </li>
-                <li>
-                    <a href="{{ url_for('text.about') }}">About</a>
-                </li>
-                {% if current_user.is_anonymous %}
-                    <li>
-                        <a href="{{ url_for('auth.login') }}">Login</a>
-                    </li>
-                {% else %}
-                    <li>
-                        <a href="{{ url_for('auth.logout') }}">Logout</a>
-                    </li>
-                {% endif %}
-            </ul>
-        </nav>
-</header>
+</nav>
 
 
 
-{#<header class="navbar" style="background-color:#07407b;border:none; border-radius:0">#}
-{#    <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">#}
-{#        <ul class="navbar-nav navbar-right">#}
-{#            <li>#}
-{#                <a href="./">Home</a>#}
-{#            </li>#}
-{#            <li class="nav-item">#}
-{#                <a class="nav-link" href="{{ url_for('map.map') }}">Map</a>#}
-{#            </li>#}
-{#            {% if current_user.is_anonymous %}#}
-{#                <li><a href="{{ url_for('auth.login') }}">Login</a></li>#}
-{#            {% else %}#}
-{#                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>#}
-{#            {% endif %}#}
-{#        </ul>#}
-{#    </nav>#}
-{#</header>#}
-
-
-{##}
-{#<nav class="navbar navbar-expand-sm bg-primary navbar-dark">#}
-{#  <ul class="navbar-nav">#}
-{#    <li class="nav-item active">#}
-{#      <a class="nav-link" href="#">Carwave</a>#}
-{#    </li>#}
-{#    <li class="nav-item">#}
-{#      <a class="nav-link" href="#">Map</a>#}
-{#    </li>#}
-{#    <li class="nav-item">#}
-{#      <a class="nav-link" href="#">Login</a>#}
-{#    </li>#}
-{#    <li class="nav-item">#}
-{#      <a class="nav-link" href="#">About</a>#}
-{#    </li>#}
-{#  </ul>#}
-{#</nav>#}
