@@ -56,14 +56,17 @@ def register_drive():
         abort(400, "Invalid format")
 
     # TODO: wie kan rides aanmaken? driver, passenger of beide?
-    # enkel als driver stel ik voor (voor de api van de opdracht is elke user authomatisch een driver) - Ward
+    # enkel als driver stel ik voor (voor de api van de opdracht is elke user automatisch een driver) - Ward
+    # FIXME: A user is always a driver.
 
     # if user.driver is None:
     #     abort(400, "Rides can only be created by drivers")
     user = g.current_user
-    ride = Ride.create_ride(
+    ride = Ride.create(
         driver_id=user.id,
         passenger_places=passenger_places,
+        departure_address=start,
+        arrival_address=stop,
         arrival_time=arrive_by
     )
     return (
@@ -72,8 +75,8 @@ def register_drive():
             "driver-id": ride.driver_id,
             "passenger-ids": [],
             "passenger-places": ride.passenger_places,
-            # "from": address[ride.arrival_address_id],
-            # "to": address[ride.departure_address_id],
+            "from": ride.arrival_address,
+            "to": ride.departure_address,
             "arrive-by": ride.arrival_time,
         },
         201,

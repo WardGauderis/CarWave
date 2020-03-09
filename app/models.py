@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import jwt
 from flask import current_app
 from flask_login import UserMixin
+from geoalchemy2 import Geometry
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -219,6 +220,7 @@ class Passenger(db.Model):
     )
     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
     requests = db.relationship("Ride", secondary="passenger_requests")
+
     def __repr__(self):
         return f"<Passenger(id={self.id}, rating={self.rating})>"
 
@@ -249,13 +251,9 @@ class Ride(db.Model):
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     departure_time = db.Column(db.DateTime, nullable=False)
-    departure_address_id = db.Column(
-        db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    )
+    departure_address = db.Column(Geometry("POINT"), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
-    arrival_address_id = db.Column(
-        db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    )
+    arrival_address = db.Column(Geometry("POINT"), nullable=False)
 
     passengers = db.relationship(
         "Passenger", secondary="ride_links", back_populates="rides"
