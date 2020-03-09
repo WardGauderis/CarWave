@@ -106,10 +106,3 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
     return render_template('reset_password.html', form=form)
 
-@bp.route('/contact/', methods=['get', 'post'])
-def contact():
-    msg = Message("Feedback", recipients=['mano.marichal@gmail.com'])
-    msg.body = render_template('test.txt')
-    mail.send(msg)
-    print("oops")
-    return redirect('auth.login')

@@ -6,6 +6,7 @@ class Config:
     Config class with values that is passed to the flask application
     """
 
+    # TODO official carwave email
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = 1
