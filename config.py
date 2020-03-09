@@ -6,6 +6,14 @@ class Config:
     Config class with values that is passed to the flask application
     """
 
+    # TODO official carwave email
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = 1
+    MAIL_USERNAME = 'hallobesteploppers@gmail.com'
+    MAIL_DEFAULT_SENDER = 'hallobesteploppers@gmail.com'
+    MAIL_PASSWORD = 'j3icT8XWy9FB7ig'
+
     SQLALCHEMY_DATABASE_URI = environ.get(
         "DATABASE_URI") or 'postgresql://app@localhost/carwave_db?user=postgres&password=postgres'
     # SQLALCHEMY_ECHO = True

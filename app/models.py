@@ -57,7 +57,7 @@ class User(UserMixin, db.Model):
 
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
-    email_adress = db.Column(db.String(128))
+    email = db.Column(db.String(128), nullable=False)
     address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
     phone_number = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
