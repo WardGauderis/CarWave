@@ -18,7 +18,7 @@ def register_user():
     except KeyError:
         abort(400, "Invalid format")
 
-    user = User.create_user(
+    user = User.create(
         username=username, first_name=first_name, last_name=last_name, password=password
     )
     if user is None:
@@ -75,8 +75,8 @@ def register_drive():
             "driver-id": ride.driver_id,
             "passenger-ids": [],
             "passenger-places": ride.passenger_places,
-            "from": ride.arrival_address,
-            "to": ride.departure_address,
+            "from": ride.depart_from,
+            "to": ride.arrive_at,
             "arrive-by": ride.arrival_time,
         },
         201,
@@ -100,8 +100,8 @@ def get_drive(drive_id: int):
                 passenger.id for passenger in ride.passengers
             ],
             "passenger-places": ride.passenger_places,
-            "from": -1,
-            "start": -1,
+            "from": ride.depart_from,
+            "start": ride.arrive_at,
             "arrive-by": ride.arrival_time,
         },
         200,

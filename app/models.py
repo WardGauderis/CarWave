@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from json import loads
 
 import jwt
 from flask import current_app
 from flask_login import UserMixin
 from geoalchemy2 import Geometry
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -85,11 +87,7 @@ class User(UserMixin, db.Model):
     address_id = db.Column(db.Integer)
     phone_number = db.Column(db.String(32))
     age = db.Column(db.Integer, db.CheckConstraint("13 <= age AND age <= 200"))
-    gender = db.Column(
-        db.Enum("male", "female", "other", name="gender_enum"),
-        default="male",
-        nullable=False,
-    )
+    gender = db.Column(db.Enum("male", "female", "other", name="gender_enum"), nullable=True)
     # TODO: Gravatar?
     # profile_picture = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
@@ -98,7 +96,7 @@ class User(UserMixin, db.Model):
         return f"<User(id={self.id}, username={self.username})>"
 
     @staticmethod
-    def create_user(**kwargs) -> int:
+    def create(**kwargs) -> int:
         try:
             # TODO: Reject passwords shorter than a specified length. probably in the form
             kwargs["password_hash"] = generate_password_hash(kwargs.pop("password"))
@@ -108,6 +106,8 @@ class User(UserMixin, db.Model):
         try:
             user = User(**kwargs)
             db.session.add(user)
+            db.session.commit()
+            db.session.add(Driver(id=user.id))
             db.session.commit()
             return user
         except IntegrityError:
@@ -250,10 +250,10 @@ class Ride(db.Model):
     car = db.relationship("Car")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    departure_time = db.Column(db.DateTime, nullable=False)
-    departure_address = db.Column(Geometry("POINT"), nullable=False)
+    departure_time = db.Column(db.DateTime, nullable=True)
+    departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
-    arrival_address = db.Column(Geometry("POINT"), nullable=False)
+    arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
 
     passengers = db.relationship(
         "Passenger", secondary="ride_links", back_populates="rides"
@@ -264,19 +264,37 @@ class Ride(db.Model):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
     @staticmethod
-    def create_ride(**kwargs):
-        try:
-            ride = Ride(**kwargs)
-            db.session.add(ride)
-            db.session.commit()
-            return ride
-        except IntegrityError:
-            db.session.rollback()
-            return None
+    def create(**kwargs):
+        # try:
+            # TODO: Move this to the API request handler?
+        dep, arr = kwargs.pop("departure_address"), kwargs.pop("arrival_address")
+        kwargs["departure_address"] = f"SRID=4326;POINT({dep[0]} {dep[1]})"
+        kwargs["arrival_address"] = f"SRID=4326;POINT({arr[0]} {arr[1]})"
+        ride = Ride(**kwargs)
+        db.session.add(ride)
+        db.session.commit()
+        return ride
+        # except KeyError:
+        #     # Throw or error message?
+        #     return None
+        # except IntegrityError:
+        #     db.session.rollback()
+        #     return None
 
     @staticmethod
     def get_ride(ride_id: int):
         return Ride.query.get(ride_id)
+
+    @property
+    def depart_from(self):
+        point = loads(db.session.scalar(func.ST_AsGeoJson(self.departure_address)))
+        return point["coordinates"]
+
+    @property
+    def arrive_at(self):
+        point = loads(db.session.scalar(func.ST_AsGeoJson(self.arrival_address)))
+        return point["coordinates"]
+
 
     # FIXME: should be replaceable with a CheckConstraint
     def add_car(self, car) -> bool:

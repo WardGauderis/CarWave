@@ -1,12 +1,12 @@
 import os
 from datetime import datetime
+from json import loads
 
 from flask import Flask
-from sqlalchemy import func
 from flask_login import UserMixin
-from json import loads
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -92,11 +92,7 @@ class User(UserMixin, db.Model):
     address_id = db.Column(db.Integer)
     phone_number = db.Column(db.String(32))
     age = db.Column(db.Integer, db.CheckConstraint("13 <= age AND age <= 200"))
-    gender = db.Column(
-        db.Enum("male", "female", "other", name="gender_enum"),
-        default="male",
-        nullable=False,
-    )
+    gender = db.Column(db.Enum("male", "female", "other", name="gender_enum"), nullable=True)
     # TODO: Gravatar?
     # profile_picture = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
@@ -115,6 +111,8 @@ class User(UserMixin, db.Model):
         try:
             user = User(**kwargs)
             db.session.add(user)
+            db.session.commit()
+            db.session.add(Driver(id=user.id))
             db.session.commit()
             return user
         except IntegrityError:
@@ -142,12 +140,8 @@ class Review(db.Model):
         nullable=False,
     )
     text = db.Column(db.String(256), nullable=True)
-    reviewee_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"), nullable=False
-    )
-    author_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"), nullable=False
-    )
+    reviewee_id = db.Column(db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"))
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id", on_delete="CASCADE"))
 
     # TODO: can't review yourself
 
@@ -219,6 +213,7 @@ class Ride(db.Model):
     car = db.relationship("Car")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    departure_time = db.Column(db.DateTime, nullable=True)
     departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
@@ -242,9 +237,9 @@ class Ride(db.Model):
             db.session.add(ride)
             db.session.commit()
             return ride
-        except KeyError:
-            # Throw or error message?
-            return None
+        # except KeyError:
+        #     # Throw or error message?
+        #     return None
         except IntegrityError:
             db.session.rollback()
             return None
@@ -252,6 +247,17 @@ class Ride(db.Model):
     @staticmethod
     def get_ride(ride_id: int):
         return Ride.query.get(ride_id)
+
+    @property
+    def depart_from(self):
+        point = loads(db.session.scalar(func.ST_AsGeoJson(self.departure_address)))
+        return point["coordinates"]
+
+    @property
+    def arrive_at(self):
+        point = loads(db.session.scalar(func.ST_AsGeoJson(self.arrival_address)))
+        return point["coordinates"]
+
 
     # FIXME: should be replaceable with a CheckConstraint
     def add_car(self, car) -> bool:
@@ -267,7 +273,9 @@ class Car(db.Model):
 
     license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
+    # Enum?
     colour = db.Column(db.String(32), nullable=False)
+    # TODO: # of passengers driver counts as one of the passengers
     passenger_places = db.Column(
         db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )

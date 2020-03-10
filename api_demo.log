@@ -1,0 +1,286 @@
+http://127.0.0.1:5000/users/register
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Content-Length": "94"
+}
+Body:
+{
+    "username": "MarkP",
+    "firstname": "Mark",
+    "lastname": "Peeters",
+    "password": "MarkIsCool420"
+}
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "14",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:49 GMT"
+}
+Body:
+{
+    "id": 1
+}
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/users/register
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Content-Length": "94"
+}
+Body:
+{
+    "username": "MarkP",
+    "firstname": "Mark",
+    "lastname": "Peeters",
+    "password": "MarkIsCool420"
+}
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "82",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:49 GMT"
+}
+Body:
+{
+    "description": "This username is already in use",
+    "error": "Bad Request"
+}
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/users/auth
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Content-Length": "50"
+}
+Body:
+{
+    "username": "MarkP",
+    "password": "MarkIsCool420"
+}
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "133",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:49 GMT"
+}
+Body:
+{
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNTgzODgzNjQ5fQ.d6HPsDpwzc8M9Boxxn8fpYtM7Fu0zqjWQi9R_mSFCn0"
+}
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/users/auth
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Content-Length": "53"
+}
+Body:
+{
+    "username": "tvjkgyphhtfw",
+    "password": "Py88\"B:$"
+}
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "73",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:49 GMT"
+}
+Body:
+{
+    "description": "Invalid authorization",
+    "error": "Unauthorized"
+}
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/drives
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNTgzODgzNjQ5fQ.d6HPsDpwzc8M9Boxxn8fpYtM7Fu0zqjWQi9R_mSFCn0",
+    "Content-Length": "120"
+}
+Body:
+{
+    "from": [
+        51.130215,
+        4.571509
+    ],
+    "to": [
+        51.18417,
+        4.41931
+    ],
+    "passenger-places": 3,
+    "arrive-by": "2020-02-12T10:00:00.00"
+}
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "222",
+    "Location": "http://127.0.0.1:5000/drives/1",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:50 GMT"
+}
+Body:
+{
+    "arrive-by": "Wed, 12 Feb 2020 10:00:00 GMT",
+    "driver-id": 1,
+    "from": [
+        51.130215,
+        4.571509
+    ],
+    "id": 1,
+    "passenger-ids": [],
+    "passenger-places": 3,
+    "to": [
+        51.18417,
+        4.41931
+    ]
+}
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/drives/1
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json"
+}
+Body:
+None
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "225",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:50 GMT"
+}
+Body:
+{
+    "arrive-by": "Wed, 12 Feb 2020 10:00:00 GMT",
+    "driver-id": 1,
+    "from": [
+        51.130215,
+        4.571509
+    ],
+    "id": 1,
+    "passenger-ids": [],
+    "passenger-places": 3,
+    "start": [
+        51.18417,
+        4.41931
+    ]
+}
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/drives/1/passengers
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json"
+}
+Body:
+None
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "2",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:50 GMT"
+}
+Body:
+[]
+
+----------------------------------------------------------------------------------------------------
+
+http://127.0.0.1:5000/drives/1/passenger-requests
+
+Request
+Headers:
+{
+    "User-Agent": "python-requests/2.23.0",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Content-Type": "application/json",
+    "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiZXhwIjoxNTgzODgzNjQ5fQ.d6HPsDpwzc8M9Boxxn8fpYtM7Fu0zqjWQi9R_mSFCn0"
+}
+Body:
+None
+
+Response
+Headers:
+{
+    "Content-Type": "application/json",
+    "Content-Length": "2",
+    "Server": "Werkzeug/1.0.0 Python/3.6.9",
+    "Date": "Tue, 10 Mar 2020 23:10:50 GMT"
+}
+Body:
+[]
