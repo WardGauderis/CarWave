@@ -48,20 +48,4 @@ def create_app(config=Config):
     migrate.init_app(app, db)
     login.init_app(app)
 
-    @app.after_request
-    def after_request(response):
-        timestamp = strftime("[%Y-%b-%d %H:%M]")
-        req_json = request.get_json(silent=True)
-        logger.error(
-            "%s %s %s %s %s %s\n%s",
-            timestamp,
-            request.remote_addr,
-            request.method,
-            request.scheme,
-            request.full_path,
-            response.status,
-            json.dumps(req_json, indent=2) if req_json is not None else "",
-        )
-        return response
-
     return app
