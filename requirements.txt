@@ -1,10 +1,10 @@
-Flask               1.1.1
-Flask-Bootstrap4    4.0.2
-Flask-Migrate       2.5.3
-Flask-mail          0.9.1
-Flask-Login         0.5.0
-Flask-HTTPAuth      3.3.0
-Flask-WTF           0.14.3
-Flask-JWT           0.3.2
-setuptools          46.1.1
-psycopg2            2.8.4
+Flask==1.1.1
+Flask-Bootstrap4==4.0.2
+Flask-Migrate==2.5.3
+Flask-mail==0.9.1
+Flask-Login==0.5.0
+Flask-HTTPAuth==3.3.0
+Flask-WTF==0.14.3
+Flask-JWT==0.3.2
+setuptools==46.1.1
+psycopg2==2.8.4
