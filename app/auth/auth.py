@@ -13,6 +13,7 @@ from app.models import User
 from app.auth.forms import ResetPasswordRequestForm
 from app.auth.email import send_password_reset_email
 from app.auth.forms import ResetPasswordForm
+from app.auth.forms import EditProfileForm
 
 token_auth = HTTPTokenAuth("Bearer")
 
@@ -117,6 +118,25 @@ def user(username):
         {'author': user, 'body': 'Test post #1'},
         {'author': user, 'body': 'Test post #2'}
     ]
-    return render_template('user.html',
+    return render_template('profile.html',
                            user=user,
                            posts=posts)
+
+@bp.route('/user/<username>/edit', methods=['GET', 'POST'])
+@login_required
+def edit(username):
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        # current_user.email = form.email
+        # current_user.phone_number = form.phone_number
+        db.session.add(current_user)
+        db.session.commit()
+        return redirect(url_for('auth.user', username=username))
+    else:
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        # form.email = current_user.email
+        # form.phone_number = current_user.phone_number
+    return render_template('edit_profile.html', form=form)

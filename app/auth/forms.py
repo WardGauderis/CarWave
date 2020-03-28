@@ -40,6 +40,8 @@ class ResetPasswordForm(FlaskForm):
 class EditProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(max=64)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(max=64)])
-    about_me = StringField('About me')
+    # email = StringField('Email', validators=[DataRequired(), Length(max=128), Email()])
+    # phone_number = StringField('Phone number', validators=[Length(max=64)])
+    submit = SubmitField('Save changes')
 
 
