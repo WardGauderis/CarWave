@@ -1,6 +1,6 @@
 from flask import flash, g, redirect, render_template, request, url_for
 from flask_httpauth import HTTPTokenAuth
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user, login_required
 from flask_mail import Message
 from werkzeug.urls import url_parse
 
@@ -106,3 +106,17 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
     return render_template('reset_password.html', form=form)
 
+@bp.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first()
+    if user == None:
+        flash('User %s not found.' % username)
+        return redirect(url_for('index'))
+    posts = [
+        {'author': user, 'body': 'Test post #1'},
+        {'author': user, 'body': 'Test post #2'}
+    ]
+    return render_template('user.html',
+                           user=user,
+                           posts=posts)

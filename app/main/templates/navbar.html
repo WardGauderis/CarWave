@@ -1,16 +1,20 @@
 <nav class="navbar navbar-expand navbar-dark justify-content-between" style="background-color:#0e0f3b">
-      <a class="navbar-brand" href="./" style="font-size: 28px; font-family:Varela Round; color:#f7931e;padding:0">carwave</a>
+      <a class="navbar-brand" href="/" style="font-size: 28px; font-family:Varela Round; color:#f7931e;padding:0">carwave</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
       </button>
 
     {% if current_user.is_anonymous %}#}
-    <a class="navbar-brand" href="{{ url_for('auth.login') }}">login</a>
+    <a class="navbar-brand" href="{{ url_for('auth.login') }}">Login</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
     {% else %}
-    <a class="navbar-brand" href="{{ url_for('auth.logout') }}">logout</a>
+    <a class="navbar-brand" href="{{ url_for('auth.user', username=current_user.username) }}">Your Profile</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="{{ url_for('auth.logout') }}">Logout</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
