@@ -65,8 +65,7 @@ class User(UserMixin, db.Model):
 
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
-    email_adress = db.Column(db.String(128))
-    address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))
+    email = db.Column(db.String(128))
     phone_number = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
@@ -102,23 +101,6 @@ class User(UserMixin, db.Model):
     @staticmethod
     def from_username(username: str):
         return User.query.filter_by(username=username).one_or_none()
-
-    @staticmethod
-    def from_token(token):
-        try:
-            data = jwt.decode(
-                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
-            )
-            return User.query.get(data["id"])
-        except jwt.DecodeError:
-            return None
-
-    def get_token(self):
-        return jwt.encode(
-            {"id": self.id, "exp": datetime.utcnow() + timedelta(minutes=30)},
-            current_app.config["SECRET_KEY"],
-            algorithm="HS256",
-        ).decode("utf-8")
 
 
 class Driver(db.Model):
@@ -295,7 +277,6 @@ class Car(db.Model):
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
-
 
 # TODO: move out to unit tests?
 def main():

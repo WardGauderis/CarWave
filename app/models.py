@@ -57,8 +57,7 @@ class User(UserMixin, db.Model):
 
     first_name = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.String(64), nullable=False)
-    email = db.Column(db.String(128), nullable=False)
-    address_id = db.Column(db.Integer, db.ForeignKey("addresses.id"))   #TODO postgis
+    email = db.Column(db.String(128))
     phone_number = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
@@ -70,7 +69,6 @@ class User(UserMixin, db.Model):
     @staticmethod
     def create_user(**kwargs) -> int:
         try:
-            # TODO: Reject passwords shorter than a specified length. probably in the form
             kwargs["password_hash"] = generate_password_hash(kwargs.pop("password"))
         except KeyError:
             raise ValueError("No 'password' keyword argument was supplied")
@@ -80,7 +78,8 @@ class User(UserMixin, db.Model):
             db.session.add(user)
             db.session.commit()
             return user
-        except IntegrityError:
+        except IntegrityError as e:
+            print(e)
             db.session.rollback()
             # TODO: log error
             return None
