@@ -64,7 +64,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         # TODO: restrict password length
-        User.create_user(
+        User.create(
             username=form.username.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,

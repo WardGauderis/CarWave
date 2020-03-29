@@ -8,3 +8,4 @@ Flask-WTF==0.14.3
 Flask-JWT==0.3.2
 setuptools==46.1.1
 psycopg2==2.8.4
+GeoAlchemy2==0.7.0

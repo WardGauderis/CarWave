@@ -18,11 +18,12 @@ def register_user():
     except KeyError:
         abort(400, "Invalid format")
 
-    user = User.create_user(
+
+    user = User.create(
         username=username, first_name=first_name, last_name=last_name, password=password
     )
-    if user is None:
-        abort(400, "This username is already in use")
+    if not isinstance(user, User):
+        abort(400, user.statement)
     return {"id": user.id}, 201
 
 
@@ -55,25 +56,24 @@ def register_drive():
     except KeyError:
         abort(400, "Invalid format")
 
-    # TODO: wie kan rides aanmaken? driver, passenger of beide?
-    # enkel als driver stel ik voor (voor de api van de opdracht is elke user authomatisch een driver) - Ward
-
-    # if user.driver is None:
-    #     abort(400, "Rides can only be created by drivers")
     user = g.current_user
-    ride = Ride.create_ride(
+    ride = Ride.create(
         driver_id=user.id,
         passenger_places=passenger_places,
-        arrival_time=arrive_by
+        departure_address=start,
+        arrival_address=stop,
+        arrival_time = arrive_by,
     )
+    if not isinstance(ride, Ride):
+        abort(400, ride.statement)
     return (
         {
             "id": ride.id,
             "driver-id": ride.driver_id,
             "passenger-ids": [],
             "passenger-places": ride.passenger_places,
-            # "from": address[ride.arrival_address_id],
-            # "to": address[ride.departure_address_id],
+            "from": ride.depart_from,
+            "to": ride.arrive_at,
             "arrive-by": ride.arrival_time,
         },
         201,
@@ -84,7 +84,7 @@ def register_drive():
 # FIXME: addressen
 @bp.route("/drives/<int:drive_id>", methods=["GET"])
 def get_drive(drive_id: int):
-    ride = Ride.get_ride(drive_id)
+    ride = Ride.get(drive_id)
 
     if ride is None:
         abort(400, "Invalid drive id")
@@ -107,7 +107,7 @@ def get_drive(drive_id: int):
 
 @bp.route("/drives/<int:drive_id>/passengers", methods=["GET"])
 def get_passengers(drive_id):
-    ride = Ride.get_ride(drive_id)
+    ride = Ride.get(drive_id)
 
     if ride is None:
         abort(400, "Invalid drive id")
@@ -123,7 +123,10 @@ def get_passengers(drive_id):
 @token_auth.login_required
 def get_passenger_requests(drive_id):
     if request.method == "GET":
-        ride = Ride.get_ride(drive_id)
+        ride = Ride.get(drive_id)
+        if ride is None:
+            abort(400, f"Drive {drive_id} doesn't exist.")
+
         user = g.current_user
         if ride.driver_id == user.id:
             return Response(
@@ -168,7 +171,7 @@ def get_passenger_requests(drive_id):
 @bp.route("/drives/<int:drive_id>/passenger-requests/<int:user_id>", methods=["POST"])
 @token_auth.login_required
 def accept_passenger_request(drive_id, user_id):    #TODO accept user
-    ride = Ride.get_ride(drive_id)
+    ride = Ride.get(drive_id)
     user = g.current_user
     if ride.driver_id == user.id:
         json = request.get_json() or {}

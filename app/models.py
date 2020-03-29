@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 
 import jwt
 from flask import current_app
+from json import loads
+from geoalchemy2 import Geometry
+from sqlalchemy import func
 from flask_login import UserMixin
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -22,27 +25,41 @@ TODO:
 # The secondary tables for the many-to-many relationships
 
 car_links = db.Table(
+    # TODO: Cascade on delete
     "car_links",
     db.metadata,
-    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id")),
-    db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate")),
+    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id"), primary_key=True),
+    db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
 )
 
 ride_links = db.Table(
+    # Cascade on delete
     "ride_links",
     db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id")),
-    db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
+    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
+    db.Column(
+        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
+    ),
 )
 
-# TODO: add request status else we have no way to track declined requests
-# enum {PENDING, DECLINED}, ACCEPTED -> added to ride.passengers so no need
-passenger_requests = db.Table(
-    "passenger_requests",
-    db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id")),
-    db.Column("passenger_id", db.Integer, db.ForeignKey("passengers.id")),
-)
+
+class PassengerRequest(db.Model):
+    __tablename__ = "passenger_requests"
+    ___tableargs__ = [
+        # TODO: CheckConstraint, not present in ride_links
+        db.CheckConstraint("ride_id != passenger_id")
+    ]
+
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
+    passenger_id = db.Column(db.Integer, db.ForeignKey("passengers.id"), primary_key=True)
+    status = db.Column(db.Enum("pending", "declined", name="status_enum"), default="pending", nullable=False)
+
+    ride = db.relationship(
+        "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
+    )
+    passenger = db.relationship(
+        "Passenger", backref=db.backref("passengers", cascade="all, delete-orphan")
+    )
 
 
 # Entities
@@ -61,13 +78,11 @@ class User(UserMixin, db.Model):
     phone_number = db.Column(db.String(32))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
-    address = db.relationship("Address")
-
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
 
     @staticmethod
-    def create_user(**kwargs) -> int:
+    def create(**kwargs):
         try:
             kwargs["password_hash"] = generate_password_hash(kwargs.pop("password"))
         except KeyError:
@@ -77,12 +92,12 @@ class User(UserMixin, db.Model):
             user = User(**kwargs)
             db.session.add(user)
             db.session.commit()
+            db.session.add(Driver(id=user.id))
+            db.session.commit()
             return user
         except IntegrityError as e:
-            print(e)
             db.session.rollback()
-            # TODO: log error
-            return None
+            return e
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -121,9 +136,10 @@ class User(UserMixin, db.Model):
         try:
             id = jwt.decode(token, current_app.config['SECRET_KEY'],
                             algorithms=['HS256'])['reset_password']
-        except:
-            return
-        return User.query.get(id)
+        except jwt.DecodeError as e:
+            return e
+        return User.get(id)
+
 
 @login.user_loader
 def load_user(id):
@@ -180,7 +196,7 @@ class Passenger(db.Model):
     )
     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
     requests = db.relationship(
-        "Ride", secondary=passenger_requests, back_populates="requests"
+        "Ride", secondary="passenger_requests", back_populates="requests"
     )
 
     def __repr__(self):
@@ -199,93 +215,65 @@ class Ride(db.Model):
     driver = db.relationship("Driver", back_populates="rides")
     passenger_places = db.Column(
         db.Integer,
-        # TODO: river counts as one so there should be space for at least one more
+        # TODO: driver counts as one so there should be space for at least one more
         # TODO: len(ride.passengers) <= passenger_places
         db.CheckConstraint("passenger_places >= 2"),
         nullable=False,
     )
-    # TODO
-    # Addable at a later date, but must check car's # of passenger places is
-    # greater or equal to the ride's # of passengers
-    car_license_plate = db.Column(
-        db.String(16),
-        db.ForeignKey("cars.license_plate"),
-        # db.CheckConstraint("passenger_places <= car"),
-        nullable=True,
-    )
-    car = db.relationship("Car")
+
+    # car_license_plate = db.Column(
+    #     db.String(16),
+    #     db.ForeignKey("cars.license_plate"),
+    #     # db.CheckConstraint("passenger_places <= car"),
+    #     nullable=True,
+    # )
+    # car = db.relationship("Car")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    # departure_time = db.Column(db.DateTime, nullable=False)
-    # departure_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
-    # departure_address = db.relationship("Address")
+    departure_time = db.Column(db.DateTime, nullable=True)
+    departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
-    # arrival_address_id = db.Column(
-    #     db.Integer, db.ForeignKey("addresses.id"), nullable=False
-    # )
-    # arrival_address = db.relationship("Address")
+    arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
 
     passengers = db.relationship(
         "Passenger",
         secondary=ride_links,
         back_populates="rides"
-        # FIXME: constraint, len(passengers) < car.num_passengers
     )
     requests = db.relationship(
-        "Passenger", secondary=passenger_requests, back_populates="requests"
+        "Passenger", secondary="passenger_requests", back_populates="requests"
     )
 
-    # FIXME(Hayaan): Not needed so long as car is a nullable field (API spec).
-    # def __init__(self, **kwargs):
-    #     try:
-    #         driver = Driver.query.get(kwargs["driver_id"])
-    #         car = Car.query.get(kwargs["car_license_plate"])
-    #     except KeyError:
-    #         raise ValueError("Invalid driver_id or car_license_plate args")
-    #
-    #     if car not in driver.cars:
-    #         raise ValueError("The driver cannot use a car they do not own for a ride")
-    #
-    #     super(Ride, self).__init__(**kwargs)
-
     def __repr__(self):
-        return f"<Ride(id={self.id}, driver={self.driver_id})>"
+        return f"<Ride.create(id={self.id}, driver={self.driver_id})>"
 
     @staticmethod
-    def create_ride(**kwargs):
+    def create(**kwargs):
         try:
+            dep, arr = kwargs.pop("departure_address"), kwargs.pop("arrival_address")
+            kwargs["departure_address"] = f"SRID=4326;POINT({dep[0]} {dep[1]})"
+            kwargs["arrival_address"] = f"SRID=4326;POINT({arr[0]} {arr[1]})"
             ride = Ride(**kwargs)
             db.session.add(ride)
             db.session.commit()
             return ride
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            # TODO: log error
-            return None
+            return e
 
     @staticmethod
-    def get_ride(ride_id: int):
+    def get(ride_id: int):
         return Ride.query.get(ride_id)
 
-    # FIXME: should be replaceable with a CheckConstraint
-    def add_car(self, car) -> bool:
-        if self.passenger_places < car.passenger_places:
-            return False
-        self.car = car
-        db.session.commit()
-        return True
+    @property
+    def depart_from(self):
+        point = loads(db.session.scalar(func.ST_AsGeoJson(self.departure_address)))
+        return point["coordinates"]
 
-
-class Address(db.Model):
-    __tablename__ = "addresses"
-
-    id = db.Column(db.Integer, primary_key=True)
-    address = db.Column(db.String(256), unique=True, index=True, nullable=False)
-
-    def __repr__(self):
-        return f"<Address(id={self.id}, address={self.address}>"
+    @property
+    def arrive_at(self):
+        point = loads(db.session.scalar(func.ST_AsGeoJson(self.arrival_address)))
+        return point["coordinates"]
 
 
 class Car(db.Model):
@@ -293,7 +281,6 @@ class Car(db.Model):
 
     license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
-    # Enum?
     colour = db.Column(db.String(32), nullable=False)
     # TODO: # of passengers driver counts as one of the passengers
     passenger_places = db.Column(
