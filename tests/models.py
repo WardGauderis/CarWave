@@ -50,14 +50,12 @@ ride_links = db.Table(
 
 class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
-    ___tableargs__ = [
-        # TODO: CheckConstraint, not present in ride_links
-        db.CheckConstraint("ride_id != passenger_id")
-    ]
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
     passenger_id = db.Column(db.Integer, db.ForeignKey("passengers.id"), primary_key=True)
-    status = db.Column(db.Enum("pending", "declined", name="status_enum"), default="pending", nullable=False)
+    status = db.Column(db.Enum("accepted", "pending", "declined", name="status_enum"), default="pending", nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
+    last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
     ride = db.relationship(
         "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
@@ -66,8 +64,25 @@ class PassengerRequest(db.Model):
         "Passenger", backref=db.backref("passengers", cascade="all, delete-orphan")
     )
 
+    def update(self, action):
+        if action == "accept":
+            self.ride.passengers.append(self.passenger)
+            self.status = "accepted"
+            db.session.add(self.ride)
+        elif action == "reject":
+            self.status = "rejected"
+        else:
+            raise ValueError("Undefined action")
 
-# Entities
+        self.last_modified = datetime.utcnow()
+        db.session.add(self)
+
+        try:
+            db.session.commit()
+        except IntegrityError as e:
+            return e
+
+        return self
 
 
 class User(UserMixin, db.Model):
@@ -214,7 +229,7 @@ class Ride(db.Model):
     )
 
     def __repr__(self):
-        return f"<Ride.create(id={self.id}, driver={self.driver_id})>"
+        return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
     @staticmethod
     def create(**kwargs):
@@ -233,6 +248,22 @@ class Ride(db.Model):
     @staticmethod
     def get(ride_id: int):
         return Ride.query.get(ride_id)
+
+    @staticmethod
+    def get_all(limit: int = None):
+        if limit is None:
+            return Ride.query.all()
+        return Ride.query.limit(limit).all()
+
+    def post_passenger_request(self, passenger_id):
+        request = PassengerRequest(self.id, passenger_id)
+        db.session.add(request)
+        try:
+            db.session.commit()
+        except IntegrityError as e:
+            db.session.rollback()
+            return e
+        return request
 
     @property
     def depart_from(self):
@@ -260,6 +291,7 @@ class Car(db.Model):
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+
 
 
 def main():
@@ -303,6 +335,7 @@ def main():
 
     passengers = [
         Passenger(id=1, rating=uniform(0.0, 5.0)),
+        Passenger(id=2, rating=uniform(0.0, 5.0)),
         Passenger(id=4, rating=uniform(0.0, 5.0)),
     ]
 
@@ -364,7 +397,7 @@ def main():
         Ride.create(
             driver_id=5,
             passenger_places=3,
-            arrival_time="2020-02-12T10:00:00.00",
+            arrival_time="2020-02-24T10:43:42.00",
             departure_address=[51.184374, 4.420656],
             arrival_address=[51.219636, 4.403119],
         )
