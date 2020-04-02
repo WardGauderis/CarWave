@@ -1,6 +1,6 @@
 from flask import flash, g, redirect, render_template, request, url_for
 from flask_httpauth import HTTPTokenAuth
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user, login_required
 from flask_mail import Message
 from werkzeug.urls import url_parse
 
@@ -13,6 +13,7 @@ from app.models import User
 from app.auth.forms import ResetPasswordRequestForm
 from app.auth.email import send_password_reset_email
 from app.auth.forms import ResetPasswordForm
+from app.auth.forms import EditProfileForm
 
 token_auth = HTTPTokenAuth("Bearer")
 
@@ -63,7 +64,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         # TODO: restrict password length
-        User.create_user(
+        User.create(
             username=form.username.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
@@ -106,3 +107,36 @@ def reset_password(token):
         return redirect(url_for('auth.login'))
     return render_template('reset_password.html', form=form)
 
+@bp.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first()
+    if user == None:
+        flash('User %s not found.' % username)
+        return redirect(url_for('index'))
+    posts = [
+        {'author': user, 'body': 'Test post #1'},
+        {'author': user, 'body': 'Test post #2'}
+    ]
+    return render_template('profile.html',
+                           user=user,
+                           posts=posts)
+
+@bp.route('/user/<username>/edit', methods=['GET', 'POST'])
+@login_required
+def edit(username):
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.first_name = form.first_name.data
+        current_user.last_name = form.last_name.data
+        # current_user.email = form.email
+        # current_user.phone_number = form.phone_number
+        db.session.add(current_user)
+        db.session.commit()
+        return redirect(url_for('auth.user', username=username))
+    else:
+        form.first_name.data = current_user.first_name
+        form.last_name.data = current_user.last_name
+        # form.email = current_user.email
+        # form.phone_number = current_user.phone_number
+    return render_template('edit_profile.html', form=form)

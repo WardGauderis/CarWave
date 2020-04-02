@@ -1,10 +1,11 @@
 import json
 
 from flask import Response, abort, request, g
+from sqlalchemy.exc import DatabaseError
 
 from app.api import bp
 from app.auth.auth import token_auth
-from app.models import Ride, User
+from app.models import Ride, User, PassengerRequest
 
 
 @bp.route("/users/register", methods=["POST"])
@@ -18,11 +19,11 @@ def register_user():
     except KeyError:
         abort(400, "Invalid format")
 
-    user = User.create_user(
+    user = User.create(
         username=username, first_name=first_name, last_name=last_name, password=password
     )
-    if user is None:
-        abort(400, "This username is already in use")
+    if isinstance(user, DatabaseError):
+        abort(400, user.statement)
     return {"id": user.id}, 201
 
 
@@ -55,25 +56,25 @@ def register_drive():
     except KeyError:
         abort(400, "Invalid format")
 
-    # TODO: wie kan rides aanmaken? driver, passenger of beide?
-    # enkel als driver stel ik voor (voor de api van de opdracht is elke user authomatisch een driver) - Ward
-
-    # if user.driver is None:
-    #     abort(400, "Rides can only be created by drivers")
     user = g.current_user
-    ride = Ride.create_ride(
+    ride = Ride.create(
         driver_id=user.id,
         passenger_places=passenger_places,
-        arrival_time=arrive_by
+        departure_address=start,
+        arrival_address=stop,
+        arrival_time=arrive_by,
     )
+    if isinstance(ride, DatabaseError):
+        abort(500, ride.statement)
+
     return (
         {
             "id": ride.id,
             "driver-id": ride.driver_id,
             "passenger-ids": [],
             "passenger-places": ride.passenger_places,
-            # "from": address[ride.arrival_address_id],
-            # "to": address[ride.departure_address_id],
+            "from": ride.depart_from,
+            "to": ride.arrive_at,
             "arrive-by": ride.arrival_time,
         },
         201,
@@ -81,10 +82,9 @@ def register_drive():
     )
 
 
-# FIXME: addressen
 @bp.route("/drives/<int:drive_id>", methods=["GET"])
 def get_drive(drive_id: int):
-    ride = Ride.get_ride(drive_id)
+    ride = Ride.get(drive_id)
 
     if ride is None:
         abort(400, "Invalid drive id")
@@ -107,7 +107,7 @@ def get_drive(drive_id: int):
 
 @bp.route("/drives/<int:drive_id>/passengers", methods=["GET"])
 def get_passengers(drive_id):
-    ride = Ride.get_ride(drive_id)
+    ride = Ride.get(drive_id)
 
     if ride is None:
         abort(400, "Invalid drive id")
@@ -121,21 +121,23 @@ def get_passengers(drive_id):
 
 @bp.route("/drives/<int:drive_id>/passenger-requests", methods=["GET", "POST"])
 @token_auth.login_required
-def get_passenger_requests(drive_id):
+def passenger_requests(drive_id):
+    ride: Ride = Ride.get(drive_id)
+    if ride is None:
+        abort(400, f"Drive {drive_id} doesn't exist.")
+
+    user = g.current_user
     if request.method == "GET":
-        ride = Ride.get_ride(drive_id)
-        user = g.current_user
         if ride.driver_id == user.id:
             return Response(
                 json.dumps([
                     {
-                        "id": passenger.id,
-                        "username": passenger.user.username,
-                        # FIXME(Hayaan): shift to enum, e.g. passenger.request.status
-                        "status": "pending",
-                        "time-created": passenger.user.created_at.isoformat(),
+                        "id": p_request.passenger_id,
+                        "username": p_request.passenger.user.username,
+                        "status": p_request.status,
+                        "time-created": p_request.created_at.isoformat(),
                     }
-                    for passenger in ride.requests
+                    for p_request in ride.requests
                 ]),
                 status=200,
                 mimetype="application/json"
@@ -143,32 +145,26 @@ def get_passenger_requests(drive_id):
         else:
             abort(401, "Invalid authorization")
     else:  # POST
-        # TODO(Hayaan): still need to add a function for this
-        accepted = True
-        if accepted:
-            id = 0
-            username = ""
-            status = ""
-            time_created = ""
-            location = f"/drives/{0}/passenger-requests/{0}"
-            return (
-                {
-                    "id": id,
-                    "username": username,
-                    "status": status,
-                    "time-created": time_created,
-                },
-                201,
-                {"Location": location},
-            )
-        else:
-            abort(401, "Invalid authorization")
+        p_request = ride.post_passenger_request(user.id)
+        if isinstance(p_request, DatabaseError):
+            abort(500, p_request.statement)
+
+        return (
+            {
+                "id": p_request.passenger_id,
+                "username": p_request.passenger.user.username,
+                "status": p_request.status,
+                "time-created": p_request.created_at.isoformat(),
+            },
+            201,
+            {"Location": f"/drives/{p_request.ride_id}/passenger-requests/{p_request.passenger_id}"},
+        )
 
 
 @bp.route("/drives/<int:drive_id>/passenger-requests/<int:user_id>", methods=["POST"])
 @token_auth.login_required
-def accept_passenger_request(drive_id, user_id):    #TODO accept user
-    ride = Ride.get_ride(drive_id)
+def accept_passenger_request(drive_id, user_id):
+    ride = Ride.get(drive_id)
     user = g.current_user
     if ride.driver_id == user.id:
         json = request.get_json() or {}
@@ -177,18 +173,24 @@ def accept_passenger_request(drive_id, user_id):    #TODO accept user
         except KeyError:
             abort(400, "Invalid format")
 
-        id = 0
-        username = ""
-        status = ""
-        time_created = ""
-        time_updated = ""
+        if action not in ["accept", "reject"]:
+            abort(400, "Invalid action")
+
+        p_request = PassengerRequest.query.get((ride.id, user_id))
+        if p_request is None:
+            abort(400, "No such passenger request")
+        elif p_request.status != "pending":
+            abort(400, "This request has already been accepted or declined")
+
+        p_request = p_request.update(action)
+
         return (
             {
-                "id": id,
-                "username": username,
-                "status": status,
-                "time-created": time_created,
-                "time-updated": time_updated,
+                "id": p_request.passenger_id,
+                "username": p_request.passenger.user.username,
+                "status": p_request.status,
+                "time-created": p_request.created_at.isoformat(),
+                "time-updated": p_request.last_modified.isoformat(),
             },
             200,
         )
@@ -196,30 +198,35 @@ def accept_passenger_request(drive_id, user_id):    #TODO accept user
         abort(401, "Invalid authorization")
 
 
-@bp.route("/drives/search", methods=["GET"])    #TODO search drive
+@bp.route("/drives/search", methods=["GET"])  # TODO search drive
 def search_drive():
-    json = request.get_json() or {}
+    MIN_RIDES = 1
+    MAX_RIDES = 25
+    DEFAULT_LIMIT = 5
     try:
-        limit = request.args["limit"]
-        start = json["from"]
-        stop = json["to"]
-        arrive_by = json["arrive-by"]
+        # Clamp if present, else use default value of 5
+        limit = request.args.get("limit")
+        # TODO: support these search parameters (https://postgis.net/docs/ST_DWithin.html)
+        # start = json["from"]
+        # stop = json["to"]
+        # arrive_by = json["arrive-by"]
     except KeyError:
         abort(400, "Invalid format")
 
-    id = 0
-    driver_id = 0
-    passenger_ids = []
-    return (
-        [
+    limit = DEFAULT_LIMIT if limit is None else max(MIN_RIDES, min(int(limit), MAX_RIDES))
+    rides = Ride.get_all(limit)
+    return Response(
+        json.dumps([
             {
-                "id": id,
-                "driver-id": driver_id,
-                "passenger-ids": passenger_ids,
-                "from": start,
-                "to": stop,
-                "arrive-by": arrive_by,
+                "id": ride.id,
+                "driver-id": ride.driver_id,
+                "passenger-ids": [passenger.id for passenger in ride.passengers],
+                "from": ride.depart_from,
+                "to": ride.arrive_at,
+                "arrive-by": ride.arrival_time.isoformat(),
             }
-        ],
-        200,
+            for ride in rides
+        ]),
+        status=200,
+        mimetype="application/json"
     )
