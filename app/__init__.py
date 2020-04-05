@@ -31,6 +31,8 @@ def create_app(config=Config):
     app.register_blueprint(map_bp)
     from app.text import bp as text_bp
     app.register_blueprint(text_bp)
+    from app.offers import bp as offers_bp
+    app.register_blueprint(offers_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)

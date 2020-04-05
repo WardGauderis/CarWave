@@ -1,184 +1,150 @@
 {% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_styles %}
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
-<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela+Round" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela+Round"/>
 
-<style>
-{#body {#}
-{#  background: url('https://img2.goodfon.com/original/1920x1080/1/5d/photographer-kim-leuenberger-6185.jpg') no-repeat center center fixed;#}
-{#  -webkit-background-size: cover;#}
-{#  -moz-background-size: cover;#}
-{#  background-size: cover;#}
-{#  -o-background-size: cover;#}
-{# }#}
+    <style>
+        {#body {#}
+        {#  background: url('https://img2.goodfon.com/original/1920x1080/1/5d/photographer-kim-leuenberger-6185.jpg') no-repeat center center fixed;#}
+        {#  -webkit-background-size: cover;#}
+        {#  -moz-background-size: cover;#}
+        {#  background-size: cover;#}
+        {#  -o-background-size: cover;#}
+        {# }#}
 
-body, html {
-  height: 100%;
-}
-.bg {
-  /* The image used */
-  background-image: url("https://mdbootstrap.com/img/Photos/Horizontal/Nature/full page/img(20).jpg");
+        body, html {
+            height: 100%;
+        }
 
-  /* Full height */
-  height: 100%;
+        .bg {
+            /* The image used */
+            background-image: url("https://mdbootstrap.com/img/Photos/Horizontal/Nature/full page/img(20).jpg");
 
-  /* Center and scale the image nicely */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
+            /* Full height */
+            height: 100%;
 
-</style>
+            /* Center and scale the image nicely */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+    </style>
 {% endblock %}
 
 {% block app_content %}
 
-<div class="bg"></div>
+    <div class="bg"></div>
 
-<div class="container">
-    <h1 class="text-center font-weight-bold">
-        <span style="font-size: 112px;font-family:Varela Round;color:#f7931e">carwave</span>
-    </h1>
-    <h1 class="text-center font-weight-bold">
-        <span style="font-size: 72px;font-family:Varela Round; color:#0e0f3b">surf to your destination</span>
-    </h1>
-
-    <form action="/drives" method="post" name="ride">
+    <div class="container">
+        <h1 class="text-center font-weight-bold">
+            <span style="font-size: 112px;font-family:Varela Round;color:#f7931e">carwave</span>
+        </h1>
+        <h1 class="text-center font-weight-bold">
+            <span style="font-size: 72px;font-family:Varela Round; color:#0e0f3b">surf to your destination</span>
+        </h1>
+    <form method="post" name="ride">
         <div class="form-row" style="padding:10px">
             <div class="ui-widget col-sm" style="margin:0">
-                <input id="from" class="form-control" placeholder="from" style="border-radius:100px">
+                {{ form.from_location(class="form-control", id="from", placeholder="from", style="border-radius:100px") }}
             </div>
             <div class="col-sm-auto">
                 <button id="reverse" type="button" class="btn btn-white d-none d-sm-block">&#8646</button>
             </div>
             <div class="ui-widget col-sm">
-                <input id="to" class="form-control" placeholder="to" style="border-radius:100px">
+                {{ form.to_location(class="form-control", id="to", placeholder="to", style="border-radius:100px") }}
             </div>
 
         </div>
         <div class="form-row" style="padding:10px">
             <div class="ui-widget col-sm">
-                <input id="date" type="date" class="center form-control" style="border-radius:100px">
+                {{ form.date(class="form-control", type="date", class="center form-control", style="border-radius:100px") }}
             </div>
 
             <div class="ui-widget col-sm">
-                <input id="time" type="time" class="center form-control" style="border-radius:100px">
+                {{ form.time(id="time", type="time", class="center form-control", style="border-radius:100px") }}
             </div>
         </div>
-         <div class="form-row justify-content-md-center" style="padding:10px">
-            <input type="submit" class="col-4 btn text-white" value="submit drive" style="border-radius:100px; background-color:#f7931e">
-             <div class="col-2"></div>
-            <input type="submit" class="col-4 btn text-white" value="find drive" style="border-radius:100px; background-color:#0e0f3b">
+        <div class="form-row justify-content-md-center" style="padding:10px">
+            {{ form.offer(value='offer', class="col-4 btn text-white form-control", placeholder="offer drive", style="border-radius:100px; background-color:#f7931e") }}
+            <div class="col-2"></div>
+            {{ form.find(value = 'find', class="col-4 btn text-white form-control", placeholder="find drive", style="border-radius:100px; background-color:#0e0f3b") }}
         </div>
     </form>
-</div>
+    </div>
 
 {% endblock %}
 
 {% block app_scripts %}
 
-<script src="//code.jquery.com/jquery-1.12.4.js"></script>
-<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<script type="text/javascript">
+    <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript">
 
-    let fromOptions = [];
-    let toOptions = [];
+        let fromOptions = [];
+        let toOptions = [];
 
-    let from = $("#from");
-    let to = $("#to");
+        let from = $("#from");
+        let to = $("#to");
 
-    from.val('');
-    to.val('');
+        from.val('');
+        to.val('');
 
-    $(function()
-    {
-        // Initialize form validation on the registration form.
-        // It has the name attribute "registration"
-        $("form[name='ride']").validate({
-            rules: {
-                from: "required",
-                to: "required",
-                date: "required",
-                time: "required"
-            },
-            messages: {
-                from: "Please enter from where",
-                to: "Please enter to where",
-                date: "please enter a date",
-                time: "please enter a time"
-            },
-            // Make sure the form is submitted to the destination defined
-            // in the "action" attribute of the form when valid
-            submitHandler: function(form)
-            {
-              form.submit();
-            }
-        });
-    });
+        let getNewRoutes = function (request, response, which) {
+            request.term.replace(/\s/g, '+');
+            $.ajax({
+                url: "https://photon.komoot.de/api/?q=" + request.term + "&lat=51.0&lon=4.0",
+                type: "GET",
+                success: function (xhr) {
+                    let tempOptions = [];
+                    for (let i = 0; i < xhr.features.length; i++) {
+                        const properties = xhr.features[i].properties;
+                        const lnglat = xhr.features[i].geometry.coordinates;
 
-    let getNewRoutes = function(request, response, which)
-    {
-        request.term.replace(/\s/g, '+');
-        $.ajax({
-            url: "https://photon.komoot.de/api/?q=" + request.term + "&lat=51.0&lon=4.0",
-            type: "GET",
-            success: function (xhr)
-            {
-                let tempOptions = [];
-                for(let i = 0; i < xhr.features.length; i++)
-                {
-                    const properties = xhr.features[i].properties;
-                    const lnglat = xhr.features[i].geometry.coordinates;
+                        let name = properties.name + ", ";
+                        if (properties.city != null) name += properties.city + ", ";
+                        name += properties.country;
 
-                    let name = properties.name + ", ";
-                    if(properties.city != null) name += properties.city + ", ";
-                    name += properties.country;
+                        tempOptions.push(name);
+                        tempOptions = [...new Set(tempOptions)];
 
-                    tempOptions.push(name);
-                    tempOptions = [... new Set(tempOptions)];
-
-                    if(which === 'from') fromOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
-                    else if(which === 'to') toOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
+                        if (which === 'from') fromOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
+                        else if (which === 'to') toOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
+                    }
+                    response(tempOptions);
+                },
+                error: function (xhr) {
+                    alert(xhr);
                 }
-                response(tempOptions);
+            });
+        };
+
+        function submit() {
+            alert(from.val());
+        }
+
+        from.autocomplete({
+            delay: 500,
+            source: function (request, response) {
+                getNewRoutes(request, response, 'from');
             },
-            error: function (xhr)
-            {
-                alert(xhr);
-            }
         });
-    };
 
-    function submit()
-    {
-        alert(from.val());
-    }
+        to.autocomplete({
+            delay: 500,
+            source: function (request, response) {
+                getNewRoutes(request, response, 'to');
+            },
+        });
 
-    from.autocomplete({
-        delay: 500,
-        source: function (request, response)
-        {
-            getNewRoutes(request, response, 'from');
-        },
-    });
-
-    to.autocomplete({
-        delay: 500,
-        source: function (request, response)
-        {
-            getNewRoutes(request, response, 'to');
-        },
-    });
-
-    document.getElementById('reverse').onclick = function()
-    {
-        let temp = to.val();
-        to.val(from.val());
-        from.val(temp);
-    };
+        document.getElementById('reverse').onclick = function () {
+            let temp = to.val();
+            to.val(from.val());
+            from.val(temp);
+        };
 
 
-
-</script>
+    </script>
 {% endblock %}

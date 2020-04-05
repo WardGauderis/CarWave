@@ -76,8 +76,6 @@
         // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
 
-
-
         let control = L.Routing.control({
             waypoints: [null, null],
             show: false,
@@ -106,7 +104,6 @@
 
             document.getElementById("route").innerHTML = (time + "min (" + dist + "km)");
         }).addTo(map);
-
 
         // this hides the plan from the map
         control._container.style.display = "None";
