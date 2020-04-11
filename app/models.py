@@ -33,7 +33,8 @@ car_links = db.Table(
 )
 
 ride_links = db.Table(
-    # Cascade on delete
+    # TODO: Cascade on delete
+    # is dit geen overbodige informatie als er al en tabel is met accepted requests?
     "ride_links",
     db.metadata,
     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),

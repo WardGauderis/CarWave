@@ -33,6 +33,8 @@ def create_app(config=Config):
     app.register_blueprint(text_bp)
     from app.offers import bp as offers_bp
     app.register_blueprint(offers_bp)
+    from app.profile import bp as profile_bp
+    app.register_blueprint(profile_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)

@@ -6,6 +6,11 @@
 
 {% block styles %}
     {{ super() }}
+    <style>
+        .invalid-feedback {
+            display: block;
+        }
+    </style>
     {% block app_styles %}
     {% endblock %}
 {% endblock %}
@@ -17,10 +22,10 @@
 {% block content %}
     <link rel="shortcut icon" href="{{ url_for('main.static', filename='favicon.ico') }}">
     <div class="container">
-        {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-info" role="alert">{{ message }}</div>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
