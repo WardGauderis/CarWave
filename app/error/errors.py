@@ -26,7 +26,7 @@ def api_error(status_code, description=None):
 
 
 @bp.app_errorhandler(HTTPException)
-def not_found(error):
+def error_handler(error):
     if json_error():
         return api_error(error.code, error.description)
     else:

@@ -6,25 +6,18 @@ from sqlalchemy.exc import DatabaseError
 from app.api import bp
 from app.auth.auth import token_auth
 from app.models import Ride, User, PassengerRequest
+from app.crud import create_user
+from app.auth.forms import RegistrationForm
 
 
 @bp.route("/users/register", methods=["POST"])
 def register_user():
     json = request.get_json() or {}
-    try:
-        username = json["username"]
-        first_name = json["firstname"]
-        last_name = json["lastname"]
-        password = json["password"]
-    except KeyError:
-        abort(400, "Invalid format")
-
-    user = User.create(
-        username=username, first_name=first_name, last_name=last_name, password=password
-    )
-    if isinstance(user, DatabaseError):
-        abort(400, user.statement)
-    return {"id": user.id}, 201
+    form = RegistrationForm()
+    if form.from_json(json):
+        user = create_user(form)
+        return {"id": user.id}, 201
+    abort(409, form.errors)
 
 
 @bp.route("/users/auth", methods=["POST"])

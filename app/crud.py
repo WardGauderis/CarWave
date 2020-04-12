@@ -1,5 +1,12 @@
-def create_user():
-    pass
+from app.models import User, db
+from flask import abort
+
+
+def create_user(json):
+    user = User(json)
+    db.session.add(user)
+    db.session.commit()
+    return user
 
 
 def read_user():
