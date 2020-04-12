@@ -27,6 +27,8 @@ def user(username):
 @bp.route('/user/<username>/edit', methods=['GET', 'POST'])
 @login_required
 def edit(username):
+    #TODO check user == currentuser
+    #TODO python functie
     form = EditProfileForm()
     if form.validate_on_submit():
         current_user.first_name = form.first_name.data
