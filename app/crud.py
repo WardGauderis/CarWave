@@ -1,5 +1,4 @@
 from app.models import User, db
-from flask import abort
 
 
 def create_user(json):
