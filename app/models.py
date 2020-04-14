@@ -39,7 +39,7 @@ ride_links = db.Table(
     db.metadata,
     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
     db.Column(
-        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
+        "user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True
     ),
 )
 
@@ -48,7 +48,7 @@ class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
-    passenger_id = db.Column(db.Integer, db.ForeignKey("passengers.id"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     status = db.Column(db.Enum("accepted", "pending", "declined", name="status_enum"), default="pending",
                        nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
@@ -58,7 +58,7 @@ class PassengerRequest(db.Model):
         "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
     )
     passenger = db.relationship(
-        "Passenger", backref=db.backref("passengers", cascade="all, delete-orphan")
+        "User", backref=db.backref("users", cascade="all, delete-orphan")
     )
 
     def update(self, action):
@@ -94,8 +94,13 @@ class User(UserMixin, db.Model):
     # phone_number = db.Column(db.String(32))
     # created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
-    rides = db.relationship("Ride", back_populates="driver")
+    driver_rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="owners")
+
+    passenger_rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
+    requests = db.relationship(
+        "Ride", secondary="passenger_requests", back_populates="requests"
+    )
 
     def __init__(self, form):
         for key, value in form.generator():
@@ -165,37 +170,37 @@ def load_user(id):
 #         return f"<Driver(id={self.id}, rating={self.rating})>"
 
 
-class Passenger(db.Model):
-    """
-    Passenger is a User
-    """
-
-    __tablename__ = "passengers"
-
-    id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-    )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        default=None,
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
-
-    user = db.relationship(
-        "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
-    )
-    rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
-    requests = db.relationship(
-        "Ride", secondary="passenger_requests", back_populates="requests"
-    )
-
-    def __repr__(self):
-        return f"<Passenger(id={self.id}, rating={self.rating})>"
-
-    def to_json(self):
-        return {"id": self.id, "username": self.user.username}
+# class Passenger(db.Model):
+#     """
+#     Passenger is a User
+#     """
+#
+#     __tablename__ = "passengers"
+#
+#     id = db.Column(
+#         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
+#     )
+#     rating = db.Column(
+#         db.Numeric(precision=2, scale=1),
+#         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
+#         default=None,
+#         nullable=True,
+#     )
+#     num_ratings = db.Column(db.Integer, default=0, nullable=False)
+#
+#     user = db.relationship(
+#         "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
+#     )
+#     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
+#     requests = db.relationship(
+#         "Ride", secondary="passenger_requests", back_populates="requests"
+#     )
+#
+#     def __repr__(self):
+#         return f"<Passenger(id={self.id}, rating={self.rating})>"
+#
+#     def to_json(self):
+#         return {"id": self.id, "username": self.user.username}
 
 
 class Ride(db.Model):
@@ -204,7 +209,7 @@ class Ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     driver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    driver = db.relationship("User", back_populates="rides")
+    driver = db.relationship("User", back_populates="driver_rides")
     passenger_places = db.Column(
         db.Integer,
         # TODO: len(ride.passengers) <= passenger_places
@@ -227,12 +232,12 @@ class Ride(db.Model):
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
 
     passengers = db.relationship(
-        "Passenger",
+        "User",
         secondary=ride_links,
-        back_populates="rides"
+        back_populates="passenger_rides"
     )
     requests = db.relationship(
-        "Passenger", secondary="passenger_requests", back_populates="requests"
+        "User", secondary="passenger_requests", back_populates="requests"
     )
 
     def __repr__(self):
