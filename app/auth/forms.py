@@ -5,10 +5,32 @@ from app.models import User
 
 
 class DictForm(FlaskForm):
+    all_errors = dict()
+
     def generator(self):
         for attr, value in self.__dict__.items():
             if hasattr(value, 'data'):
                 yield attr, value.data
+
+    def load_json(self, json):
+        for key, value in json.items():
+            if hasattr(self, key):
+                attr = getattr(self, key)
+                if not isinstance(value, str):
+                    self.all_errors[key] = "This field should be string."
+                else:
+                    attr.process_formdata([value])
+
+    def validate_json(self):
+        self.validate()
+        self.errors.pop('csrf_token')
+        return not (len(self.errors) + len(self.all_errors))
+
+    def get_errors(self):
+        # errors = {}
+        # for form, error in self.errors.items():
+        #     errors[getattr(self, form, error).label.text] = error
+        return dict(list(self.errors.items()) + list(self.all_errors.items()))
 
 
 class LoginForm(DictForm):
@@ -16,6 +38,10 @@ class LoginForm(DictForm):
     password = PasswordField('Password', [DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Login')
+
+    def from_json(self, json):
+        self.load_json(json)
+        return self.validate_json()
 
 
 class RegistrationForm(DictForm):
@@ -28,14 +54,9 @@ class RegistrationForm(DictForm):
     submit = SubmitField('Register')
 
     def from_json(self, json):
-        for key, value in json.items():
-            if hasattr(self, key):
-                attr = getattr(self, key)
-                attr.data = value
-        self.password_validation.data = self.password.data
-        self.validate()
-        self.errors.pop('csrf_token')
-        return not len(self.errors)
+        self.load_json(json)
+        self.password_validation.process_formdata(self.password.data)
+        return self.validate_json()
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()

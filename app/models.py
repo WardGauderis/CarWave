@@ -105,43 +105,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
 
-    # @staticmethod
-    # def create(**kwargs):
-    #     try:
-    #         kwargs["password_hash"] = generate_password_hash(kwargs.pop("password"))
-    #     except KeyError:
-    #         raise ValueError("No 'password' keyword argument was supplied")
-    #
-    #     try:
-    #         user = User(**kwargs)
-    #         db.session.add(user)
-    #         db.session.commit()
-    #         db.session.add(Driver(id=user.id))
-    #         db.session.commit()
-    #         return user
-    #     except IntegrityError as e:
-    #         db.session.rollback()
-    #         return e
-
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password: str):
         return check_password_hash(self.password_hash, password)
-
-    @staticmethod
-    def from_username(username: str):
-        return User.query.filter_by(username=username).one_or_none()
-
-    @staticmethod
-    def from_token(token):
-        try:
-            data = jwt.decode(
-                token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
-            )
-            return User.query.get(data["id"])
-        except jwt.DecodeError:
-            return None
 
     def get_token(self):
         return jwt.encode(
@@ -239,7 +207,6 @@ class Ride(db.Model):
     driver = db.relationship("User", back_populates="rides")
     passenger_places = db.Column(
         db.Integer,
-        # TODO: driver counts as one so there should be space for at least one more
         # TODO: len(ride.passengers) <= passenger_places
         db.CheckConstraint("passenger_places >= 2"),
         nullable=False,

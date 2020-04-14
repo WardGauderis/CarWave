@@ -18,11 +18,14 @@ token_auth = HTTPTokenAuth('Bearer')
 
 @token_auth.verify_token
 def verify_token(token):
-    user = User.from_token(token)
-    if user is None:
+    try:
+        user = User.from_token(token)
+        if user is None:
+            return False
+        g.current_user = user
+        return True
+    except:
         return False
-    g.current_user = user
-    return True
 
 
 @token_auth.error_handler
