@@ -23,7 +23,7 @@ def create_app(config=Config):
     app.register_blueprint(api_bp)
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp)
-    from app.errors import bp as errors_bp
+    from app.error import bp as errors_bp
     app.register_blueprint(errors_bp)
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
@@ -33,6 +33,8 @@ def create_app(config=Config):
     app.register_blueprint(text_bp)
     from app.offers import bp as offers_bp
     app.register_blueprint(offers_bp)
+    from app.profile import bp as profile_bp
+    app.register_blueprint(profile_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)

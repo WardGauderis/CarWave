@@ -5,5 +5,5 @@
   <div>First name: {{ user.first_name }}</div>
   <div>Last name: {{ user.last_name }}</div>
   <div>Email: {{ user.email }}</div>
-  <a href="{{ url_for('auth.edit', username=current_user.username) }}">{{ 'Edit profile' }}</a>
+  <a href="{{ url_for('profile.edit', username=current_user.username) }}">{{ 'Edit profile' }}</a>
 {% endblock %}
