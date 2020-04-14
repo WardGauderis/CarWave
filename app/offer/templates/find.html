@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    {% for ride in rides %}
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text">amount of passengers: {{ ride.passenger_places }}</p>
+                        <p class="card-text">departure: {{ ride.departure_address }}</p>
+                        <p class="card-text">destination: {{ ride.arrival_address }}</p>
+                        <p class="card-text">eta: {{ ride.arrival_time }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

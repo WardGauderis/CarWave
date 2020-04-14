@@ -27,12 +27,10 @@ def create_app(config=Config):
     app.register_blueprint(errors_bp)
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
-    from app.map import bp as map_bp
-    app.register_blueprint(map_bp)
     from app.text import bp as text_bp
     app.register_blueprint(text_bp)
-    from app.offers import bp as offers_bp
-    app.register_blueprint(offers_bp)
+    from app.offer import bp as offer_bp
+    app.register_blueprint(offer_bp)
     from app.profile import bp as profile_bp
     app.register_blueprint(profile_bp)
 

@@ -9,8 +9,10 @@ def index():
     form = DriveForm()
     if request.method == 'POST':
         if "offer" in request.form:
-            return redirect(url_for('offers.offers'))
+            return redirect(url_for('offer.offer',
+                                    fl=request.form['from_location'],
+                                    tl=request.form['to_location'],
+                                    dt=request.form['date'] + 'T' + request.form['time']))
         elif "find" in request.form:
-            return redirect(url_for('offers.find'))
+            return redirect(url_for('offer.find'))
     return render_template('index.html', title='Home', form=form)
-

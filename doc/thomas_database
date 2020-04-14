@@ -1,0 +1,20 @@
+lees eerst de reset_database, dat lijkt beter
+momenteel werkt alles als ik dit doe.
+how to database ppdb for skrubz:
+
+// in een terminal
+dropdb carwave_db
+creatdb carwave db
+
+psql
+\c carwave_db
+CREATE EXTENSION postgis;
+\dx to check
+
+// in de venv
+delete migrations folder
+flask db init
+optional sometimes: copy paste alembic.ini from github or keep it from before
+flask db migrate
+import geoalchemy2 in de migration versie
+flask db upgrade

@@ -269,7 +269,7 @@ class Ride(db.Model):
     )
 
     def __repr__(self):
-        return f"<Ride(id={self.id}, driver={self.user_id})>"
+        return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
     @staticmethod
     def create(**kwargs):
