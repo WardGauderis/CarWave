@@ -1,4 +1,4 @@
-from app.models import User, db, current_app
+from app.models import User, db, current_app, Ride
 from flask import abort
 from jwt import decode, DecodeError
 
@@ -52,3 +52,55 @@ def delete_user(user: User):
     except:
         db.session.rollback()
         abort(400, 'Invalid user deletion')
+
+
+def create_drive(form, user: User) -> Ride:
+    try:
+        drive = Ride(form)
+        drive.driver_id = user.id
+        db.session.add(drive)
+        db.session.commit()
+        return drive
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid drive creation')
+
+
+def read_drive_from_driver(driver: User) -> Ride:
+    try:
+        return driver.driver_rides
+    except:
+        abort(400, 'Invalid drive read from user')
+
+
+def read_drive_from_id(id: int) -> Ride:
+    try:
+        return Ride.query.get(id)
+    except:
+        abort(400, 'Invalid drive read from user')
+
+
+def read_all_drives(limit: int = None) -> list:
+    try:
+        if limit is None:
+            return Ride.query.all()
+        return Ride.query.limit(limit).all()
+    except:
+        abort(400, 'Invalid drive read')
+
+
+def update_drive(drive: Ride, form):
+    try:
+        drive.__init__(form)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid drive update')
+
+
+def delete_drive(drive: Ride):
+    try:
+        db.session.delete(drive)
+        db.session.commit()
+    except:
+        abort(400, 'Invalid drive deletion')

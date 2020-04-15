@@ -6,8 +6,9 @@ from sqlalchemy.exc import DatabaseError
 from app.api import bp
 from app.auth.auth import token_auth
 from app.models import Ride, PassengerRequest
-from app.crud import create_user, read_user_from_login
+from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive
 from app.auth.forms import RegistrationForm, LoginForm
+from app.offer.forms import OfferForm
 
 
 @bp.route("/users/register", methods=["POST"])
@@ -32,47 +33,34 @@ def authorize_user():
         abort(401, "Invalid authorization")
     abort(409, form.get_errors())
 
+
 @bp.route("/drives", methods=["POST"])
 @token_auth.login_required
 def register_drive():
     json = request.get_json() or {}
-    try:
-        start = json["from"]
-        stop = json["to"]
-        passenger_places = json["passenger-places"]
-        arrive_by = json["arrive-by"]
-    except KeyError:
-        abort(400, "Invalid format")
-
-    user = g.current_user
-    ride = Ride.create(
-        driver_id=user.id,
-        passenger_places=passenger_places,
-        departure_address=start,
-        arrival_address=stop,
-        arrival_time=arrive_by,
-    )
-    if isinstance(ride, DatabaseError):
-        abort(500, ride.statement)
-
-    return (
-        {
-            "id": ride.id,
-            "driver-id": ride.driver_id,
-            "passenger-ids": [],
-            "passenger-places": ride.passenger_places,
-            "from": ride.depart_from,
-            "to": ride.arrive_at,
-            "arrive-by": ride.arrival_time,
-        },
-        201,
-        {"Location": f"/drives/{ride.id}"}
-    )
+    form = OfferForm()
+    if form.from_json(json):
+        driver = g.current_user
+        drive = create_drive(form, driver)
+        return (
+            {
+                "id": drive.id,
+                "driver-id": drive.driver_id,
+                "passenger-ids": [],
+                "passenger-places": drive.passenger_places,
+                "from": drive.depart_from,
+                "to": drive.arrive_at,
+                "arrive-by": drive.arrival_time,
+            },
+            201,
+            {"Location": f"/drives/{drive.id}"}
+        )
+    abort(409, form.get_errors())
 
 
 @bp.route("/drives/<int:drive_id>", methods=["GET"])
 def get_drive(drive_id: int):
-    ride = Ride.get(drive_id)
+    ride = read_drive_from_id(drive_id)
 
     if ride is None:
         abort(400, "Invalid drive id")
@@ -95,7 +83,7 @@ def get_drive(drive_id: int):
 
 @bp.route("/drives/<int:drive_id>/passengers", methods=["GET"])
 def get_passengers(drive_id):
-    ride = Ride.get(drive_id)
+    ride = read_drive_from_id(drive_id)
 
     if ride is None:
         abort(400, "Invalid drive id")
@@ -110,7 +98,7 @@ def get_passengers(drive_id):
 @bp.route("/drives/<int:drive_id>/passenger-requests", methods=["GET", "POST"])
 @token_auth.login_required
 def passenger_requests(drive_id):
-    ride: Ride = Ride.get(drive_id)
+    ride: Ride = read_drive_from_id(drive_id)
     if ride is None:
         abort(400, f"Drive {drive_id} doesn't exist.")
 

@@ -6,7 +6,7 @@ from werkzeug.urls import url_parse
 from app.auth import bp
 from app import db
 from app.auth.forms import LoginForm, RegistrationForm
-from app.crud import create_user
+from app.crud import create_user, read_user_from_token
 from app.error.errors import api_error
 from app.models import User
 from app.auth.forms import ResetPasswordRequestForm
@@ -19,7 +19,7 @@ token_auth = HTTPTokenAuth('Bearer')
 @token_auth.verify_token
 def verify_token(token):
     try:
-        user = User.from_token(token)
+        user = read_user_from_token(token)
         if user is None:
             return False
         g.current_user = user

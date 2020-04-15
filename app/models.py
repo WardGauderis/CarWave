@@ -202,7 +202,7 @@ def load_user(id):
 #     def to_json(self):
 #         return {"id": self.id, "username": self.user.username}
 
-
+# TODO: remove past rides
 class Ride(db.Model):
     __tablename__ = "rides"
 
@@ -226,7 +226,7 @@ class Ride(db.Model):
     # car = db.relationship("Car")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    departure_time = db.Column(db.DateTime, nullable=True)
+    # departure_time = db.Column(db.DateTime, nullable=True)
     departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
@@ -240,32 +240,14 @@ class Ride(db.Model):
         "User", secondary="passenger_requests", back_populates="requests"
     )
 
+    def __init__(self, form):
+        for key, value in form.generator():
+            setattr(self, key, value)
+        self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"
+        self.arrival_address = f"SRID=4326;POINT({form.to_lat.data} {form.to_lon.data})"
+
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
-
-    @staticmethod
-    def create(**kwargs):
-        try:
-            dep, arr = kwargs.pop("departure_address"), kwargs.pop("arrival_address")
-            kwargs["departure_address"] = f"SRID=4326;POINT({dep[0]} {dep[1]})"
-            kwargs["arrival_address"] = f"SRID=4326;POINT({arr[0]} {arr[1]})"
-            ride = Ride(**kwargs)
-            db.session.add(ride)
-            db.session.commit()
-            return ride
-        except IntegrityError as e:
-            db.session.rollback()
-            return e
-
-    @staticmethod
-    def get(ride_id: int):
-        return Ride.query.get(ride_id)
-
-    @staticmethod
-    def get_all(limit: int = None):
-        if limit is None:
-            return Ride.query.all()
-        return Ride.query.limit(limit).all()
 
     def post_passenger_request(self, passenger_id):
         request = PassengerRequest(self.id, passenger_id)

@@ -1,16 +1,39 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.fields import IntegerField, FloatField
-from wtforms.validators import DataRequired
+from wtforms import SubmitField
+from wtforms.fields import IntegerField, FloatField, DateTimeField
+from wtforms.validators import DataRequired, NumberRange, ValidationError
+from app.forms import DictForm
+from datetime import datetime
+import dateutil.parser
 
 
-class OfferForm(FlaskForm):
-    from_lon = FloatField('', [DataRequired()])
-    from_lat = FloatField('', [DataRequired()])
-    to_lon = FloatField('', [DataRequired()])
-    to_lat = FloatField('', [DataRequired()])
+class OfferForm(DictForm):
+    from_lon = FloatField('', [DataRequired(), NumberRange(-180, 180)])
+    from_lat = FloatField('', [DataRequired(), NumberRange(-90, 90)])
+    to_lon = FloatField('', [DataRequired(), NumberRange(-180, 180)])
+    to_lat = FloatField('', [DataRequired(), NumberRange(-90, 90)])
 
-    arrival_time = StringField('arrival time', [DataRequired()])
-    passengers = IntegerField('number of passengers', [DataRequired()])
+    arrival_time = DateTimeField('arrival time', [DataRequired()], "%Y-%m-%dT%H:%M:%S%z")
+    passenger_places = IntegerField('number of passengers', [DataRequired(), NumberRange(1)])
     confirm = SubmitField('confirm')
 
+    def from_json(self, json):
+        try:
+            self.arrival_time.data = dateutil.parser.isoparse(json.get('arrive-by'))
+        except:
+            self.all_errors['arrive-by'] = "Not a valid date format"
+        self.passenger_places.process_formdata([json.get('passenger-places', 0)])
+        try:
+            self.from_lat.data = float(json.get('from')[0])
+            self.from_lon.data = float(json.get('from')[1])
+        except:
+            self.all_errors['from'] = "Not a valid coordinate type"
+        try:
+            self.to_lat.data = float(json.get('to')[0])
+            self.to_lon.data = float(json.get('to')[1])
+        except:
+            self.all_errors['to'] = "Not a valid coordinate type"
+        return self.validate_json()
+
+    def validate_arrival_time(self, arrival_time):
+        if arrival_time.data <= datetime.utcnow():
+            raise ValidationError('Arrival time must be in the future')
