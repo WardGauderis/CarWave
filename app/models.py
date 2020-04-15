@@ -6,7 +6,7 @@ from json import loads
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from flask_login import UserMixin
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DatabaseError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, login
@@ -34,7 +34,7 @@ car_links = db.Table(
 
 ride_links = db.Table(
     # TODO: Cascade on delete
-    # is dit geen overbodige informatie als er al en tabel is met accepted requests?
+    # TODO: eliminate redundancy
     "ride_links",
     db.metadata,
     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
@@ -76,7 +76,7 @@ class PassengerRequest(db.Model):
 
         try:
             db.session.commit()
-        except IntegrityError as e:
+        except DatabaseError as e:
             return e
 
         return self
@@ -143,66 +143,6 @@ def load_user(id):
     return User.query.get(int(id))
 
 
-# class Driver(db.Model):
-#     """
-#     Driver is a User
-#     """
-#
-#     __tablename__ = "drivers"
-#
-#     id = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-#     )
-#     rating = db.Column(
-#         db.Numeric(precision=2, scale=1),
-#         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-#         nullable=True,
-#     )
-#     num_ratings = db.Column(db.Integer, default=0, nullable=False)
-#
-#     user = db.relationship(
-#         "User", backref=db.backref("driver", uselist=False, passive_deletes=True),
-#     )
-#     rides = db.relationship("Ride", back_populates="driver")
-#     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
-#
-#     def __repr__(self):
-#         return f"<Driver(id={self.id}, rating={self.rating})>"
-
-
-# class Passenger(db.Model):
-#     """
-#     Passenger is a User
-#     """
-#
-#     __tablename__ = "passengers"
-#
-#     id = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-#     )
-#     rating = db.Column(
-#         db.Numeric(precision=2, scale=1),
-#         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-#         default=None,
-#         nullable=True,
-#     )
-#     num_ratings = db.Column(db.Integer, default=0, nullable=False)
-#
-#     user = db.relationship(
-#         "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
-#     )
-#     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
-#     requests = db.relationship(
-#         "Ride", secondary="passenger_requests", back_populates="requests"
-#     )
-#
-#     def __repr__(self):
-#         return f"<Passenger(id={self.id}, rating={self.rating})>"
-#
-#     def to_json(self):
-#         return {"id": self.id, "username": self.user.username}
-
-
 class Ride(db.Model):
     __tablename__ = "rides"
 
@@ -245,34 +185,60 @@ class Ride(db.Model):
 
     @staticmethod
     def create(**kwargs):
+        dep, arr = kwargs.pop("departure_address"), kwargs.pop("arrival_address")
+        kwargs["departure_address"] = f"SRID=4326;POINT({dep[0]} {dep[1]})"
+        kwargs["arrival_address"] = f"SRID=4326;POINT({arr[0]} {arr[1]})"
+        ride = Ride(**kwargs)
+        db.session.add(ride)
+
         try:
-            dep, arr = kwargs.pop("departure_address"), kwargs.pop("arrival_address")
-            kwargs["departure_address"] = f"SRID=4326;POINT({dep[0]} {dep[1]})"
-            kwargs["arrival_address"] = f"SRID=4326;POINT({arr[0]} {arr[1]})"
-            ride = Ride(**kwargs)
-            db.session.add(ride)
             db.session.commit()
-            return ride
-        except IntegrityError as e:
+        except DatabaseError as e:
             db.session.rollback()
             return e
+
+        return ride
 
     @staticmethod
     def get(ride_id: int):
         return Ride.query.get(ride_id)
 
     @staticmethod
-    def get_all(limit: int = None):
-        if limit is None:
-            return Ride.query.all()
-        return Ride.query.limit(limit).all()
+    def search(limit=5,
+               departure=None,
+               departure_distance=1000,
+               arrival=None,
+               arrival_distance=1000,
+               arrival_time=None,
+               time_delta=timedelta(minutes=30)):
+        """
+        Departure/arrival = tuple of 2 floats (longitude, latitude)
+        TODO: make additional arguments, tuples?
+            e.g. arrival=(location, max_distance), arrival_time=(time, delta)
+        """
+        query = Ride.query
+        if departure:
+            query = query.filter(
+                func.ST_DWithin(Ride.departure_address, departure, departure_distance, True)
+            )
+        if arrival:
+            query = query.filter(
+                func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True)
+            )
+        if arrival_time:
+            query = query.filter(
+                Ride.arrival_time.between(arrival_time - time_delta, arrival_time + time_delta)
+            )
+        # Sort by distance to departure/arrival?
+        # Move the limit out, only really needed for the API AFAIK
+        return query.limit(limit).all()
 
     def post_passenger_request(self, passenger_id):
         request = PassengerRequest(self.id, passenger_id)
         db.session.add(request)
         try:
             db.session.commit()
-        except IntegrityError as e:
+        except DatabaseError as e:
             db.session.rollback()
             return e
         return request

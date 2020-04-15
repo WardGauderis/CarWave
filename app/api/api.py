@@ -195,14 +195,15 @@ def search_drive():
         # Clamp if present, else use default value of 5
         limit = request.args.get("limit")
         # TODO: support these search parameters (https://postgis.net/docs/ST_DWithin.html)
-        # start = json["from"]
-        # stop = json["to"]
-        # arrive_by = json["arrive-by"]
+        # Default distances from given start and stop, should be optional
+        start = json.get("from")
+        stop = json.get("to")
+        arrive_by = json.get("arrive-by")
     except KeyError:
         abort(400, "Invalid format")
-
-    limit = DEFAULT_LIMIT if limit is None else max(MIN_RIDES, min(int(limit), MAX_RIDES))
-    rides = Ride.get_all(limit)
+    if limit:
+        limit = max(MIN_RIDES, min(int(limit), MAX_RIDES))
+    rides = Ride.search(limit=limit, departure=start, arrival=stop, arrival_time=arrive_by)
     return Response(
         json.dumps([
             {
