@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import uniform
 
 from flask import Flask
@@ -8,7 +8,7 @@ from geoalchemy2 import Geometry
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DatabaseError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -25,6 +25,7 @@ TODO:
     - Handle passenger requests for a certain driver
     - How to delete a passenger request?
     - Serialise models to JSON for the API requests?
+    - Remove redundant accepted passenger request/ride links vs. 
 """
 
 # The secondary tables for the many-to-many relationships
@@ -33,12 +34,13 @@ car_links = db.Table(
     # TODO: Cascade on delete
     "car_links",
     db.metadata,
-    db.Column("driver_id", db.Integer, db.ForeignKey("drivers.id"), primary_key=True),
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
     db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
 )
 
 ride_links = db.Table(
-    # Cascade on delete
+    # TODO: Cascade on delete
+    # is dit geen overbodige informatie als er al en tabel is met accepted requests?
     "ride_links",
     db.metadata,
     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
@@ -53,7 +55,8 @@ class PassengerRequest(db.Model):
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
     passenger_id = db.Column(db.Integer, db.ForeignKey("passengers.id"), primary_key=True)
-    status = db.Column(db.Enum("accepted", "pending", "declined", name="status_enum"), default="pending", nullable=False)
+    status = db.Column(db.Enum("accepted", "pending", "declined", name="status_enum"), default="pending",
+                       nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
@@ -79,7 +82,7 @@ class PassengerRequest(db.Model):
 
         try:
             db.session.commit()
-        except IntegrityError as e:
+        except DatabaseError as e:
             return e
 
         return self
@@ -91,12 +94,12 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-
-    first_name = db.Column(db.String(64), nullable=False)
-    last_name = db.Column(db.String(64), nullable=False)
+    firstname = db.Column(db.String(64), nullable=False)
+    lastname = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(128))
-    phone_number = db.Column(db.String(32))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow())
+
+    rides = db.relationship("Ride", back_populates="driver")
+    cars = db.relationship("Car", secondary=car_links, back_populates="owners")
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
@@ -112,8 +115,6 @@ class User(UserMixin, db.Model):
             user = User(**kwargs)
             db.session.add(user)
             db.session.commit()
-            db.session.add(Driver(id=user.id))
-            db.session.commit()
             return user
         except IntegrityError as e:
             db.session.rollback()
@@ -128,33 +129,6 @@ class User(UserMixin, db.Model):
     @staticmethod
     def from_username(username: str):
         return User.query.filter_by(username=username).one_or_none()
-
-
-class Driver(db.Model):
-    """
-    Driver is a User
-    """
-
-    __tablename__ = "drivers"
-
-    id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-    )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
-
-    user = db.relationship(
-        "User", backref=db.backref("driver", uselist=False, passive_deletes=True),
-    )
-    rides = db.relationship("Ride", back_populates="driver")
-    cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
-
-    def __repr__(self):
-        return f"<Driver(id={self.id}, rating={self.rating})>"
 
 
 class Passenger(db.Model):
@@ -195,8 +169,8 @@ class Ride(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    driver_id = db.Column(db.Integer, db.ForeignKey("drivers.id"), nullable=False)
-    driver = db.relationship("Driver", back_populates="rides")
+    driver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    driver = db.relationship("User", back_populates="rides")
     passenger_places = db.Column(
         db.Integer,
         # TODO: driver counts as one so there should be space for at least one more
@@ -241,7 +215,7 @@ class Ride(db.Model):
             db.session.add(ride)
             db.session.commit()
             return ride
-        except IntegrityError as e:
+        except DatabaseError as e:
             db.session.rollback()
             return e
 
@@ -250,17 +224,38 @@ class Ride(db.Model):
         return Ride.query.get(ride_id)
 
     @staticmethod
-    def get_all(limit: int = None):
-        if limit is None:
-            return Ride.query.all()
-        return Ride.query.limit(limit).all()
+    def search(limit=5,
+               departure=None,
+               departure_distance=1000,
+               arrival=None,
+               arrival_distance=1000,
+               arrival_time=None,
+               time_delta=timedelta(minutes=30)):
+        """
+        Departure/arrival = tuple of 2 floats (longitude, latitude)
+        """
+        query = Ride.query
+        # https://stackoverflow.com/questions/20803878/geoalchemy2-query-all-users-within-x-meteres
+        # https://stackoverflow.com/questions/8444753/st-dwithin-takes-parameter-as-degree-not-meters-why
+        if departure:
+            query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
+        if arrival:
+            query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
+        if arrival_time:
+            query = query.filter(Ride.arrival_time.between(
+                arrival_time - time_delta,
+                arrival_time + time_delta
+            ))
+        # Sort by distance to departure/arrival?
+        # Move the limit out, only really needed for the API AFAIK
+        return query.limit(limit).all()
 
     def post_passenger_request(self, passenger_id):
         request = PassengerRequest(self.id, passenger_id)
         db.session.add(request)
         try:
             db.session.commit()
-        except IntegrityError as e:
+        except DatabaseError as e:
             db.session.rollback()
             return e
         return request
@@ -287,50 +282,49 @@ class Car(db.Model):
         db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
     )
 
-    drivers = db.relationship("Driver", secondary=car_links, back_populates="cars")
+    owners = db.relationship("User", secondary=car_links, back_populates="cars")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
 
 
-
-def main():
+def add_entities():
     User.create(
         username="dbsrxvqujuce",
         password="$N:K]r3",
-        first_name="John",
-        last_name="Smith",
+        firstname="John",
+        lastname="Smith",
     )
     User.create(
         username="xwhxycctuyce",
         password="]2[xrCh>",
-        first_name="Jane",
-        last_name="Doe",
+        firstname="Jane",
+        lastname="Doe",
     )
     User.create(
         username="qrtdavjtzhwu",
         password="F37ZLv,W",
-        first_name="Barack",
-        last_name="Obama",
+        firstname="Barack",
+        lastname="Obama",
     )
     User.create(
         username="vsvvkeqgkczp",
         password="N%2^t<4_",
-        first_name="Ada",
-        last_name="Lovelace",
+        firstname="Ada",
+        lastname="Lovelace",
     )
     User.create(
         username="tvjkgyphhtfw",
         password='Py88"B:$',
-        first_name="Edsger",
-        last_name="Dijkstra",
+        firstname="Edsger",
+        lastname="Dijkstra",
     )
     # Duplicate username, what happens?
     User.create(
         username="tvjkgyphhtfw",
         password='Py88"B:$',
-        first_name="Edsger",
-        last_name="Dijkstra",
+        firstname="Edsger",
+        lastname="Dijkstra",
     )
 
     passengers = [
@@ -360,7 +354,7 @@ def main():
     )
     db.session.commit()
 
-    driver1 = User.from_username("xwhxycctuyce").driver
+    driver1 = User.from_username("xwhxycctuyce")
     driver1.cars.append(
         Car(
             license_plate="8-ABC-001",
@@ -384,7 +378,7 @@ def main():
     )
     db.session.commit()
 
-    driver2 = User.query.get(5).driver
+    driver2 = User.query.get(5)
     driver2.cars.append(Car.query.get("5-THX-435"))
     db.session.commit()
 
@@ -417,6 +411,15 @@ def main():
     ride.passengers.append(Passenger.query.get(4))
     ride.passengers.append(Passenger.query.get(1))
     db.session.commit()
+
+def main():
+    # add_entities()
+    time = datetime(year=2020, month=2, day=24, hour=10, minute=38, second=42)
+    delta = timedelta(minutes=4, seconds=60)
+    rides = Ride.search(arrival_time=time, time_delta=delta)
+    for ride in rides:
+        print(ride.arrival_time)
+
 
 
 if __name__ == "__main__":

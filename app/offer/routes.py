@@ -21,4 +21,4 @@ def offer():
 
 @bp.route('/find')
 def find():
-    return render_template('find.html', title='Find', rides=read_all_drives())
+    return render_template('find.html', title='Find', rides=Ride.get_all())

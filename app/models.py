@@ -6,7 +6,7 @@ from json import loads
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from flask_login import UserMixin
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DatabaseError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, login
@@ -34,7 +34,7 @@ car_links = db.Table(
 
 ride_links = db.Table(
     # TODO: Cascade on delete
-    # is dit geen overbodige informatie als er al en tabel is met accepted requests?
+    # TODO: eliminate redundancy
     "ride_links",
     db.metadata,
     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
@@ -76,7 +76,7 @@ class PassengerRequest(db.Model):
 
         try:
             db.session.commit()
-        except IntegrityError as e:
+        except DatabaseError as e:
             return e
 
         return self
@@ -202,7 +202,7 @@ def load_user(id):
 #     def to_json(self):
 #         return {"id": self.id, "username": self.user.username}
 
-# TODO: remove past rides
+
 class Ride(db.Model):
     __tablename__ = "rides"
 
@@ -254,7 +254,7 @@ class Ride(db.Model):
         db.session.add(request)
         try:
             db.session.commit()
-        except IntegrityError as e:
+        except DatabaseError as e:
             db.session.rollback()
             return e
         return request
