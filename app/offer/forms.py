@@ -1,3 +1,4 @@
+from flask_wtf import FlaskForm
 from wtforms import SubmitField
 from wtforms.fields import IntegerField, FloatField, DateTimeField
 from wtforms.validators import DataRequired, NumberRange, ValidationError
@@ -37,3 +38,8 @@ class OfferForm(DictForm):
     def validate_arrival_time(self, arrival_time):
         if arrival_time.data <= datetime.utcnow():
             raise ValidationError('Arrival time must be in the future')
+
+
+class FindForm(FlaskForm):
+    ride_id = IntegerField('ride_id', [DataRequired()])
+    request = SubmitField('request')

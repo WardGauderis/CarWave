@@ -1,7 +1,7 @@
 from flask import render_template, request, url_for, redirect
 from flask_login import current_user, login_required
 from app.offer import bp
-from app.offer.forms import OfferForm
+from app.offer.forms import OfferForm, FindForm
 from app.crud import create_drive, read_all_drives
 
 
@@ -9,10 +9,15 @@ from app.crud import create_drive, read_all_drives
 @login_required
 def offer():
     form = OfferForm()
-    if form.validate_on_submit():
-        user = current_user
-        create_drive(form, user)
-        return redirect(url_for('main.index'))
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            user = current_user
+            create_drive(form, user)
+            return redirect(url_for('main.index'))
+        else:
+            print(form.get_errors()) #TODO: howto error handling
+            return redirect(url_for('main.index'))
+
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
     date = request.args.get('dt')
@@ -21,4 +26,5 @@ def offer():
 
 @bp.route('/find')
 def find():
-    return render_template('find.html', title='Find', rides=Ride.get_all())
+    form = FindForm()
+    return render_template('find.html', title='Find', form=form, rides=read_all_drives())

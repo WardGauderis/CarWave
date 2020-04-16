@@ -24,36 +24,41 @@
 
 {% block app_content %}
 
-    <div id="map" style="height: 720px;"></div>
+    <div id="map" style="height: 600px;"></div>
 
     <div class="row">
         <div class="col">
             <div class="card">
                 <div class="card-body">
+
                     <h5 id="route" class="card-title">No route selected</h5>
+
+                    <form method="post" name="ride">
+                        {{ form.from_lon(id="from_lon", type="hidden") }}
+                        {{ form.from_lat(id="from_lat", type="hidden") }}
+                        {{ form.to_lon(id="to_lon", type="hidden") }}
+                        {{ form.to_lat(id="to_lat", type="hidden") }}
+                        {{ form.arrival_time(id="arrival_time", type="hidden") }}
+
+                        <div class="form-row" style="padding:10px">
+                            <div class="ui-widget col-sm">
+                                {{ form.passenger_places(class="form-control", id="passengers", placeholder="passenger capacity") }}
+                            </div>
+                        </div>
+
+                        <div class="form-row" style="padding:10px">
+                            <div class="ui-widget col-sm">
+                                {{ form.confirm(class="form-control", id="confirm") }}
+                            </div>
+                        </div>
+                    </form>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <form method="post" name="ride">
-        {{ form.from_lon(id="from_lon", type="hidden") }}
-        {{ form.from_lat(id="from_lat", type="hidden") }}
-        {{ form.to_lon(id="to_lon", type="hidden") }}
-        {{ form.to_lat(id="to_lat", type="hidden") }}
 
-        <div class="ui-widget col-sm">
-            {{ form.arrival_time(class="form-control", id="arrival_time", readonly=true) }}
-        </div>
-
-        <div class="ui-widget col-sm">
-            {{ form.passenger_places(class="form-control", id="passengers") }}
-        </div>
-
-        <div class="ui-widget col-sm">
-            {{ form.confirm(class="form-control", id="confirm") }}
-        </div>
-    </form>
 
 {% endblock %}
 
@@ -106,8 +111,14 @@
             let date = new Date('{{ dt }}');
             date = new Date(date.getTime() + time * 60000);
 
-            document.getElementById("route").innerHTML = (time + "min (" + dist + "km)");
+            let eta = date.getHours() + ':';
+
+            if(date.getMinutes() < 10) eta = eta + '0' + date.getMinutes();
+            else eta = eta + date.getMinutes();
+
+            document.getElementById("route").innerHTML = (time + "min (" + dist + "km) - eta: " + eta);
             document.getElementById("arrival_time").value = date.toISOString();
+            alert(document.getElementById("arrival_time").value);
         }).addTo(map);
 
         // this hides the plan from the map
