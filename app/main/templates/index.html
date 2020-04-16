@@ -39,6 +39,7 @@
     <div class="bg"></div>
 
     <div class="container">
+        {#        TODO fix mobile view#}
         <h1 class="text-center font-weight-bold">
             <span style="font-size: 112px;font-family:Varela Round;color:#f7931e">carwave</span>
         </h1>
@@ -46,34 +47,34 @@
             <span style="font-size: 72px;font-family:Varela Round; color:#0e0f3b">surf to your destination</span>
         </h1>
 
-    <form method="post" name="ride">
-        <div class="form-row" style="padding:10px">
-            <div class="ui-widget col-sm" style="margin:0">
-                {{ form.from_location(class="form-control", id="from", placeholder="from", style="border-radius:100px") }}
-            </div>
-            <div class="col-sm-auto">
-                <button id="reverse" type="button" class="btn btn-white d-none d-sm-block">&#8646</button>
-            </div>
-            <div class="ui-widget col-sm">
-                {{ form.to_location(class="form-control", id="to", placeholder="to", style="border-radius:100px") }}
-            </div>
+        <form method="post" name="ride">
+            <div class="form-row" style="padding:10px">
+                <div class="ui-widget col-sm" style="margin:0">
+                    {{ form.from_location(class="form-control", id="from", placeholder="from", style="border-radius:100px") }}
+                </div>
+                <div class="col-sm-auto">
+                    <button id="reverse" type="button" class="btn btn-white d-none d-sm-block">&#8646</button>
+                </div>
+                <div class="ui-widget col-sm">
+                    {{ form.to_location(class="form-control", id="to", placeholder="to", style="border-radius:100px") }}
+                </div>
 
-        </div>
-        <div class="form-row" style="padding:10px">
-            <div class="ui-widget col-sm">
-                {{ form.date(class="form-control", type="date", class="center form-control", style="border-radius:100px") }}
             </div>
+            <div class="form-row" style="padding:10px">
+                <div class="ui-widget col-sm">
+                    {{ form.date(class="form-control", type="date", class="center form-control", style="border-radius:100px") }}
+                </div>
 
-            <div class="ui-widget col-sm">
-                {{ form.time(id="time", type="time", class="center form-control", style="border-radius:100px") }}
+                <div class="ui-widget col-sm">
+                    {{ form.time(id="time", type="time", class="center form-control", style="border-radius:100px") }}
+                </div>
             </div>
-        </div>
-        <div class="form-row justify-content-md-center" style="padding:10px">
-            {{ form.offer(value='offer', class="col-4 btn text-white form-control", placeholder="offer drive", style="border-radius:100px; background-color:#f7931e") }}
-            <div class="col-2"></div>
-            {{ form.find(value = 'find', class="col-4 btn text-white form-control", placeholder="find drive", style="border-radius:100px; background-color:#0e0f3b") }}
-        </div>
-    </form>
+            <div class="form-row justify-content-md-center" style="padding:10px">
+                {{ form.offer(value='offer', class="col-4 btn text-white form-control", placeholder="offer drive", style="border-radius:100px; background-color:#f7931e") }}
+                <div class="col-2"></div>
+                {{ form.find(value = 'find', class="col-4 btn text-white form-control", placeholder="find drive", style="border-radius:100px; background-color:#0e0f3b") }}
+            </div>
+        </form>
     </div>
 
 {% endblock %}

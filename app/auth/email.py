@@ -1,5 +1,4 @@
 from flask_mail import Message
-from flask import current_app
 from flask import render_template
 
 from app import mail
@@ -13,7 +12,6 @@ def send_email(subject, recipients, text_body, html_body):
 
 
 def send_password_reset_email(user):
-    print("hallo3")
     token = user.get_reset_password_token()
     send_email('[Carwave] Reset Your Password',
                recipients=[user.email],

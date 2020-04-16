@@ -5,7 +5,8 @@ from jwt import decode, DecodeError
 
 def create_user(form) -> User:
     try:
-        user = User(form)
+        user = User()
+        user.from_form(form)
         db.session.add(user)
         db.session.commit()
         return user
@@ -24,6 +25,13 @@ def read_user_from_login(form) -> User:
         abort(400, 'Invalid user login')
 
 
+def read_user_from_id(id) -> User:
+    try:
+        return User.query.get(id)
+    except:
+        abort(400, 'Invalid user id')
+
+
 def read_user_from_token(token) -> User:
     try:
         data = decode(
@@ -38,7 +46,7 @@ def read_user_from_token(token) -> User:
 
 def update_user(user: User, form):
     try:
-        user.__init__(form)
+        user.from_form(form)
         db.session.commit()
     except:
         db.session.rollback()
@@ -56,7 +64,8 @@ def delete_user(user: User):
 
 def create_drive(form, user: User) -> Ride:
     try:
-        drive = Ride(form)
+        drive = Ride()
+        drive.from_form(form)
         drive.driver_id = user.id
         db.session.add(drive)
         db.session.commit()
@@ -91,7 +100,7 @@ def read_all_drives(limit: int = None) -> list:
 
 def update_drive(drive: Ride, form):
     try:
-        drive.__init__(form)
+        drive.from_form(form)
         db.session.commit()
     except:
         db.session.rollback()

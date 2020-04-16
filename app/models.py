@@ -102,10 +102,11 @@ class User(UserMixin, db.Model):
         "Ride", secondary="passenger_requests", back_populates="requests"
     )
 
-    def __init__(self, form):
+    def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
-        self.set_password(form.password.data)
+        if hasattr(form, 'password'):
+            self.set_password(form.password.data)
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
@@ -240,7 +241,7 @@ class Ride(db.Model):
         "User", secondary="passenger_requests", back_populates="requests"
     )
 
-    def __init__(self, form):
+    def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
         self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"

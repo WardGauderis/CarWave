@@ -2,6 +2,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
 from app.models import User
 from app.forms import DictForm
+from flask_login import current_user
 
 
 class LoginForm(DictForm):
@@ -29,6 +30,12 @@ class RegistrationForm(DictForm):
         self.password_validation.process_formdata(self.password.data)
         return self.validate_json()
 
+    def from_database(self, user: User):
+        self.username.data = user.username
+        self.email.data = user.email
+        self.firstname.data = user.firstname
+        self.lastname.data = user.lastname
+
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
@@ -45,11 +52,3 @@ class ResetPasswordForm(DictForm):
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Request Password Reset')
-
-
-class EditProfileForm(DictForm):
-    first_name = StringField('First Name', validators=[DataRequired(), Length(max=64)])
-    last_name = StringField('Last Name', validators=[DataRequired(), Length(max=64)])
-    # email = StringField('Email', validators=[DataRequired(), Length(max=128), Email()])
-    # phone_number = StringField('Phone number', validators=[Length(max=64)])
-    submit = SubmitField('Save changes')
