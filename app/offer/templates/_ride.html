@@ -1,0 +1,38 @@
+<div class="card m-3">
+    <div class=" card-header">
+        <nav>
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-item nav-link active" data-toggle="tab"
+                       href="#body-overview-{{ ride.id }}">Overview</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-item nav-link" data-toggle="tab"
+                       href="#body-map-{{ ride.id }}">Map</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-item nav-link" data-toggle="tab"
+                       href="#body-car-{{ ride.id }}">Car</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="tab-content card-body">
+        <div class="tab-pane fade show active" id="body-overview-{{ ride.id }}">
+            {#            TODO invullen#}
+            <span class="text-left font-weight-bold">From: </span>TODO<br>
+            <span class="text-left font-weight-bold">To: </span>TODO<br>
+            <span class="text-left font-weight-bold">Arrival Time: </span>{{ ride.arrival_time }}<br>
+            <span class="text-left font-weight-bold">Driver: </span><a href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
+{#            TODO places left, passengers, ...#}
+            <span class="text-left font-weight-bold">Passenger Places: </span>{{ ride.passenger_places }}<br>
+        </div>
+        <div class="tab-pane fade" id="body-map-{{ ride.id }}">
+            <h5 class="card-title">Map</h5>
+        </div>
+        <div class="tab-pane fade" id="body-car-{{ ride.id }}">
+            <h5 class="card-title">Car</h5>
+        </div>
+    </div>
+</div>

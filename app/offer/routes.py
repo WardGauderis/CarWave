@@ -15,7 +15,7 @@ def offer():
             create_drive(form, user)
             return redirect(url_for('main.index'))
         else:
-            print(form.get_errors()) #TODO: howto error handling
+            print(form.get_errors())  # TODO: howto error handling
             return redirect(url_for('main.index'))
 
     from_location = request.args.get('fl')
@@ -28,3 +28,8 @@ def offer():
 def find():
     form = FindForm()
     return render_template('find.html', title='Find', form=form, rides=read_all_drives())
+
+
+@bp.route('/rides')
+def rides():
+    return render_template('rides.html', title='Available Rides', rides=read_all_drives())

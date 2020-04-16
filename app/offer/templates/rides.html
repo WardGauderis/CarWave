@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    {% for ride in rides %}
+        {% include '_ride.html' %}
+    {% endfor %}
+{% endblock %}

@@ -11,7 +11,7 @@ def user(user_id):
     user = read_user_from_id(user_id)
     if user is None:
         abort(404, 'User does not exist')
-    return render_template('profile.html', user=user)
+    return render_template('profile.html', title=user.username, user=user)
 
 
 @bp.route('/user/update', methods=['GET', 'POST'])
@@ -24,4 +24,4 @@ def edit():
         return redirect(url_for('profile.user', user_id=current_user.id))
     elif request.method == 'GET':
         form.from_database(current_user)
-    return render_template('edit_profile.html', form=form)
+    return render_template('edit_profile.html', title="Edit profile",form=form)
