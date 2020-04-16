@@ -32,19 +32,21 @@ car_links = db.Table(
     db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
 )
 
-ride_links = db.Table(
-    # TODO: Cascade on delete
-    # TODO: eliminate redundancy
-    "ride_links",
-    db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
-    db.Column(
-        "user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True
-    ),
-)
+
+# ride_links = db.Table(
+#     # TODO: Cascade on delete
+#     # TODO: eliminate redundancy
+#     "ride_links",
+#     db.metadata,
+#     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
+#     db.Column(
+#         "user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True
+#     ),
+# )
 
 
 class PassengerRequest(db.Model):
+    # TODO DELETION, CHECK ON AMOUNT, CHECK ON PASSENGER==DRIVER, PASSENGERPLACES LEFT
     __tablename__ = "passenger_requests"
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
@@ -55,11 +57,9 @@ class PassengerRequest(db.Model):
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
     ride = db.relationship(
-        "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
+        "Ride", back_populates="requests"
     )
-    passenger = db.relationship(
-        "User", backref=db.backref("users", cascade="all, delete-orphan")
-    )
+    passenger = db.relationship("User", back_populates="requests")
 
     def update(self, action):
         if action == "accept":
@@ -97,9 +97,9 @@ class User(UserMixin, db.Model):
     driver_rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", secondary=car_links, back_populates="owners")
 
-    passenger_rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
+    # passenger_rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers", lazy="dynamic")
     requests = db.relationship(
-        "Ride", secondary="passenger_requests", back_populates="requests"
+        "PassengerRequest", back_populates="passenger", lazy="dynamic"
     )
 
     def from_form(self, form):
@@ -110,6 +110,9 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
+
+    def passenger_rides(self):
+        return self.requests.filter_by(status="accepted")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -232,13 +235,13 @@ class Ride(db.Model):
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
 
-    passengers = db.relationship(
-        "User",
-        secondary=ride_links,
-        back_populates="passenger_rides"
-    )
+    # passengers = db.relationship(
+    #     "User",
+    #     secondary=ride_links,
+    #     back_populates="passenger_rides"
+    # )
     requests = db.relationship(
-        "User", secondary="passenger_requests", back_populates="requests"
+        "PassengerRequest", back_populates="ride", lazy="dynamic"
     )
 
     def from_form(self, form):
@@ -249,6 +252,9 @@ class Ride(db.Model):
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
+
+    def passengers(self):
+        return self.requests.filter_by(status="accepted")
 
     def post_passenger_request(self, passenger_id):
         request = PassengerRequest(self.id, passenger_id)
