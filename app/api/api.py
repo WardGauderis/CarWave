@@ -63,7 +63,7 @@ def get_drive(drive_id: int):
     ride = read_drive_from_id(drive_id)
 
     if ride is None:
-        abort(400, "Invalid drive id")
+        abort(404, "Invalid drive id")
 
     return (
         {
@@ -73,7 +73,7 @@ def get_drive(drive_id: int):
                 passenger.id for passenger in ride.passengers
             ],
             "passenger-places": ride.passenger_places,
-            "from": -1,
+            "from": -1, #TODO format
             "start": -1,
             "arrive-by": ride.arrival_time,
         },
