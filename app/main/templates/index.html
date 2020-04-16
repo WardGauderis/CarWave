@@ -6,47 +6,35 @@
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela+Round"/>
 
     <style>
-        {#body {#}
-        {#  background: url('https://img2.goodfon.com/original/1920x1080/1/5d/photographer-kim-leuenberger-6185.jpg') no-repeat center center fixed;#}
-        {#  -webkit-background-size: cover;#}
-        {#  -moz-background-size: cover;#}
-        {#  background-size: cover;#}
-        {#  -o-background-size: cover;#}
-        {# }#}
-
         body, html {
-            height: 100%;
-        }
-
-        .bg {
-            /* The image used */
-            background-image: url("https://mdbootstrap.com/img/Photos/Horizontal/Nature/full page/img(20).jpg");
-
-            /* Full height */
-            height: 100%;
-
-            /* Center and scale the image nicely */
+            background-image: url('{{ url_for('main.static', filename='wave2.jpg') }}');
             background-position: center;
-            background-repeat: no-repeat;
             background-size: cover;
+            background-repeat: no-repeat;
+
+            height: 100%;
         }
 
+        h1 {
+            font-family: Varela Round, sans-serif
+        }
+
+        #}#}
     </style>
 {% endblock %}
 
 {% block app_content %}
-
-    <div class="bg"></div>
-
+    <div>
+        <h1 class="text-center font-weight-bold display-1 m-4"
+            style="color:#f7931e">
+            CarWave
+        </h1>
+        <h1 class="text-center font-weight-bold display-4 m-3"
+            style="color:#0e0f3b">
+            surf to your destination
+        </h1>
+    </div>
     <div class="container">
-        {#        TODO fix mobile view#}
-        <h1 class="text-center font-weight-bold">
-            <span style="font-size: 112px;font-family:Varela Round;color:#f7931e">carwave</span>
-        </h1>
-        <h1 class="text-center font-weight-bold">
-            <span style="font-size: 72px;font-family:Varela Round; color:#0e0f3b">surf to your destination</span>
-        </h1>
-
         <form method="post" name="ride">
             <div class="form-row" style="padding:10px">
                 <div class="ui-widget col-sm" style="margin:0">
@@ -76,7 +64,6 @@
             </div>
         </form>
     </div>
-
 {% endblock %}
 
 {% block app_scripts %}
