@@ -1,6 +1,7 @@
-from app.models import User, db, current_app, Ride
+from app.models import User, db, current_app, Ride, PassengerRequest
 from flask import abort
 from jwt import decode, DecodeError
+from datetime import datetime
 
 
 def create_user(form) -> User:
@@ -113,3 +114,50 @@ def delete_drive(drive: Ride):
         db.session.commit()
     except:
         abort(400, 'Invalid drive deletion')
+
+
+def create_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
+    try:
+        request = PassengerRequest()
+        request.ride_id = drive.id
+        request.user_id = passenger.id
+        db.session.add(request)
+        db.session.commit()
+        return request
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid passenger request')
+
+
+def read_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
+    try:
+        return PassengerRequest.query.get((drive.id, passenger.id))
+    except:
+        abort(400, 'Invalid passenger request read')
+
+
+def update_passenger_request(request: PassengerRequest, action: str) -> PassengerRequest:
+    if request.status != "pending":
+        abort(400, "This request is not pending")
+    try:
+        if action == "accept":
+            request.status = "accepted"
+        elif action == "reject":
+            request.status = "rejected"
+        else:
+            raise ValueError("Undefined action")
+
+        request.last_modified = datetime.utcnow()
+        db.session.commit()
+        return request
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid passenger request update')
+
+
+def delete_passenger_request(request: PassengerRequest):
+    try:
+        db.session.delete(request)
+        db.session.commit()
+    except:
+        abort(400, 'Invalid passenger request deletion')
