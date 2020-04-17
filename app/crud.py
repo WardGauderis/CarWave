@@ -121,6 +121,10 @@ def delete_drive(drive: Ride):
 
 
 def create_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
+    if passenger == drive.driver:
+        abort(400, 'Driver cannot be a passenger in his own ride')
+    elif read_passenger_request(passenger, drive):
+        abort(400, 'User has already created a passenger request for this ride')
     try:
         request = PassengerRequest()
         request.ride_id = drive.id
@@ -155,7 +159,8 @@ def update_passenger_request(request: PassengerRequest, action: str) -> Passenge
         request.last_modified = datetime.utcnow()
         db.session.commit()
         return request
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid passenger request update')
 

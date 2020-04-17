@@ -69,7 +69,7 @@ class PassengerRequest(db.Model):
 
     def update(self, action):
         if action == "accept":
-            self.ride.passengers.append(self.passenger)
+            self.ride.accepted_requests.append(self.passenger)
             self.status = "accepted"
             db.session.add(self.ride)
         elif action == "reject":
@@ -408,8 +408,8 @@ def add_entities():
     db.session.commit()
 
     ride = Ride.query.get(1)
-    ride.passengers.append(Passenger.query.get(4))
-    ride.passengers.append(Passenger.query.get(1))
+    ride.accepted_requests.append(Passenger.query.get(4))
+    ride.accepted_requests.append(Passenger.query.get(1))
     db.session.commit()
 
 def main():

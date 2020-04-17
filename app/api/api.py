@@ -70,12 +70,12 @@ def get_drive(drive_id: int):
             "id": ride.id,
             "driver-id": ride.driver_id,
             "passenger-ids": [
-                passenger.id for passenger in ride.passengers
+                request.user_id for request in ride.accepted_requests()
             ],
             "passenger-places": ride.passenger_places,
-            "from": -1,  # TODO format
-            "start": -1,
-            "arrive-by": ride.arrival_time,
+            "from": ride.depart_from,
+            "to": ride.arrive_at,
+            "arrive-by": ride.arrival_time.isoformat(),
         },
         200,
     )
@@ -89,7 +89,8 @@ def get_passengers(drive_id):
         abort(400, "Invalid drive id")
 
     return Response(
-        json.dumps([passenger.to_json() for passenger in ride.passengers()]),
+        json.dumps(
+            [{"id": request.user_id, "username": request.passenger.username} for request in ride.accepted_requests()]),
         status=200,
         mimetype="application/json"
     )
@@ -104,12 +105,12 @@ def passenger_requests(drive_id):
     user = g.current_user
 
     if request.method == "GET":
-        if ride.driver_id == user.id:
+        if ride.driver == user:
             return Response(
                 json.dumps([
                     {
-                        "id": p_request.passenger_id,
-                        "username": p_request.passenger.user.username,
+                        "id": p_request.user_id,
+                        "username": p_request.passenger.username,
                         "status": p_request.status,
                         "time-created": p_request.created_at.isoformat(),
                     }
@@ -124,13 +125,13 @@ def passenger_requests(drive_id):
         p_request = create_passenger_request(user, ride)
         return (
             {
-                "id": p_request.passenger_id,
-                "username": p_request.passenger.user.username,
+                "id": p_request.user_id,
+                "username": p_request.passenger.username,
                 "status": p_request.status,
                 "time-created": p_request.created_at.isoformat(),
             },
             201,
-            {"Location": f"/drives/{p_request.ride_id}/passenger-requests/{p_request.passenger_id}"},
+            {"Location": f"/drives/{p_request.ride_id}/passenger-requests/{p_request.user_id}"},
         )
 
 
@@ -160,8 +161,8 @@ def accept_passenger_request(drive_id, user_id):
 
         return (
             {
-                "id": p_request.passenger_id,
-                "username": p_request.passenger.user.username,
+                "id": p_request.user_id,
+                "username": p_request.passenger.username,
                 "status": p_request.status,
                 "time-created": p_request.created_at.isoformat(),
                 "time-updated": p_request.last_modified.isoformat(),
@@ -196,7 +197,7 @@ def search_drive():
             {
                 "id": ride.id,
                 "driver-id": ride.driver_id,
-                "passenger-ids": [passenger.id for passenger in ride.passengers],
+                "passenger-ids": [passenger.id for passenger in ride.accepted_requests],
                 "from": ride.depart_from,
                 "to": ride.arrive_at,
                 "arrive-by": ride.arrival_time.isoformat(),

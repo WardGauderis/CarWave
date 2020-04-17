@@ -6,7 +6,6 @@ from json import loads
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from flask_login import UserMixin
-from sqlalchemy.exc import DatabaseError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, login
@@ -44,12 +43,12 @@ car_links = db.Table(
 
 
 class PassengerRequest(db.Model):
-    # TODO DELETION, CHECK ON AMOUNT, CHECK ON PASSENGER==DRIVER, PASSENGERPLACES LEFT
+    # TODO DELETION
     __tablename__ = "passenger_requests"
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    status = db.Column(db.Enum("accepted", "pending", "declined", name="status_enum"), default="pending",
+    status = db.Column(db.Enum("accepted", "pending", "rejected", name="status_enum"), default="pending",
                        nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
@@ -90,7 +89,7 @@ class User(UserMixin, db.Model):
         return f"<User(id={self.id}, username={self.username})>"
 
     def passenger_rides(self):
-        return self.requests.filter_by(status="accepted")
+        return self.requests.filter_by(status="accepted").all()
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -231,11 +230,11 @@ class Ride(db.Model):
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
-    def passengers(self) -> list:
+    def accepted_requests(self):
         return self.requests.filter_by(status="accepted")
 
     def passenger_places_left(self) -> int:
-        return self.passenger_places - self.passengers().count()
+        return self.passenger_places - self.accepted_requests().count()
 
     def has_place_left(self) -> bool:
         return self.passenger_places_left() != 0
