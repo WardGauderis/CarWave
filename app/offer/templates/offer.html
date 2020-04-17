@@ -117,11 +117,7 @@
             else eta = eta + date.getMinutes();
 
             document.getElementById("route").innerHTML = (time + "min (" + dist + "km) - eta: " + eta);
-
-            const str = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDay() +
-                ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
-
-            document.getElementById("arrival_time").value = str;
+            document.getElementById("arrival_time").value = date.toISOString();
         }).addTo(map);
 
         // this hides the plan from the map
