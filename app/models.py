@@ -34,8 +34,6 @@ car_links = db.Table(
 
 
 # ride_links = db.Table(
-#     # TODO: Cascade on delete
-#     # TODO: eliminate redundancy
 #     "ride_links",
 #     db.metadata,
 #     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
@@ -60,26 +58,6 @@ class PassengerRequest(db.Model):
         "Ride", back_populates="requests"
     )
     passenger = db.relationship("User", back_populates="requests")
-
-    def update(self, action):
-        if action == "accept":
-            self.ride.passengers.append(self.passenger)
-            self.status = "accepted"
-            db.session.add(self.ride)
-        elif action == "reject":
-            self.status = "rejected"
-        else:
-            raise ValueError("Undefined action")
-
-        self.last_modified = datetime.utcnow()
-        db.session.add(self)
-
-        try:
-            db.session.commit()
-        except DatabaseError as e:
-            return e
-
-        return self
 
 
 class User(UserMixin, db.Model):
@@ -253,18 +231,14 @@ class Ride(db.Model):
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
 
-    def passengers(self):
+    def passengers(self) -> list:
         return self.requests.filter_by(status="accepted")
 
-    def post_passenger_request(self, passenger_id):
-        request = PassengerRequest(self.id, passenger_id)
-        db.session.add(request)
-        try:
-            db.session.commit()
-        except DatabaseError as e:
-            db.session.rollback()
-            return e
-        return request
+    def passenger_places_left(self) -> int:
+        return self.passenger_places - self.passengers().count()
+
+    def has_place_left(self) -> bool:
+        return self.passenger_places_left() != 0
 
     @property
     def depart_from(self):

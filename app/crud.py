@@ -1,6 +1,7 @@
-from app.models import User, db, current_app, Ride
+from app.models import User, db, current_app, Ride, PassengerRequest
 from flask import abort
 from jwt import decode, DecodeError
+from datetime import datetime
 
 
 def create_user(form) -> User:
@@ -98,6 +99,10 @@ def read_all_drives(limit: int = None) -> list:
         abort(400, 'Invalid drive read')
 
 
+def search_drives() -> list:    #TODO
+    pass
+
+
 def update_drive(drive: Ride, form):
     try:
         drive.from_form(form)
@@ -113,3 +118,51 @@ def delete_drive(drive: Ride):
         db.session.commit()
     except:
         abort(400, 'Invalid drive deletion')
+
+
+def create_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
+    try:
+        request = PassengerRequest()
+        request.ride_id = drive.id
+        request.user_id = passenger.id
+        db.session.add(request)
+        db.session.commit()
+        return request
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid passenger request')
+
+
+def read_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
+    try:
+        return PassengerRequest.query.get((drive.id, passenger.id))
+    except:
+        abort(400, 'Invalid passenger request read')
+
+
+def update_passenger_request(request: PassengerRequest, action: str) -> PassengerRequest:
+    if request.status != "pending":
+        abort(400, "This request is not pending")
+    if action == "accept":
+        if not request.ride.has_place_left():
+            abort(400, "This request cannot be accepted because there are no passenger places left")
+        request.status = "accepted"
+    elif action == "reject":
+        request.status = "rejected"
+    else:
+        abort(400, 'Invalid passenger request update')
+    try:
+        request.last_modified = datetime.utcnow()
+        db.session.commit()
+        return request
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid passenger request update')
+
+
+def delete_passenger_request(request: PassengerRequest):
+    try:
+        db.session.delete(request)
+        db.session.commit()
+    except:
+        abort(400, 'Invalid passenger request deletion')

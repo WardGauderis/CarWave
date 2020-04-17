@@ -1,12 +1,12 @@
 import json
 
 from flask import Response, abort, request, g
-from sqlalchemy.exc import DatabaseError
 
 from app.api import bp
 from app.auth.auth import token_auth
 from app.models import Ride, PassengerRequest
-from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive
+from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive, create_passenger_request, \
+    update_passenger_request
 from app.auth.forms import RegistrationForm, LoginForm
 from app.offer.forms import OfferForm
 
@@ -73,7 +73,7 @@ def get_drive(drive_id: int):
                 passenger.id for passenger in ride.passengers
             ],
             "passenger-places": ride.passenger_places,
-            "from": -1, #TODO format
+            "from": -1,  # TODO format
             "start": -1,
             "arrive-by": ride.arrival_time,
         },
@@ -89,7 +89,7 @@ def get_passengers(drive_id):
         abort(400, "Invalid drive id")
 
     return Response(
-        json.dumps([passenger.to_json() for passenger in ride.passengers]),
+        json.dumps([passenger.to_json() for passenger in ride.passengers()]),
         status=200,
         mimetype="application/json"
     )
@@ -101,8 +101,8 @@ def passenger_requests(drive_id):
     ride: Ride = read_drive_from_id(drive_id)
     if ride is None:
         abort(400, f"Drive {drive_id} doesn't exist.")
-
     user = g.current_user
+
     if request.method == "GET":
         if ride.driver_id == user.id:
             return Response(
@@ -121,10 +121,7 @@ def passenger_requests(drive_id):
         else:
             abort(401, "Invalid authorization")
     else:  # POST
-        p_request = ride.post_passenger_request(user.id)
-        if isinstance(p_request, DatabaseError):
-            abort(500, p_request.statement)
-
+        p_request = create_passenger_request(user, ride)
         return (
             {
                 "id": p_request.passenger_id,
@@ -140,8 +137,11 @@ def passenger_requests(drive_id):
 @bp.route("/drives/<int:drive_id>/passenger-requests/<int:user_id>", methods=["POST"])
 @token_auth.login_required
 def accept_passenger_request(drive_id, user_id):
-    ride = Ride.get(drive_id)
+    ride = read_drive_from_id(drive_id)
+    if ride is None:
+        abort(400, f"Drive {drive_id} doesn't exist.")
     user = g.current_user
+
     if ride.driver_id == user.id:
         json = request.get_json() or {}
         try:
@@ -154,11 +154,9 @@ def accept_passenger_request(drive_id, user_id):
 
         p_request = PassengerRequest.query.get((ride.id, user_id))
         if p_request is None:
-            abort(400, "No such passenger request")
-        elif p_request.status != "pending":
-            abort(400, "This request has already been accepted or declined")
+            abort(404, "No such passenger request")
 
-        p_request = p_request.update(action)
+        p_request = update_passenger_request(p_request, action)
 
         return (
             {
@@ -174,7 +172,8 @@ def accept_passenger_request(drive_id, user_id):
         abort(401, "Invalid authorization")
 
 
-@bp.route("/drives/search", methods=["GET"])  # TODO search drive
+# TODO search drive -> doe dit in de crud functie search_drives() zodate de site dit ook kan gebruiken
+@bp.route("/drives/search", methods=["GET"])
 def search_drive():
     MIN_RIDES = 1
     MAX_RIDES = 25
