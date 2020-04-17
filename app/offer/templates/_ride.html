@@ -27,10 +27,9 @@
             <span class="text-left font-weight-bold">Driver: </span><a
                 href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
             {#            TODO places left, passengers, ...#}
-            <span class="text-left font-weight-bold">Passenger Places: </span>{{ ride.passenger_places }}<br>
+            <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
         </div>
         <div class="tab-pane fade" id="body-map-{{ ride.id }}">
-            <h5 class="card-title" onclick="alert('heya')">Map</h5>
             <div id="map{{ ride.id }}" style="height: 500px;"></div>
         </div>
         <div class="tab-pane fade" id="body-car-{{ ride.id }}">
