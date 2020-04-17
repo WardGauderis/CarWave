@@ -174,6 +174,7 @@ def accept_passenger_request(drive_id, user_id):
 
 
 # TODO search drive -> doe dit in de crud functie search_drives() zodate de site dit ook kan gebruiken
+# TODO voorkeuren: leeftijd, geslacht, verbruik
 @bp.route("/drives/search", methods=["GET"])
 def search_drive():
     MIN_RIDES = 1

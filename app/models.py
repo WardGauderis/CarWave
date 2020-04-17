@@ -21,15 +21,16 @@ TODO:
     - Serialise models to JSON for the API requests?
 """
 
+
 # The secondary tables for the many-to-many relationships
 
-car_links = db.Table(
-    # TODO: Cascade on delete
-    "car_links",
-    db.metadata,
-    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
-    db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
-)
+# car_links = db.Table(
+#     # TODO: Cascade on delete
+#     "car_links",
+#     db.metadata,
+#     db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+#     db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
+# )
 
 
 # ride_links = db.Table(
@@ -60,6 +61,7 @@ class PassengerRequest(db.Model):
 
 
 class User(UserMixin, db.Model):
+    # TODO checks in database want alle checks gebeuren nu in de forms
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -72,7 +74,7 @@ class User(UserMixin, db.Model):
     # created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
     driver_rides = db.relationship("Ride", back_populates="driver")
-    cars = db.relationship("Car", secondary=car_links, back_populates="owners")
+    cars = db.relationship("Car", back_populates="owner")
 
     # passenger_rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers", lazy="dynamic")
     requests = db.relationship(
@@ -185,26 +187,17 @@ def load_user(id):
 
 
 class Ride(db.Model):
+    # TODO alle checks gebeuren voorlopig in CRUD
     __tablename__ = "rides"
 
     id = db.Column(db.Integer, primary_key=True)
 
     driver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     driver = db.relationship("User", back_populates="driver_rides")
-    passenger_places = db.Column(
-        db.Integer,
-        # TODO: len(ride.passengers) <= passenger_places
-        db.CheckConstraint("passenger_places >= 2"),
-        nullable=False,
-    )
+    passenger_places = db.Column(db.Integer, nullable=False)
 
-    # car_license_plate = db.Column(
-    #     db.String(16),
-    #     db.ForeignKey("cars.license_plate"),
-    #     # db.CheckConstraint("passenger_places <= car"),
-    #     nullable=True,
-    # )
-    # car = db.relationship("Car")
+    license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate"), nullable=True)
+    car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     # departure_time = db.Column(db.DateTime, nullable=True)
@@ -212,11 +205,6 @@ class Ride(db.Model):
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
 
-    # passengers = db.relationship(
-    #     "User",
-    #     secondary=ride_links,
-    #     back_populates="passenger_rides"
-    # )
     requests = db.relationship(
         "PassengerRequest", back_populates="ride", lazy="dynamic"
     )
@@ -251,17 +239,20 @@ class Ride(db.Model):
 
 
 class Car(db.Model):
+    # TODO checks in database, on delete
     __tablename__ = "cars"
 
     license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
     colour = db.Column(db.String(32), nullable=False)
-    # TODO: # of passengers driver counts as one of the passengers
-    passenger_places = db.Column(
-        db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
-    )
+    passenger_places = db.Column(db.Integer, nullable=False)
+    build_year = db.Column(db.Integer, nullable=False)
+    fuel = db.Column(db.Enum("gasoline", "diesel", "electric", name="fuel_enum"), nullable=False)
+    consumption = db.Column(db.Float, nullable=False)
 
-    owners = db.relationship("User", secondary=car_links, back_populates="cars")
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    owner = db.relationship("User", back_populates="cars")
+    rides = db.relationship("Ride", back_populates="car")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
