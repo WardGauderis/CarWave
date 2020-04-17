@@ -71,7 +71,6 @@
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
     <script type="text/javascript">
-
         let map = L.map('map', {
             minZoom: 2,
             maxZoom: 20
@@ -101,6 +100,7 @@
             },
         }).on('routingerror', function (result) {
             document.getElementById("route").innerHtml = "no route found";
+            alert("no route could be found, please try again");
         }).on('routingstart', function (result) {
             document.getElementById("route").innerHtml = "calculating route";
         }).on('routeselected', function (result) {
@@ -113,12 +113,11 @@
 
             let eta = date.getHours() + ':';
 
-            if(date.getMinutes() < 10) eta = eta + '0' + date.getMinutes();
+            if (date.getMinutes() < 10) eta = eta + '0' + date.getMinutes();
             else eta = eta + date.getMinutes();
 
             document.getElementById("route").innerHTML = (time + "min (" + dist + "km) - eta: " + eta);
             document.getElementById("arrival_time").value = date.toISOString();
-            alert(document.getElementById("arrival_time").value);
         }).addTo(map);
 
         // this hides the plan from the map

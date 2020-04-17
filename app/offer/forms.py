@@ -5,6 +5,7 @@ from wtforms.validators import DataRequired, NumberRange, ValidationError
 from app.forms import DictForm
 from datetime import datetime
 import dateutil.parser
+import pytz
 
 
 class OfferForm(DictForm):
@@ -18,7 +19,10 @@ class OfferForm(DictForm):
     confirm = SubmitField('confirm')
 
     def from_json(self, json):
-        self.arrival_time.data = json.get('arrive-by')
+        try:
+            self.arrival_time.data = dateutil.parser.isoparse(json.get('arrive-by'))
+        except:
+            self.all_errors['arrive-by'] = "Not a valid date format"
         self.passenger_places.process_formdata([json.get('passenger-places', 0)])
         try:
             self.from_lat.data = float(json.get('from')[0])
@@ -33,13 +37,7 @@ class OfferForm(DictForm):
         return self.validate_json()
 
     def validate_arrival_time(self, arrival_time):
-        try:
-            arrival_time.data = dateutil.parser.isoparse(arrival_time.data)
-        except:
-            self.all_errors['arrive-by'] = "Not a valid date format"
-            return
-
-        if arrival_time.data <= datetime.utcnow():
+        if dateutil.parser.isoparse(arrival_time.data) <= pytz.utc.localize(datetime.utcnow()):
             raise ValidationError('Arrival time must be in the future')
 
 

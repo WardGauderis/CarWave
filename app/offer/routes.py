@@ -8,7 +8,7 @@ from app.crud import create_drive, read_all_drives
 @bp.route('/offer', methods=['POST', 'GET'])
 @login_required
 def offer():
-    form = OfferForm()
+    form = OfferForm(meta={'csrf': False})
     if request.method == 'POST':
         if form.validate_on_submit():
             user = current_user
