@@ -171,8 +171,8 @@ def accept_passenger_request(drive_id, user_id):
     else:
         abort(401, "Invalid authorization")
 
-
-@bp.route("/drives/search", methods=["GET"])  # TODO search drive
+# TODO search drive -> doe dit in de crud functie search_drives() zodate de site dit ook kan gebruiken
+@bp.route("/drives/search", methods=["GET"])
 def search_drive():
     MIN_RIDES = 1
     MAX_RIDES = 25

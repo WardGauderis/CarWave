@@ -99,6 +99,10 @@ def read_all_drives(limit: int = None) -> list:
         abort(400, 'Invalid drive read')
 
 
+def search_drives() -> list:    #TODO
+    pass
+
+
 def update_drive(drive: Ride, form):
     try:
         drive.from_form(form)
@@ -139,14 +143,15 @@ def read_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
 def update_passenger_request(request: PassengerRequest, action: str) -> PassengerRequest:
     if request.status != "pending":
         abort(400, "This request is not pending")
+    if action == "accept":
+        if not request.ride.has_place_left():
+            abort(400, "This request cannot be accepted because there are no passenger places left")
+        request.status = "accepted"
+    elif action == "reject":
+        request.status = "rejected"
+    else:
+        abort(400, 'Invalid passenger request update')
     try:
-        if action == "accept":
-            request.status = "accepted"
-        elif action == "reject":
-            request.status = "rejected"
-        else:
-            raise ValueError("Undefined action")
-
         request.last_modified = datetime.utcnow()
         db.session.commit()
         return request
