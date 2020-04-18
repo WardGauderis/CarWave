@@ -10,7 +10,6 @@ from app.profile.forms import CreateCarForm
 @bp.route('/car/update', methods=['GET', 'POST'])
 @login_required
 def car_edit():
-
     create = CreateCarForm()
     update = CreateCarForm()
     update.make_update_form()
@@ -20,7 +19,6 @@ def car_edit():
     elif update.validate_on_submit():
         car = read_car_from_plate(update.license_plate.data)
         update_car(car, update)
-    print(create.get_errors())
 
     return render_template('car-edit.html', title='update cars', create=create, update=update, cars=current_user.cars)
 

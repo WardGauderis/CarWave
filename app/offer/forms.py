@@ -6,10 +6,10 @@ import dateutil.parser
 
 
 class OfferForm(DictForm):
-    from_lon = FloatField('', [DataRequired(), NumberRange(-180, 180)])
-    from_lat = FloatField('', [DataRequired(), NumberRange(-90, 90)])
-    to_lon = FloatField('', [DataRequired(), NumberRange(-180, 180)])
-    to_lat = FloatField('', [DataRequired(), NumberRange(-90, 90)])
+    from_lon = FloatField('', [NumberRange(-180, 180)])
+    from_lat = FloatField('', [NumberRange(-90, 90)])
+    to_lon = FloatField('', [NumberRange(-180, 180)])
+    to_lat = FloatField('', [NumberRange(-90, 90)])
 
     arrival_time = StringField('arrival time', [DataRequired()])
     car = SelectField('select car', [DataRequired()], choices=[('None', 'None')])

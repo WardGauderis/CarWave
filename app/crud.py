@@ -173,23 +173,25 @@ def delete_passenger_request(request: PassengerRequest):
         abort(400, 'Invalid passenger request deletion')
 
 
-def create_car(form) -> Car:
+def create_car(form, user: User) -> Car:
     try:
         car = Car()
         car.from_form(form)
+        car.user_id = user.id
         db.session.add(car)
         db.session.commit()
         return car
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid car creation')
 
 
 def read_car_from_plate(plate: str) -> Car:
     try:
-        return Car.query(plate)
+        return Car.query.get(plate)
     except:
-        abort(400, 'Invalid user id')
+        abort(400, 'Invalid car plate')
 
 
 def update_car(car: Car, form) -> Car:
@@ -207,4 +209,3 @@ def delete_car(car: Car):
         db.session.commit()
     except:
         abort(400, 'Invalid Car deletion')
-
