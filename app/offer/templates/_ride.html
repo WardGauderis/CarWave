@@ -42,7 +42,17 @@
             <div id="map{{ ride.id }}" style="height: 500px;"></div>
         </div>
         <div class="tab-pane fade" id="body-car-{{ ride.id }}">
-            <h5 class="card-title">Car</h5>
+            {% if ride.car %}
+                <span class="text-left font-weight-bold">license_plate: </span>{{ ride.car.license_plate }}<br>
+                <span class="text-left font-weight-bold">model: </span>{{ ride.car.model }}<br>
+                <span class="text-left font-weight-bold">colour: </span>{{ ride.car.colour }}<br>
+                <span class="text-left font-weight-bold">passenger_places: </span>{{ ride.car.passenger_places }}<br>
+                <span class="text-left font-weight-bold">build_year: </span>{{ ride.car.build_year }}<br>
+                <span class="text-left font-weight-bold">fuel: </span>{{ ride.car.fuel }}<br>
+                <span class="text-left font-weight-bold">consumption: </span>{{ ride.car.consumption }}<br>
+            {% else %}
+                <span class="text-left font-weight-bold"> this offered ride does not have a car </span><br>
+            {% endif %}
         </div>
     </div>
 </div>

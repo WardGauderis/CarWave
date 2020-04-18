@@ -12,7 +12,7 @@ class OfferForm(DictForm):
     to_lat = FloatField('', [DataRequired(), NumberRange(-90, 90)])
 
     arrival_time = StringField('arrival time', [DataRequired()])
-    passenger_places = IntegerField('number of passengers', [DataRequired(), NumberRange(1)])
+    car = SelectField('select car', [DataRequired()], choices=[('None', 'None')])
     confirm = SubmitField('confirm')
 
     def from_json(self, json):

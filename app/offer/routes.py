@@ -10,9 +10,12 @@ from app.crud import *
 def offer():
     form = OfferForm(meta={'csrf': False})
     if form.validate_on_submit():
-        user = current_user
-        create_drive(form, user)
+        create_drive(form, current_user)
         return redirect(url_for('main.index'))
+
+    form.car.choices = [('None', 'None')]
+    for car in current_user.cars:
+        form.car.choices.append((car.license_plate, car.license_plate))
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
