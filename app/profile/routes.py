@@ -20,6 +20,7 @@ def car_edit():
     elif update.validate_on_submit():
         car = read_car_from_plate(update.license_plate.data)
         update_car(car, update)
+    print(create.get_errors())
 
     return render_template('car-edit.html', title='update cars', create=create, update=update, cars=current_user.cars)
 
