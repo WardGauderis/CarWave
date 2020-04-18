@@ -11,32 +11,17 @@ from app.profile.forms import CreateCarForm
 @login_required
 def car_edit():
 
-    forms = []
-    size = len(current_user.cars)
+    create = CreateCarForm()
+    update = CreateCarForm()
+    update.make_update_form()
 
-    for i in range(size):
-        temp = CreateCarForm()
-        temp.make_update_form()
-        forms.append(temp)
+    if create.validate_on_submit():
+        create_car(create)
+    elif update.validate_on_submit():
+        car = read_car_from_plate(update.license_plate.data)
+        update_car(car, update)
 
-    forms.append(CreateCarForm())
-
-    for i in range(size+1):
-        if forms[i].validate_on_submit():
-            if forms[i].update:
-                update_car(current_user.cars[i], forms[i])
-                print('update')
-            else:
-                create_car(forms[i])
-                forms[-1].make_update_form()
-                forms.append(CreateCarForm())
-                print('create')
-
-    if request.method == 'GET':
-        for i in range(size):
-            forms[i].from_database(current_user.cars[i])
-
-    return render_template('car-edit.html', title='update cars', forms=forms)
+    return render_template('car-edit.html', title='update cars', create=create, update=update, cars=current_user.cars)
 
 
 @bp.route('/user/<int:user_id>')
