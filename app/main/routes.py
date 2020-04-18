@@ -7,7 +7,8 @@ from app.main.forms import DriveForm
 @bp.route('/index', methods=['POST', 'GET'])
 def index():
     form = DriveForm()
-    if request.method == 'POST':
+
+    if form.validate_on_submit():
         if "offer" in request.form:
             return redirect(url_for('offer.offer',
                                     fl=request.form['from_location'],
@@ -15,4 +16,5 @@ def index():
                                     dt=request.form['date'] + 'T' + request.form['time']))
         elif "find" in request.form:
             return redirect(url_for('offer.find'))
+
     return render_template('index.html', title='Home', form=form)

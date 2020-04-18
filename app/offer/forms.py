@@ -1,11 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import SubmitField
 from wtforms.fields import IntegerField, FloatField, StringField
-from wtforms.validators import DataRequired, NumberRange, ValidationError
+from wtforms.validators import DataRequired, NumberRange
 from app.forms import DictForm
-from datetime import datetime
 import dateutil.parser
-import pytz
 
 
 class OfferForm(DictForm):
@@ -36,11 +34,17 @@ class OfferForm(DictForm):
             self.all_errors['to'] = "Not a valid coordinate type"
         return self.validate_json()
 
-    def validate_arrival_time(self, arrival_time):
-        if dateutil.parser.isoparse(arrival_time.data) <= pytz.utc.localize(datetime.utcnow()):
-            raise ValidationError('Arrival time must be in the future')
-
 
 class FindForm(FlaskForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
     request = SubmitField('request')
+
+
+class DeleteOfferForm(FlaskForm):
+    ride_id = IntegerField('ride_id', [DataRequired()])
+    delete = SubmitField('delete offer')
+
+
+class DeleteRequestForm(FlaskForm):
+    ride_id = IntegerField('ride_id', [DataRequired()])
+    delete = SubmitField('delete request')

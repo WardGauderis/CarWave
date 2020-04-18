@@ -1,8 +1,8 @@
 from flask import render_template, request, url_for, redirect
 from flask_login import current_user, login_required
 from app.offer import bp
-from app.offer.forms import OfferForm, FindForm
-from app.crud import create_drive, read_all_drives
+from app.offer.forms import *
+from app.crud import *
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -30,6 +30,34 @@ def find():
     return render_template('find.html', title='Find', form=form, rides=read_all_drives())
 
 
-@bp.route('/rides')
-def rides():
+@bp.route('/rides/all')
+def all_rides():
     return render_template('rides.html', title='Available Rides', rides=read_all_drives())
+
+
+@bp.route('/rides/passenger', methods=['POST', 'GET'])
+def passenger_rides():
+    form = DeleteRequestForm()
+
+    if request.method == 'POST':
+        drive = read_drive_from_id(form.ride_id.data)
+        user = current_user
+        passenger = read_passenger_request(user, drive)
+        delete_passenger_request(passenger)
+        return redirect(url_for('offer.passenger_rides'))
+
+    # TODO: ik heb hier nog een read_drive_from_passenger nodig,
+    #  deze gaat alle drives die voor hem nog moeten komen tonen
+    return render_template('rides.html', title='Available Rides', rides=read_all_drives(), form=form)
+
+
+@bp.route('/rides/driver', methods=['POST', 'GET'])
+def driver_rides():
+    form = DeleteOfferForm()
+
+    if request.method == 'POST':
+        drive = read_drive_from_id(form.ride_id.data)
+        delete_drive(drive)
+        return redirect(url_for('offer.driver_rides'))
+
+    return render_template('rides.html', title='Available Rides', rides=read_drive_from_driver(current_user), form=form)

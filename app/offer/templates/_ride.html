@@ -28,6 +28,15 @@
                 href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
             {#            TODO places left, passengers, ...#}
             <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
+
+            {# delete button for the rides which can be edited #}
+            {% if form is defined %}
+                <form method="post" name="ride">
+                    {{ form.ride_id(type="hidden", value=ride.id) }}
+                    {{ form.delete(class="form-control", id="delete") }}
+                </form>
+            {% endif %}
+
         </div>
         <div class="tab-pane fade" id="body-map-{{ ride.id }}">
             <div id="map{{ ride.id }}" style="height: 500px;"></div>
@@ -40,10 +49,10 @@
 
 <script src="//code.jquery.com/jquery-1.12.4.js"></script>
 <script type="text/javascript">
-$(document).ready(function(){
-  $('.nav-tabs a').on('shown.bs.tab', function(){
-    maps.map{{ ride.id }}.invalidateSize();
-    maps.map{{ ride.id }}.setZoom(9);
-  });
-});
+    $(document).ready(function () {
+        $('.nav-tabs a').on('shown.bs.tab', function () {
+            maps.map{{ ride.id }}.invalidateSize();
+            maps.map{{ ride.id }}.setZoom(9);
+        });
+    });
 </script>

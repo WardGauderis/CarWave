@@ -9,7 +9,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="{{ url_for('offer.rides') }}">Available Rides</a>
+                <a class="nav-link" href="{{ url_for('offer.all_rides') }}">Available Rides</a>
             </li>
         </ul>
         <ul class="navbar-nav ml-auto">
@@ -28,10 +28,8 @@
                     </a>
                     <div class="dropdown-menu " aria-labelledby="navbarDropdownMenuLink"
                          style="background-color: #0e0f3b">
-                        {#                        TODO link#}
-                        <a class="dropdown-item text-white" href="#">As Passenger</a>
-                        {#                        TODO link#}
-                        <a class="dropdown-item text-white" href="#">As Driver</a>
+                        <a class="dropdown-item text-white" href="{{ url_for('offer.passenger_rides') }}">As Passenger</a>
+                        <a class="dropdown-item text-white" href="{{ url_for('offer.driver_rides') }}">As Driver</a>
                     </div>
                 </li>
                 <li class="nav-item active">
