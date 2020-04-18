@@ -1,9 +1,10 @@
 from wtforms import SubmitField
 from wtforms.fields import IntegerField, FloatField, StringField, SelectField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired, NumberRange, ValidationError
 from app.forms import DictForm
 import dateutil.parser
-
+import pytz
+from datetime import datetime
 
 class OfferForm(DictForm):
     from_lon = FloatField('', [NumberRange(-180, 180)])
@@ -11,10 +12,10 @@ class OfferForm(DictForm):
     to_lon = FloatField('', [NumberRange(-180, 180)])
     to_lat = FloatField('', [NumberRange(-90, 90)])
 
-    arrival_time = StringField('arrival time', [DataRequired()])
-    passenger_places = IntegerField('number of passengers', [NumberRange(1)])
-    car_string = SelectField('select car', [DataRequired()], choices=[('None', 'None')])
-    confirm = SubmitField('confirm')
+    arrival_time = StringField('Arrival Time*', [DataRequired()])
+    passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
+    car_string = SelectField('Select Car', choices=[('None', 'None')])
+    confirm = SubmitField('Confirm')
 
     def from_json(self, json):
         try:
@@ -36,6 +37,10 @@ class OfferForm(DictForm):
         except:
             self.all_errors['to'] = "Not a valid coordinate type"
         return self.validate_json()
+
+    def validate_depart_time(self, time):
+        if dateutil.parser.isoparse(time.data) <= pytz.utc.localize(datetime.utcnow()):
+            raise ValidationError('Arrival time must be in the future')
 
 
 class FilterForm(DictForm):

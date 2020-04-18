@@ -5,13 +5,13 @@ from app.crud import read_car_from_plate
 
 
 class CreateCarForm(DictForm):
-    license_plate = StringField('License Plate', [DataRequired(), Length(max=16)])
-    model = StringField('Model', [DataRequired(), Length(max=128)])
-    colour = StringField('Colour', [DataRequired(), Length(max=32)])
-    passenger_places = IntegerField('Passenger Places', [NumberRange(1)])
-    build_year = IntegerField('Build Year', [NumberRange(1900, 2020)])
-    fuel = SelectField('Fuel Type', choices=[('gasoline', 'gasoline'), ('diesel', 'diesel'), ('electric', 'electric')])
-    consumption = FloatField('Fuel Consumption', [NumberRange(0)])
+    license_plate = StringField('License Plate*', [DataRequired(), Length(max=16)])
+    model = StringField('Model*', [DataRequired(), Length(max=128)])
+    colour = StringField('Colour*', [DataRequired(), Length(max=32)])
+    passenger_places = IntegerField('Passenger Places*', [NumberRange(1)])
+    build_year = IntegerField('Build Year*', [NumberRange(1900, 2020)])
+    fuel = SelectField('Fuel Type*', choices=[('gasoline', 'gasoline'), ('diesel', 'diesel'), ('electric', 'electric')])
+    consumption = FloatField('Fuel Consumption*', [NumberRange(0)])
     submit = SubmitField('Register Car')
     update = False
 

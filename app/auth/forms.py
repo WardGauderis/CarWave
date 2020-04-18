@@ -17,12 +17,12 @@ class LoginForm(DictForm):
 
 
 class CreateUserForm(DictForm):
-    username = StringField('Username', validators=[DataRequired(), Length(max=64)])
+    username = StringField('Username*', validators=[DataRequired(), Length(max=64)])
     email = StringField('Email', validators=[Optional(), Length(max=128), Email()])
-    firstname = StringField('First Name', validators=[DataRequired(), Length(max=64)])
-    lastname = StringField('Last Name', validators=[DataRequired(), Length(max=64)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(max=64)])
-    password_validation = PasswordField('Repeat Password', [Optional(), EqualTo('password')])
+    firstname = StringField('First Name*', validators=[DataRequired(), Length(max=64)])
+    lastname = StringField('Last Name*', validators=[DataRequired(), Length(max=64)])
+    password = PasswordField('Password*', validators=[DataRequired(), Length(max=64)])
+    password_validation = PasswordField('Repeat Password*', [Optional(), EqualTo('password')])
     submit = SubmitField('Register')
     update = False
 
