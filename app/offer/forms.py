@@ -12,7 +12,8 @@ class OfferForm(DictForm):
     to_lat = FloatField('', [NumberRange(-90, 90)])
 
     arrival_time = StringField('arrival time', [DataRequired()])
-    car = SelectField('select car', [DataRequired()], choices=[('None', 'None')])
+    passenger_places = IntegerField('number of passengers', [NumberRange(1)])
+    car_string = SelectField('select car', [DataRequired()], choices=[('None', 'None')])
     confirm = SubmitField('confirm')
 
     def from_json(self, json):
@@ -20,7 +21,10 @@ class OfferForm(DictForm):
             self.arrival_time.data = dateutil.parser.isoparse(json.get('arrive-by'))
         except:
             self.all_errors['arrive-by'] = "Not a valid date format"
-        self.passenger_places.process_formdata([json.get('passenger-places', 0)])
+        try:
+            self.passenger_places.process_formdata([json.get('passenger-places', 0)])
+        except Exception as e:
+            self.all_errors['passenger_places'] = str(e)
         try:
             self.from_lat.data = float(json.get('from')[0])
             self.from_lon.data = float(json.get('from')[1])

@@ -24,7 +24,6 @@ class DictForm(FlaskForm):
         return not (len(self.errors) + len(self.all_errors))
 
     def get_errors(self):
-        # errors = {}
-        # for form, error in self.errors.items():
-        #     errors[getattr(self, form, error).label.text] = error
-        return dict(list(self.errors.items()) + list(self.all_errors.items()))
+        tmp = dict(list(self.errors.items()) + list(self.all_errors.items()))
+        self.all_errors.clear()
+        return tmp
