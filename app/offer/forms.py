@@ -1,4 +1,3 @@
-from flask_wtf import FlaskForm
 from wtforms import SubmitField
 from wtforms.fields import IntegerField, FloatField, StringField, SelectField
 from wtforms.validators import DataRequired, NumberRange
@@ -35,23 +34,23 @@ class OfferForm(DictForm):
         return self.validate_json()
 
 
-class FilterForm(FlaskForm):
+class FilterForm(DictForm):
     gender = SelectField('select gender', choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')])
     age = IntegerField('age', [NumberRange(min=11, max=125, message='age must be between 12 and 125')])
     usage = IntegerField('usage')
     refresh = SubmitField('refresh')
 
 
-class SelectForm(FlaskForm):
+class SelectForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
     request = SubmitField('request')
 
 
-class DeleteOfferForm(FlaskForm):
+class DeleteOfferForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
     delete = SubmitField('delete offer')
 
 
-class DeleteRequestForm(FlaskForm):
+class DeleteRequestForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
     delete = SubmitField('delete request')

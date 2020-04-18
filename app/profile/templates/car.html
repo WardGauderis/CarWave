@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+    <div>license_plate: {{ car.license_plate }}</div>
+    <div>model: {{ car.model }}</div>
+    <div>colour: {{ car.colour }}</div>
+    <div>passenger_places: {{ car.passenger_places }}</div>
+    <div>colour: {{ car.colour }}</div>
+    <div>colour: {{ car.colour }}</div>
+    <div>colour: {{ car.colour }}</div>
+
+    {% if user == current_user %}
+        <a href="{{ url_for('profile.user_edit', username=current_user.username) }}">{{ 'Edit profile' }}</a>
+
+        <a href="{{ url_for('profile.car_edit', username=current_user.username) }}">{{ 'Edit car(s)' }}</a>
+    {% endif %}
+
+{% endblock %}

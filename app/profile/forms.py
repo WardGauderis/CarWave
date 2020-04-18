@@ -1,4 +1,4 @@
-from wtforms import StringField, SubmitField, PasswordField
+from wtforms import StringField, SubmitField, IntegerField, SelectField, FloatField
 from wtforms.validators import DataRequired, Length, Optional, EqualTo, Email, ValidationError
 from app.forms import DictForm
 from app.models import User
@@ -22,3 +22,20 @@ class UpdateUserForm(DictForm):
         user = User.query.filter_by(username=username.data).first()
         if user is not None and user != current_user:
             raise ValidationError('This username has already been taken.')
+
+
+class UpdateCarForm(DictForm):
+    #TODO: custom license plate validator?
+    plate = StringField('license plate', [DataRequired()])
+    model = StringField('model', [DataRequired()])
+    colour = StringField('colour', [DataRequired()])
+    passengers = IntegerField('passenger places', [DataRequired()])
+    year = IntegerField('build year', [DataRequired()])
+    fuel = SelectField('fuel type', choices=[('gasoline', 'gasoline'), ('diesel', 'diesel'), ('electric', 'electric')])
+    consumption = FloatField('fuel consumption', [DataRequired()])
+    update = SubmitField('update')
+
+
+class AddCarForm(DictForm):
+    add = SubmitField('add car')
+

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <div class="card card-body">
+        {% for car in cars %}
+            {{ wtf.quick_form(update) }}
+        {% endfor %}
+    {{ wtf.quick_form(add) }}
+    </div>
+
+
+
+{% endblock %}

@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 
 {% block app_content %}
+
     <div>User: {{ user.username }}</div>
     <div>First name: {{ user.firstname }}</div>
     <div>Last name: {{ user.lastname }}</div>
     <div>Email: {{ user.email }}</div>
+
     {% if user == current_user %}
-        <a href="{{ url_for('profile.edit', username=current_user.username) }}">{{ 'Edit profile' }}</a>
+        <a href="{{ url_for('profile.user_edit', username=current_user.username) }}">{{ 'Edit profile' }}</a>
+
+        <a href="{{ url_for('profile.car_edit', username=current_user.username) }}">{{ 'Edit car(s)' }}</a>
     {% endif %}
+
 {% endblock %}
