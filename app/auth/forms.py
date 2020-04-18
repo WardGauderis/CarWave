@@ -28,6 +28,8 @@ class CreateUserForm(DictForm):
 
     def make_update_form(self):
         self.submit.label.text = 'Update'
+        del self.password
+        del self.password_validation
         self.update = True
 
     def from_json(self, json):

@@ -185,7 +185,14 @@ def create_car(form) -> Car:
         abort(400, 'Invalid car creation')
 
 
-def read_car(car: Car, form) -> Car:
+def read_car_from_plate(plate: str) -> Car:
+    try:
+        return Car.query(plate)
+    except:
+        abort(400, 'Invalid user id')
+
+
+def update_car(car: Car, form) -> Car:
     try:
         car.from_form(form)
         db.session.commit()
@@ -194,9 +201,10 @@ def read_car(car: Car, form) -> Car:
         abort(400, 'Invalid car update')
 
 
-def update_car():
-    pass
+def delete_car(car: Car):
+    try:
+        db.session.delete(car)
+        db.session.commit()
+    except:
+        abort(400, 'Invalid Car deletion')
 
-
-def delete_car():
-    pass

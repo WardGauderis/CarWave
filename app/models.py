@@ -84,7 +84,7 @@ class User(UserMixin, db.Model):
     def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
-        if hasattr(form, 'password'):
+        if not form.update:
             self.set_password(form.password.data)
 
     def __repr__(self):
