@@ -16,7 +16,7 @@ class LoginForm(DictForm):
         return self.validate_json()
 
 
-class RegistrationForm(DictForm):
+class CreateUserForm(DictForm):
     username = StringField('Username', validators=[DataRequired(), Length(max=64)])
     email = StringField('Email', validators=[Optional(), Length(max=128), Email()])
     firstname = StringField('First Name', validators=[DataRequired(), Length(max=64)])
@@ -24,6 +24,11 @@ class RegistrationForm(DictForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(max=64)])
     password_validation = PasswordField('Repeat Password', [Optional(), EqualTo('password')])
     submit = SubmitField('Register')
+    update = False
+
+    def make_update_form(self):
+        self.submit.label.text = 'Update'
+        self.update = True
 
     def from_json(self, json):
         self.load_json(json)
@@ -39,6 +44,8 @@ class RegistrationForm(DictForm):
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
+            if self.update and user == current_user:
+                return
             raise ValidationError('This username has already been taken.')
 
 

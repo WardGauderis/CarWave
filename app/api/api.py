@@ -7,14 +7,14 @@ from app.auth.auth import token_auth
 from app.models import Ride, PassengerRequest
 from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive, create_passenger_request, \
     update_passenger_request
-from app.auth.forms import RegistrationForm, LoginForm
+from app.auth.forms import CreateUserForm, LoginForm
 from app.offer.forms import OfferForm
 
 
 @bp.route("/users/register", methods=["POST"])
 def register_user():
     json = request.get_json() or {}
-    form = RegistrationForm()
+    form = CreateUserForm()
     if form.from_json(json):
         user = create_user(form)
         return {"id": user.id}, 201

@@ -1,4 +1,4 @@
-from app.models import User, db, current_app, Ride, PassengerRequest
+from app.models import User, db, current_app, Ride, PassengerRequest, Car
 from flask import abort
 from jwt import decode, DecodeError
 from datetime import datetime
@@ -99,7 +99,7 @@ def read_all_drives(limit: int = None) -> list:
         abort(400, 'Invalid drive read')
 
 
-def search_drives() -> list:    #TODO
+def search_drives() -> list:  # TODO
     pass
 
 
@@ -171,3 +171,32 @@ def delete_passenger_request(request: PassengerRequest):
         db.session.commit()
     except:
         abort(400, 'Invalid passenger request deletion')
+
+
+def create_car(form) -> Car:
+    try:
+        car = Car()
+        car.from_form(form)
+        db.session.add(car)
+        db.session.commit()
+        return car
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid car creation')
+
+
+def read_car(car: Car, form) -> Car:
+    try:
+        car.from_form(form)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid car update')
+
+
+def update_car():
+    pass
+
+
+def delete_car():
+    pass

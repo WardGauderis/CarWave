@@ -256,3 +256,7 @@ class Car(db.Model):
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+
+    def from_form(self, form):
+        for key, value in form.generator():
+            setattr(self, key, value)

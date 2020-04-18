@@ -3,9 +3,10 @@ from flask_login import current_user, login_required
 
 from app.profile import bp
 from app.crud import update_user, read_user_from_id
-from app.profile.forms import UpdateUserForm, UpdateCarForm, AddCarForm
+from app.auth.forms import CreateUserForm
 
-@bp.route('/car/<string:license_plate>')
+
+@bp.route('/car')
 def car(license_plate):
     pass
 
@@ -24,6 +25,7 @@ def car_edit():
     # TODO: create car
     return render_template('car-edit.html', title='update cars', update=update, add=add)
 
+
 @bp.route('/user/<int:user_id>')
 def user(user_id):
     temp_user = read_user_from_id(user_id)
@@ -35,7 +37,8 @@ def user(user_id):
 @bp.route('/user/update', methods=['GET', 'POST'])
 @login_required
 def user_edit():
-    form = UpdateUserForm()
+    form = CreateUserForm()
+    form.make_update_form()
     if form.validate_on_submit():
         update_user(current_user, form)
         flash('Your changes have been saved.', 'success')
