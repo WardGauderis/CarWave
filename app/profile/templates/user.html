@@ -1,16 +1,42 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-{#TODO MENTION GRAVATAR PLUS MORE INFOR#}
-    <div>User: {{ user.username }}</div>
-    <div>First name: {{ user.firstname }}</div>
-    <div>Last name: {{ user.lastname }}</div>
-    <div>Email: {{ user.email }}</div>
+    {#    TODO MOOI MAKEN#}
+    <div class="bg-white shadow rounded overflow-hidden">
+        <div class="px-4 pt-0 pb-4 bg-dark">
+            <div class="media align-items-end profile-header">
+                <div class="profile mr-3">
+                    <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
+                    {% if user == current_user %}
+                        <a href="{{ url_for('profile.user_edit', username=current_user.username) }}"
+                           class="btn btn-dark btn-sm btn-block">Edit profile</a>
+                        <a href="{{ url_for('profile.car_edit', username=current_user.username) }}"
+                           class="btn btn-dark btn-sm btn-block">Edit Cars</a>
+                    {% endif %}
+                </div>
+                <div class="media-body mb-5 text-white cen">
+                    <h1 class="mt-0 mb-0">{{ user.username }}</h1>
+                    <p class="small mb-4">
+                        {#                        TODO#}
+                        TODO ADDRESS
+                    </p>
 
-    {% if user == current_user %}
-        <a href="{{ url_for('profile.user_edit', username=current_user.username) }}">{{ 'Edit profile' }}</a>
-
-        <a href="{{ url_for('profile.car_edit', username=current_user.username) }}">{{ 'Edit car(s)' }}</a>
-    {% endif %}
-
+                    <ul class="list-inline">
+                        <li class="list-inline-item"><span
+                                class="font-weight-bold">Full Name: </span>{{ user.firstname }} {{ user.lastname }}</li>
+                        {% if user.email %}
+                            <li class="list-inline-item"><span class="font-weight-bold">Email: </span>{{ user.email }}
+                            </li>
+                        {% endif %}
+                        {% if user.sex %}
+                            <li class="list-inline-item"><span class="font-weight-bold">Sex: </span>{{ user.sex }}
+                            </li>{% endif %}
+                        {% if user.age %}
+                            <li class="list-inline-itemé"><span class="font-weight-bold">Age: </span>{{ user.age }}
+                            </li>{% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

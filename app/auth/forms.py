@@ -45,6 +45,8 @@ class CreateUserForm(DictForm):
         self.email.data = user.email
         self.firstname.data = user.firstname
         self.lastname.data = user.lastname
+        self.age.data = user.age
+        self.sex.data = user.sex
 
     def validate_sex(self, sex):
         if not sex.data:
