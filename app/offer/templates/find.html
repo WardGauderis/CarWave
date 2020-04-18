@@ -2,29 +2,18 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
+    <div class="card card-body">
+        <form method="post" name="ride">
+            {{ wtf.quick_form(details) }}
+        </form>
+    </div>
+
     {% if not rides %}
         <h1> We couldn't find any rides near you :( </h1>
     {% endif %}
 
     {% for ride in rides %}
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <div class="card-body">
-                        <p class="card-text">amount of passengers: {{ ride.passenger_places }}</p>
-                        <p class="card-text">departure: {{ ride.departure_address }}</p>
-                        <p class="card-text">destination: {{ ride.arrival_address }}</p>
-                        <p class="card-text">eta: {{ ride.arrival_time }}</p>
-                        <form method="post" name="ride">
-                            {{ form.ride_id(type="hidden", value=ride.id) }}
-
-                            <div class="ui-widget col-sm">
-                                {{ form.request(class="form-control", id="request") }}
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include '_ride.html' %}
     {% endfor %}
+
 {% endblock %}

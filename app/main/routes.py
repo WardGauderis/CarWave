@@ -8,7 +8,7 @@ from app.main.forms import DriveForm
 def index():
     form = DriveForm()
 
-    if form.validate_on_submit():
+    if request.method == 'POST':
         if "offer" in request.form:
             return redirect(url_for('offer.offer',
                                     fl=request.form['from_location'],
