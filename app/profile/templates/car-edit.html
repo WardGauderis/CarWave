@@ -3,10 +3,9 @@
 
 {% block app_content %}
     <div class="card card-body">
-        {% for car in cars %}
-            {{ wtf.quick_form(update) }}
+        {% for form in forms %}
+            {{ wtf.quick_form(form) }}
         {% endfor %}
-    {{ wtf.quick_form(add) }}
     </div>
 
 

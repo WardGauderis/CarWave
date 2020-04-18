@@ -2,28 +2,41 @@ from flask import redirect, render_template, url_for, abort, request, flash
 from flask_login import current_user, login_required
 
 from app.profile import bp
-from app.crud import update_user, read_user_from_id
+from app.crud import *
 from app.auth.forms import CreateUserForm
-
-
-@bp.route('/car')
-def car(license_plate):
-    pass
+from app.profile.forms import CreateCarForm
 
 
 @bp.route('/car/update', methods=['GET', 'POST'])
 @login_required
 def car_edit():
-    update = UpdateCarForm()
-    add = AddCarForm()
 
-    if update.validate_on_submit():
-        pass
-        # TODO: update car
-    elif add.validate_on_submit():
-        pass
-    # TODO: create car
-    return render_template('car-edit.html', title='update cars', update=update, add=add)
+    forms = []
+    size = len(current_user.cars)
+
+    for i in range(size):
+        temp = CreateCarForm()
+        temp.make_update_form()
+        forms.append(temp)
+
+    forms.append(CreateCarForm())
+
+    for i in range(size+1):
+        if forms[i].validate_on_submit():
+            if forms[i].update:
+                update_car(current_user.cars[i], forms[i])
+                print('update')
+            else:
+                create_car(forms[i])
+                forms[-1].make_update_form()
+                forms.append(CreateCarForm())
+                print('create')
+
+    if request.method == 'GET':
+        for i in range(size):
+            forms[i].from_database(current_user.cars[i])
+
+    return render_template('car-edit.html', title='update cars', forms=forms)
 
 
 @bp.route('/user/<int:user_id>')
