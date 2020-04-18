@@ -6,6 +6,7 @@ from json import loads
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from flask_login import UserMixin
+from hashlib import md5
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, login
@@ -70,16 +71,20 @@ class User(UserMixin, db.Model):
     firstname = db.Column(db.String(64), nullable=False)
     lastname = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(128))
-    # phone_number = db.Column(db.String(32))
-    # created_at = db.Column(db.DateTime, default=datetime.utcnow())
+    age = db.Column(db.Integer, nullable=True)
+    sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
 
     driver_rides = db.relationship("Ride", back_populates="driver")
     cars = db.relationship("Car", back_populates="owner")
 
-    # passenger_rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers", lazy="dynamic")
     requests = db.relationship(
         "PassengerRequest", back_populates="passenger", lazy="dynamic"
     )
+
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
+            digest, size)
 
     def from_form(self, form):
         for key, value in form.generator():

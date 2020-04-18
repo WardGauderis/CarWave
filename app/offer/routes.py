@@ -13,9 +13,9 @@ def offer():
         create_drive(form, current_user)
         return redirect(url_for('main.index'))
 
-    form.car.choices = [('None', 'None')]
+    form.car_string.choices = [('None', 'None')]
     for car in current_user.cars:
-        form.car.choices.append((car.license_plate, car.license_plate))
+        form.car_string.choices.append((car.license_plate, car.license_plate))
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')

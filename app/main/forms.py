@@ -16,6 +16,6 @@ class DriveForm(DictForm):
     offer = SubmitField('offer')
     find = SubmitField('find')
 
-    def validate_depart_time(self, time):
+    def validate_time(self, time):
         if dateutil.parser.isoparse(time.data) <= pytz.utc.localize(datetime.utcnow()):
             raise ValidationError('Arrival time must be in the future')

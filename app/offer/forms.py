@@ -6,6 +6,7 @@ import dateutil.parser
 import pytz
 from datetime import datetime
 
+
 class OfferForm(DictForm):
     from_lon = FloatField('', [NumberRange(-180, 180)])
     from_lat = FloatField('', [NumberRange(-90, 90)])
@@ -18,10 +19,7 @@ class OfferForm(DictForm):
     confirm = SubmitField('Confirm')
 
     def from_json(self, json):
-        try:
-            self.arrival_time.data = dateutil.parser.isoparse(json.get('arrive-by'))
-        except:
-            self.all_errors['arrive-by'] = "Not a valid date format"
+        self.arrival_time.data = json.get('arrive-by')
         try:
             self.passenger_places.process_formdata([json.get('passenger-places', 0)])
         except Exception as e:
@@ -38,8 +36,13 @@ class OfferForm(DictForm):
             self.all_errors['to'] = "Not a valid coordinate type"
         return self.validate_json()
 
-    def validate_depart_time(self, time):
-        if dateutil.parser.isoparse(time.data) <= pytz.utc.localize(datetime.utcnow()):
+    def validate_arrival_time(self, arrival_time):
+        try:
+            self.arrival_time.data = dateutil.parser.isoparse(arrival_time.data)
+        except:
+            raise ValidationError('Not a valid date format')
+        print(arrival_time.data)
+        if arrival_time.data <= datetime.utcnow():
             raise ValidationError('Arrival time must be in the future')
 
 

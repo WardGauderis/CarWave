@@ -1,5 +1,5 @@
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, Optional, NumberRange
 from app.models import User
 from app.forms import DictForm
 from flask_login import current_user
@@ -21,6 +21,9 @@ class CreateUserForm(DictForm):
     email = StringField('Email', validators=[Optional(), Length(max=128), Email()])
     firstname = StringField('First Name*', validators=[DataRequired(), Length(max=64)])
     lastname = StringField('Last Name*', validators=[DataRequired(), Length(max=64)])
+    age = IntegerField('Age', validators=[Optional(), NumberRange(18, 100)])
+    sex = SelectField('Sex', choices=[('', ''), ('male', 'male'), ('female', 'female'), ('non-binary', 'non-binary')],
+                      default='')
     password = PasswordField('Password*', validators=[DataRequired(), Length(max=64)])
     password_validation = PasswordField('Repeat Password*', [Optional(), EqualTo('password')])
     submit = SubmitField('Register')
@@ -42,6 +45,10 @@ class CreateUserForm(DictForm):
         self.email.data = user.email
         self.firstname.data = user.firstname
         self.lastname.data = user.lastname
+
+    def validate_sex(self, sex):
+        if not sex.data:
+            sex.data = None
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
