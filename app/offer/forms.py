@@ -58,6 +58,12 @@ class FilterForm(DictForm):
     refresh = SubmitField('refresh')
 
 
+class RequestChoiceForm(DictForm):
+    ride_id = IntegerField('ride_id', [DataRequired()])
+    reject = SubmitField('reject passenger')
+    accept = SubmitField('accept passenger')
+
+
 class SelectForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
     request = SubmitField('request')

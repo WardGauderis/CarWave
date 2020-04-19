@@ -5,10 +5,18 @@ from app.offer.forms import *
 from app.crud import *
 
 
-# @bp.route('/request', methods=['POST', 'GET'])
-# @login_required
-# def request():
-#     return
+@bp.route('/requests', methods=['POST', 'GET'])
+@login_required
+def requests():
+    form = RequestChoiceForm()
+
+    if request.method == 'POST':
+        if "reject" in request.form:
+            print('reject passenger code')
+        elif "accept" in request.form:
+            print('accept passenger code')
+
+    return render_template('rides.html', title='Requests', choice=form, rides=read_drive_from_driver(current_user))
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -64,7 +72,7 @@ def passenger_rides():
 
     # TODO: ik heb hier nog een read_drive_from_passenger nodig,
     #  deze gaat alle drives die voor hem nog moeten komen tonen
-    return render_template('rides.html', title='Available Rides', rides=read_all_drives(), form=form)
+    return render_template('rides.html', title='Available Rides', rides=read_all_drives(), delete=form)
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
@@ -76,4 +84,4 @@ def driver_rides():
         delete_drive(drive)
         return redirect(url_for('offer.driver_rides'))
 
-    return render_template('rides.html', title='Available Rides', rides=read_drive_from_driver(current_user), form=form)
+    return render_template('rides.html', title='Available Rides', rides=read_drive_from_driver(current_user), delete=form)
