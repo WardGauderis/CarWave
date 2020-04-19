@@ -1,10 +1,9 @@
 from wtforms import SubmitField
 from wtforms.fields import IntegerField, HiddenField, SelectField, FloatField
-from wtforms.validators import DataRequired, NumberRange, ValidationError
+from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional
 from app.forms import DictForm
 import dateutil.parser
-import pytz
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 class OfferForm(DictForm):
@@ -13,12 +12,8 @@ class OfferForm(DictForm):
     to_lon = FloatField('', [NumberRange(-180, 180)])
     to_lat = FloatField('', [NumberRange(-90, 90)])
 
-    # from_lon = HiddenField('')
-    # from_lat = HiddenField('')
-    # to_lon = HiddenField('')
-    # to_lat = HiddenField('')
-
     arrival_time = HiddenField('Arrival Time*', [DataRequired()])
+    departure_time = HiddenField('Departure Time', [Optional()])
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
     car_string = SelectField('Select Car', choices=[('None', 'None')])
     confirm = SubmitField('Confirm')
@@ -48,6 +43,16 @@ class OfferForm(DictForm):
             raise ValidationError('Not a valid date format')
         if arrival_time.data <= datetime.utcnow():
             raise ValidationError('Arrival time must be in the future')
+
+    def validate_departure_time(self, departure_time):
+        try:
+            self.departure_time.data = dateutil.parser.isoparse(departure_time.data)
+        except:
+            raise ValidationError('Not a valid date format')
+        if departure_time.data <= datetime.utcnow():
+            raise ValidationError('Departure time must be in the future')
+        if departure_time.data >= self.arrival_time.data:
+            raise ValidationError('Departure time must be before arrival time'
 
 
 class FilterForm(DictForm):

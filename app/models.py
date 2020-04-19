@@ -145,7 +145,7 @@ class Ride(db.Model):
     car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    # departure_time = db.Column(db.DateTime, nullable=True)
+    departure_time = db.Column(db.DateTime, nullable=True)
     departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
