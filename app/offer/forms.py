@@ -13,7 +13,7 @@ class OfferForm(DictForm):
     to_lat = FloatField('', [NumberRange(-90, 90)])
 
     arrival_time = HiddenField('Arrival Time*', [DataRequired()])
-    departure_time = HiddenField('Departure Time', [Optional()])
+    departure_time = HiddenField('Departure Time')
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
     car_string = SelectField('Select Car', choices=[('None', 'None')])
     confirm = SubmitField('Confirm')
@@ -38,15 +38,18 @@ class OfferForm(DictForm):
 
     def validate_arrival_time(self, arrival_time):
         try:
-            self.arrival_time.data = dateutil.parser.isoparse(arrival_time.data)
+            self.arrival_time.data = dateutil.parser.isoparse(arrival_time.data).replace(tzinfo=None)
         except:
             raise ValidationError('Not a valid date format')
         if arrival_time.data <= datetime.utcnow():
             raise ValidationError('Arrival time must be in the future')
 
     def validate_departure_time(self, departure_time):
+        if not departure_time.data:
+            departure_time.data = None
+            return
         try:
-            self.departure_time.data = dateutil.parser.isoparse(departure_time.data)
+            self.departure_time.data = dateutil.parser.isoparse(departure_time.data).replace(tzinfo=None)
         except:
             raise ValidationError('Not a valid date format')
         if departure_time.data <= datetime.utcnow():

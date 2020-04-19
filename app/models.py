@@ -55,8 +55,8 @@ class PassengerRequest(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
-    ride = db.relationship("Ride", back_populates="requests", cascade='all, delete-orphan, delete', single_parent=True)
-    passenger = db.relationship("User", back_populates="requests", cascade='all, delete-orphan, delete', single_parent=True)
+    ride = db.relationship("Ride", back_populates="requests", single_parent=True)
+    passenger = db.relationship("User", back_populates="requests", single_parent=True)
 
 
 class User(UserMixin, db.Model):
@@ -72,11 +72,11 @@ class User(UserMixin, db.Model):
     age = db.Column(db.Integer, nullable=True)
     sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
 
-    driver_rides = db.relationship("Ride", back_populates="driver")
-    cars = db.relationship("Car", back_populates="owner")
+    driver_rides = db.relationship("Ride", back_populates="driver", cascade="all, delete, delete-orphan")
+    cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
 
     requests = db.relationship(
-        "PassengerRequest", back_populates="passenger", lazy="dynamic"
+        "PassengerRequest", back_populates="passenger", lazy="dynamic", cascade="all, delete, delete-orphan"
     )
 
     def avatar(self, size):
@@ -136,7 +136,7 @@ class Ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     driver_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    driver = db.relationship("User", back_populates="driver_rides", cascade='all, delete-orphan, delete', single_parent=True)
+    driver = db.relationship("User", back_populates="driver_rides", single_parent=True)
     passenger_places = db.Column(db.Integer, nullable=False)
 
     license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate", ondelete='SET NULL'), nullable=True)
@@ -149,7 +149,7 @@ class Ride(db.Model):
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
 
     requests = db.relationship(
-        "PassengerRequest", back_populates="ride", lazy="dynamic"
+        "PassengerRequest", back_populates="ride", lazy="dynamic", cascade="all, delete, delete-orphan"
     )
 
     def from_form(self, form):
@@ -197,7 +197,7 @@ class Car(db.Model):
     consumption = db.Column(db.Float, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
-    owner = db.relationship("User", back_populates="cars", cascade='all, delete-orphan, delete', single_parent=True)
+    owner = db.relationship("User", back_populates="cars", single_parent=True)
     rides = db.relationship("Ride", back_populates="car")
 
     def __repr__(self):
