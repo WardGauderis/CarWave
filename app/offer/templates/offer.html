@@ -30,29 +30,8 @@
         <div class="col">
             <div class="card">
                 <div class="card-body">
-
                     <h5 id="route" class="card-title">No route selected</h5>
-
-                    <form method="post" name="ride">
-                        {{ form.from_lon(id="from_lon", type="hidden") }}
-                        {{ form.from_lat(id="from_lat", type="hidden") }}
-                        {{ form.to_lon(id="to_lon", type="hidden") }}
-                        {{ form.to_lat(id="to_lat", type="hidden") }}
-                        {{ form.arrival_time(id="arrival_time", type="hidden") }}
-
-                        <div class="form-row" style="padding:10px">
-                            <div class="ui-widget col-sm">
-                                {{ form.car_string(class="form-control") }}
-                            </div>
-                        </div>
-
-                        <div class="form-row" style="padding:10px">
-                            <div class="ui-widget col-sm">
-                                {{ form.confirm(class="form-control", id="confirm") }}
-                            </div>
-                        </div>
-                    </form>
-
+                    {{ wtf.quick_form(form) }}
                 </div>
             </div>
         </div>

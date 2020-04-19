@@ -5,17 +5,24 @@ from app.offer.forms import *
 from app.crud import *
 
 
+# @bp.route('/request', methods=['POST', 'GET'])
+# @login_required
+# def request():
+#     return
+
+
 @bp.route('/offer', methods=['POST', 'GET'])
 @login_required
 def offer():
     form = OfferForm(meta={'csrf': False})
-    if form.validate_on_submit():
-        create_drive(form, current_user)
-        return redirect(url_for('main.index'))
 
     form.car_string.choices = [('None', 'None')]
     for car in current_user.cars:
         form.car_string.choices.append((car.license_plate, car.license_plate))
+
+    if form.validate_on_submit():
+        create_drive(form, current_user)
+        return redirect(url_for('main.index'))
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
