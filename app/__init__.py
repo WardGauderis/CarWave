@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from config import Config
 from flask_login import LoginManager
+from flask_moment import Moment
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
@@ -12,6 +13,7 @@ mail = Mail()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
+moment = Moment()
 # login.login_message = 'Please log in to access this page.'
 
 
@@ -39,5 +41,6 @@ def create_app(config=Config):
     mail.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
+    moment.init_app(app)
 
     return app

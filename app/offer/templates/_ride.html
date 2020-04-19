@@ -23,7 +23,7 @@
             {#            TODO geen coordinaten maar namen #}
             <span class="text-left font-weight-bold">From: </span>{{ ride.depart_from }}<br>
             <span class="text-left font-weight-bold">To: </span>{{ ride.arrive_at }}<br>
-            <span class="text-left font-weight-bold">Arrival Time: </span>{{ ride.arrival_time }}<br>
+            <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).calendar() }}<br>
             <span class="text-left font-weight-bold">Driver: </span><a
                 href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
             {#            TODO places left, passengers, ...#}
@@ -59,7 +59,7 @@
                 <span class="text-left font-weight-bold">fuel: </span>{{ ride.car.fuel }}<br>
                 <span class="text-left font-weight-bold">consumption: </span>{{ ride.car.consumption }}<br>
             {% else %}
-                <span class="text-left font-weight-bold"> this offered ride does not have a car </span><br>
+                <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span><br>
             {% endif %}
         </div>
     </div>

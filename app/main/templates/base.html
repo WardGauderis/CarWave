@@ -26,9 +26,9 @@
             {% if messages %}
                 {% for category, message in messages %}
                     {% if category == 'message' %}
-                    <div class="alert alert-info" role="alert">{{ message }}</div>
+                        <div class="alert alert-info" role="alert">{{ message }}</div>
                     {% else %}
-                    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                        <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
                     {% endif %}
                 {% endfor %}
             {% endif %}
@@ -39,9 +39,10 @@
 {% endblock %}
 
 {% block scripts %}
+    {{ super() }}
+    {{ moment.include_moment() }}
     {% block app_scripts %}
     {% endblock %}
-    {{ super() }}
 {% endblock %}
 
 
