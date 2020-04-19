@@ -58,7 +58,8 @@ def delete_user(user: User):
     try:
         db.session.delete(user)
         db.session.commit()
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid user deletion')
 

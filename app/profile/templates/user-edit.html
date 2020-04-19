@@ -7,6 +7,7 @@
         <div class="col-md-4">
 {#            TODO mention gravatar#}
             {{ wtf.quick_form(form) }}
+            {{ wtf.quick_form(delete, button_map={'delete':'danger'}) }}
         </div>
     </div>
 {% endblock %}

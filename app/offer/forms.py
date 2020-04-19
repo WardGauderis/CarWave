@@ -52,7 +52,7 @@ class OfferForm(DictForm):
         if departure_time.data <= datetime.utcnow():
             raise ValidationError('Departure time must be in the future')
         if departure_time.data >= self.arrival_time.data:
-            raise ValidationError('Departure time must be before arrival time'
+            raise ValidationError('Departure time must be before arrival time')
 
 
 class FilterForm(DictForm):
