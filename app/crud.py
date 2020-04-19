@@ -72,7 +72,8 @@ def create_drive(form, user: User) -> Ride:
         db.session.add(drive)
         db.session.commit()
         return drive
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid drive creation')
 

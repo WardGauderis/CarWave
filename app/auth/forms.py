@@ -28,7 +28,7 @@ class CreateUserForm(DictForm):
     age = IntegerField('Age', validators=[Optional(), NumberRange(18, 100)])
     sex = SelectField('Sex', choices=[('', ''), ('male', 'male'), ('female', 'female'), ('non-binary', 'non-binary')],
                       default='')
-    password = PasswordField('Password*', validators=[DataRequired(), Length(max=64)])
+    password = PasswordField('Password*', validators=[DataRequired(), Length(8, 64)])
     password_validation = PasswordField('Repeat Password*', [Optional(), EqualTo('password')])
     submit = SubmitField('Register')
     update = False

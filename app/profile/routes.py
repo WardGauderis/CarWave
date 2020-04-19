@@ -48,15 +48,15 @@ def user_edit():
     form = CreateUserForm()
     delete = DeleteUserForm()
     form.make_update_form()
-    if delete.validate_on_submit():
+    if form.submit.data and form.validate():
+        update_user(current_user, form)
+        flash('Your changes have been saved.', 'success')
+        return redirect(url_for('profile.user', user_id=current_user.id))
+    if delete.delete.data and delete.validate():
         user = current_user
         delete_user(user)
         flash('Your account has successfully been removed.', 'success')
         return redirect(url_for('auth.logout'))
-    elif form.validate_on_submit():
-        update_user(current_user, form)
-        flash('Your changes have been saved.', 'success')
-        return redirect(url_for('profile.user', user_id=current_user.id))
     elif request.method == 'GET':
         form.from_database(current_user)
     return render_template('user-edit.html', title="Edit profile", form=form, delete=delete)
