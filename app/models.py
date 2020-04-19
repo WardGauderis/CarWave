@@ -48,8 +48,8 @@ class PassengerRequest(db.Model):
     # TODO DELETION
     __tablename__ = "passenger_requests"
 
-    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete='CASCADE'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), primary_key=True)
     status = db.Column(db.Enum("accepted", "pending", "rejected", name="status_enum"), default="pending",
                        nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
@@ -137,11 +137,11 @@ class Ride(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    driver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    driver_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     driver = db.relationship("User", back_populates="driver_rides")
     passenger_places = db.Column(db.Integer, nullable=False)
 
-    license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate"), nullable=True)
+    license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate", ondelete='SET NULL'), nullable=True)
     car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
@@ -195,7 +195,7 @@ class Car(db.Model):
     fuel = db.Column(db.Enum("gasoline", "diesel", "electric", name="fuel_enum"), nullable=False)
     consumption = db.Column(db.Float, nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
     owner = db.relationship("User", back_populates="cars")
     rides = db.relationship("Ride", back_populates="car")
 
