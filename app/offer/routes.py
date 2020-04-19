@@ -57,7 +57,7 @@ def find():
 
 @bp.route('/rides/all')
 def all_rides():
-    return render_template('rides.html', title='Available Rides', rides=read_all_drives())
+    return render_template('rides.html', title='Available Drives', rides=read_all_drives())
 
 
 @bp.route('/rides/passenger', methods=['POST', 'GET'])
@@ -72,7 +72,7 @@ def passenger_rides():
 
     # TODO: ik heb hier nog een read_drive_from_passenger nodig,
     #  deze gaat alle drives die voor hem nog moeten komen tonen
-    return render_template('rides.html', title='Available Rides', rides=read_all_drives(), delete=form)
+    return render_template('rides.html', title='Passenger Drives', rides=read_all_drives(), delete=form)
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
@@ -84,4 +84,4 @@ def driver_rides():
         delete_drive(drive)
         return redirect(url_for('offer.driver_rides'))
 
-    return render_template('rides.html', title='Available Rides', rides=read_drive_from_driver(current_user), delete=form)
+    return render_template('rides.html', title='Driver Drives', rides=read_drive_from_driver(current_user), delete=form)

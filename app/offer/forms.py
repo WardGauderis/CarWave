@@ -1,22 +1,22 @@
 from wtforms import SubmitField
-from wtforms.fields import IntegerField, HiddenField, FloatField, SelectField
+from wtforms.fields import IntegerField, HiddenField, SelectField, FloatField
 from wtforms.validators import DataRequired, NumberRange, ValidationError
 from app.forms import DictForm
 import dateutil.parser
 import pytz
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class OfferForm(DictForm):
-    # from_lon = FloatField('', [NumberRange(-180, 180)])
-    # from_lat = FloatField('', [NumberRange(-90, 90)])
-    # to_lon = FloatField('', [NumberRange(-180, 180)])
-    # to_lat = FloatField('', [NumberRange(-90, 90)])
+    from_lon = FloatField('', [NumberRange(-180, 180)])
+    from_lat = FloatField('', [NumberRange(-90, 90)])
+    to_lon = FloatField('', [NumberRange(-180, 180)])
+    to_lat = FloatField('', [NumberRange(-90, 90)])
 
-    from_lon = HiddenField('')
-    from_lat = HiddenField('')
-    to_lon = HiddenField('')
-    to_lat = HiddenField('')
+    # from_lon = HiddenField('')
+    # from_lat = HiddenField('')
+    # to_lon = HiddenField('')
+    # to_lat = HiddenField('')
 
     arrival_time = HiddenField('Arrival Time*', [DataRequired()])
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
@@ -46,9 +46,8 @@ class OfferForm(DictForm):
             self.arrival_time.data = dateutil.parser.isoparse(arrival_time.data)
         except:
             raise ValidationError('Not a valid date format')
-        # print(arrival_time.data)
-        # if arrival_time.data <= datetime.utcnow():
-        #     raise ValidationError('Arrival time must be in the future')
+        if arrival_time.data <= datetime.utcnow():
+            raise ValidationError('Arrival time must be in the future')
 
 
 class FilterForm(DictForm):

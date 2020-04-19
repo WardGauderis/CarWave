@@ -11,7 +11,7 @@ class CreateCarForm(DictForm):
     passenger_places = IntegerField('Passenger Places*', [NumberRange(1)])
     build_year = IntegerField('Build Year*', [NumberRange(1900, 2020)])
     fuel = SelectField('Fuel Type*', choices=[('gasoline', 'gasoline'), ('diesel', 'diesel'), ('electric', 'electric')])
-    consumption = FloatField('Fuel Consumption*', [NumberRange(0)])
+    consumption = FloatField('Fuel Consumption (l/100km)*', [NumberRange(0, 100)])
     submit = SubmitField('Register Car')
     update = False
 
