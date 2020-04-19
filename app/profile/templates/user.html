@@ -16,9 +16,8 @@
                 </div>
                 <div class="media-body mb-5 text-white cen">
                     <h1 class="mt-0 mb-0">{{ user.username }}</h1>
-                    <p class="small mb-4">
-                        {#                        TODO#}
-                        TODO ADDRESS
+                    <p id="address" class="small mb-4">
+                        loading...
                     </p>
 
                     <ul class="list-inline">
@@ -39,4 +38,23 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block app_content %}
+    <script type="text/javascript">
+        function get_address(lon, lat) {
+            $.ajax({
+                url: "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lon=" + lon + "&lat=" + lat,
+                type: "GET",
+                success: function (xhr) {
+                    document.getElementById("address").innerText = xhr.display_name;
+                },
+                error: function (xhr) {
+                    alert(xhr)
+                }
+            });
+        }
+        {# roep de functie gewoon nog op #}
+        {#get_address({{ ride.depart_from[1] }}, {{ ride.depart_from[0] }});#}
+    </script>
 {% endblock %}
