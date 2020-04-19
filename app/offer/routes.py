@@ -10,14 +10,17 @@ from app.crud import *
 def requests():
     form = RequestChoiceForm()
 
-    pending = current_user.driver_rides.requests
+    pending = []
+    for drive in current_user.driver_rides:
+        pending += drive.pending_requests()
+
     if request.method == 'POST':
         if "reject" in request.form:
             print('reject passenger code')
         elif "accept" in request.form:
             print('accept passenger code')
 
-    return render_template('requests.html', title='Requests', choice=form, rides=read_passenger_request(current_user))
+    return render_template('requests.html', title='Requests', choice=form, requests=pending)
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -31,7 +34,9 @@ def offer():
 
     if form.validate_on_submit():
         create_drive(form, current_user)
+        flash('Congratulations, you successfully offered a ride', 'success')
         return redirect(url_for('main.index'))
+    print(form.get_errors())
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')

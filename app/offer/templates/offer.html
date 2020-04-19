@@ -31,15 +31,18 @@
             <div class="card">
                 <div class="card-body">
                     <h5 id="route" class="card-title">No route selected</h5>
-                    {{ form.from_lon(type="hidden") }}
-                    {{ form.from_lat(type="hidden") }}
-                    {{ form.to_lon(type="hidden") }}
-                    {{ form.to_lat(type="hidden") }}
-                    {{ form.arrival_time(type="hidden") }}
+                    <form method="post" name="ride">
+                        {{ form.from_lon(type="hidden") }}
+                        {{ form.from_lat(type="hidden") }}
+                        {{ form.to_lon(type="hidden") }}
+                        {{ form.to_lat(type="hidden") }}
+                        {{ form.arrival_time(type="hidden") }}
+                        {{ form.departure_time(type="hidden") }}
 
-                    {{ wtf.form_field(form.passenger_places) }}
-                    {{ wtf.form_field(form.car_string) }}
-                    {{ wtf.form_field(form.confirm) }}
+                        {{ wtf.form_field(form.passenger_places) }}
+                        {{ wtf.form_field(form.car_string) }}
+                        {{ wtf.form_field(form.confirm) }}
+                    </form>
                 </div>
             </div>
         </div>
@@ -62,6 +65,8 @@
             minZoom: 2,
             maxZoom: 20
         }).setView([50.8, 4.6], 9);
+
+        document.getElementById("departure_time").value = new Date('{{ dt }}').toISOString();
 
         // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);

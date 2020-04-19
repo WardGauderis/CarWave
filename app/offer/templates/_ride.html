@@ -27,8 +27,10 @@
     <div class="tab-content card-body">
         <div class="tab-pane fade show active" id="body-overview-{{ ride.id }}">
             {#            TODO geen coordinaten maar namen #}
-            <span class="text-left font-weight-bold">From: </span>{{ ride.depart_from }}<br>
-            <span class="text-left font-weight-bold">To: </span>{{ ride.arrive_at }}<br>
+            <span class="text-left font-weight-bold">From: </span>
+            <p id="from1">loading...</p> <br>
+            <span class="text-left font-weight-bold">To: </span>
+            <p id="to1">loading...</p> <br>
             <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).calendar() }}<br>
             <span class="text-left font-weight-bold">Driver: </span><a
                 href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
@@ -88,6 +90,30 @@
 <script src="{{ url_for('.static', filename='leaflet-routing-machine.js') }}"></script>
 
 <script type="text/javascript">
+
+    function get_address(lon, lat, which) {
+        $.ajax({
+            url: "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lon=" + lon + "&lat=" + lat,
+            type: "GET",
+            success: function (xhr) {
+                if(which === 'from')
+                {
+                    document.getElementById("from1").innerText = xhr.display_name;
+                }
+                else
+                {
+                   document.getElementById("to1").innerText = xhr.display_name;
+                }
+
+            },
+            error: function (xhr) {
+                alert(xhr)
+            }
+        });
+    }
+    get_address({{ ride.depart_from[1] }}, {{ ride.depart_from[0] }}, 'from');
+    get_address({{ ride.arrive_at[1] }}, {{ ride.arrive_at[0] }}, 'to');
+
     let map{{ ride.id }} = L.map('map{{ ride.id }}', {
         minZoom: 2,
         maxZoom: 20,
