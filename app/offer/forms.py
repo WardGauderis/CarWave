@@ -13,11 +13,6 @@ class OfferForm(DictForm):
     to_lon = FloatField('', [NumberRange(-180, 180)])
     to_lat = FloatField('', [NumberRange(-90, 90)])
 
-    # from_lon = HiddenField('')
-    # from_lat = HiddenField('')
-    # to_lon = HiddenField('')
-    # to_lat = HiddenField('')
-
     arrival_time = HiddenField('Arrival Time*', [DataRequired()])
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
     car_string = SelectField('Select Car', choices=[('None', 'None')])

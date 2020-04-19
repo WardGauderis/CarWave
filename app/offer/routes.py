@@ -35,6 +35,7 @@ def offer():
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
     date = request.args.get('dt')
+
     return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date)
 
 

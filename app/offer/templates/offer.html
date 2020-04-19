@@ -31,7 +31,9 @@
             <div class="card">
                 <div class="card-body">
                     <h5 id="route" class="card-title">No route selected</h5>
-                    {{ wtf.quick_form(form) }}
+                    {{ wtf.form_field(form.passenger_places) }}
+                    {{ wtf.form_field(form.car_string) }}
+                    {{ wtf.form_field(form.confirm) }}
                 </div>
             </div>
         </div>
