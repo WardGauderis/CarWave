@@ -16,6 +16,10 @@ class LoginForm(DictForm):
         return self.validate_json()
 
 
+class DeleteUserForm(DictForm):
+    delete = SubmitField('Delete account')
+
+
 class CreateUserForm(DictForm):
     username = StringField('Username*', validators=[DataRequired(), Length(max=64)])
     email = StringField('Email', validators=[Optional(), Length(max=128), Email()])

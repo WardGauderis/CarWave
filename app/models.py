@@ -55,10 +55,8 @@ class PassengerRequest(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
-    ride = db.relationship(
-        "Ride", back_populates="requests"
-    )
-    passenger = db.relationship("User", back_populates="requests")
+    ride = db.relationship("Ride", back_populates="requests", cascade='all, delete-orphan, delete', single_parent=True)
+    passenger = db.relationship("User", back_populates="requests", cascade='all, delete-orphan, delete', single_parent=True)
 
 
 class User(UserMixin, db.Model):
@@ -138,14 +136,14 @@ class Ride(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     driver_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    driver = db.relationship("User", back_populates="driver_rides")
+    driver = db.relationship("User", back_populates="driver_rides", cascade='all, delete-orphan, delete', single_parent=True)
     passenger_places = db.Column(db.Integer, nullable=False)
 
     license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate", ondelete='SET NULL'), nullable=True)
     car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    # departure_time = db.Column(db.DateTime, nullable=True)
+    departure_time = db.Column(db.DateTime, nullable=True)
     departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
@@ -165,6 +163,9 @@ class Ride(db.Model):
 
     def accepted_requests(self):
         return self.requests.filter_by(status="accepted")
+
+    def pending_requests(self):
+        return self.requests.filter_by(status="pending")
 
     def passenger_places_left(self) -> int:
         return self.passenger_places - self.accepted_requests().count()
@@ -196,7 +197,7 @@ class Car(db.Model):
     consumption = db.Column(db.Float, nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
-    owner = db.relationship("User", back_populates="cars")
+    owner = db.relationship("User", back_populates="cars", cascade='all, delete-orphan, delete', single_parent=True)
     rides = db.relationship("Ride", back_populates="car")
 
     def __repr__(self):

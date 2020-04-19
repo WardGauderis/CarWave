@@ -58,7 +58,8 @@ def delete_user(user: User):
     try:
         db.session.delete(user)
         db.session.commit()
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid user deletion')
 
@@ -90,11 +91,16 @@ def read_drive_from_id(id: int) -> Ride:
         abort(400, 'Invalid drive read from user')
 
 
-def read_all_drives(limit: int = None) -> list:
+def read_all_drives(limit: int = None, futureOrPast: str = '') -> list:
     try:
-        if limit is None:
-            return Ride.query.all()
-        return Ride.query.limit(limit).all()
+        query = Ride.query
+        if futureOrPast == 'future':
+            query.filter(Ride.arrival_time > datetime.utcnow())
+        elif futureOrPast == 'past':
+            query.filter(Ride.arrival_time <= datetime.utcnow())
+        if limit:
+            query = query.limit(limit)
+        return query.all()
     except:
         abort(400, 'Invalid drive read')
 
