@@ -10,7 +10,7 @@
                     {% if user == current_user %}
                         <a href="{{ url_for('profile.user_edit', username=current_user.username) }}"
                            class="btn btn-dark btn-sm btn-block">Edit profile</a>
-                        <a href="{{ url_for('profile.car_edit', username=current_user.username) }}"
+                        <a href="{{ url_for('profile.car_create', username=current_user.username) }}"
                            class="btn btn-dark btn-sm btn-block">Edit Cars</a>
                     {% endif %}
                 </div>

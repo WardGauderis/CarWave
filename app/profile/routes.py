@@ -7,20 +7,31 @@ from app.auth.forms import CreateUserForm
 from app.profile.forms import CreateCarForm
 
 
-@bp.route('/car/update', methods=['GET', 'POST'])
+@bp.route('/car/update/<string:license_plate>', methods=['GET', 'POST'])
 @login_required
-def car_edit():
-    create = CreateCarForm()
+def car_edit(license_plate):
     update = CreateCarForm()
     update.make_update_form()
+    car = read_car_from_plate(license_plate)
 
-    if create.validate_on_submit():
-        create_car(create)
-    elif update.validate_on_submit():
-        car = read_car_from_plate(update.license_plate.data)
+    if update.validate_on_submit():
         update_car(car, update)
+        return redirect(url_for('profile.car_create'))
 
-    return render_template('car-edit.html', title='update cars', create=create, update=update, cars=current_user.cars)
+    if request.method == 'GET':
+        update.from_database(car)
+
+    return render_template('car-edit.html', title='update cars', update=update)
+
+
+@bp.route('/car/create', methods=['GET', 'POST'])
+@login_required
+def car_create():
+    create = CreateCarForm()
+    if create.validate_on_submit():
+        create_car(create, current_user)
+
+    return render_template('car-create.html', title='update cars', create=create, cars=current_user.cars)
 
 
 @bp.route('/user/<int:user_id>')

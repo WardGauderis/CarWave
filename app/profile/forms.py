@@ -15,6 +15,16 @@ class CreateCarForm(DictForm):
     submit = SubmitField('Register Car')
     update = False
 
+    def from_database(self, car):
+        self.license_plate.data = car.license_plate
+        self.model.data = car.model
+        self.colour.data = car.colour
+        self.passenger_places.data = car.passenger_places
+        self.build_year.data = car.build_year
+        self.fuel.data = car.fuel
+        self.consumption.data = car.consumption
+        self.fuel.data = car.fuel
+
     def make_update_form(self):
         self.submit.label.text = 'Update Car'
         self.update = True

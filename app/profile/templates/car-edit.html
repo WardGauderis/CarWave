@@ -3,17 +3,7 @@
 
 {% block app_content %}
     <div class="card card-body">
-        {% for car in cars %}
-            {{ update.license_plate(value=car.license_plate, readonly=true) }}
-            {{ update.model(value=car.model) }}
-            {{ update.colour(value=car.colour) }}
-            {{ update.passenger_places(value=car.passenger_places) }}
-            {{ update.build_year(value=car.build_year) }}
-            {{ update.fuel(value=car.fuel) }}
-            {{ update.consumption(value=car.consumption) }}
-            {{ update.submit() }}
-        {% endfor %}
-    {{ wtf.quick_form(create) }}
+        {{ wtf.quick_form(update) }}
     </div>
 
 

@@ -1,17 +1,3 @@
-dit werkt niet meer nu :(, zie reset_database
-
-
-dropdb carwave_db
-creatdb carwave db
-
-psql
-\c carwave_db
-CREATE EXTENSION postgis;
-\dx to check
-
-
-delete migrations folder
-flask db init
-flask db migrate
-import geoalchemy2 in de migration versie
-flask db upgrade
+extra uitleg reset databse:
+bij het archaische vim commando is het de bedoeling dat je
+geoalchemy2 import en op.drop_table('spatial...') wegcomment

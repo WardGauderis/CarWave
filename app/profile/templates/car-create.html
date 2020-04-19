@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <div class="card card-body" style="padding:10px">
+        {% for car in cars %}
+            <p>{{ car.license_plate }}</p>
+            <p>{{ car.model }}</p>
+            <p>{{ car.colour }}</p>
+            <p>{{ car.passenger_places }}</p>
+            <p>{{ car.build_year }}</p>
+            <p>{{ car.fuel }}</p>
+            <p>{{ car.consumption }}</p>
+
+            <a href="{{ url_for('profile.car_edit', username=current_user.username, license_plate=car.license_plate) }}"
+                           class="btn btn-dark btn-sm btn-block">Edit car</a>
+        {% endfor %}
+    </div>
+
+    <div class="card card-body">
+        {{ wtf.quick_form(create) }}
+    </div>
+
+{% endblock %}
