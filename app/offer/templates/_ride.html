@@ -14,6 +14,12 @@
                     <a class="nav-item nav-link" data-toggle="tab"
                        href="#body-car-{{ ride.id }}">Car</a>
                 </li>
+                {% if passenger is defined %}
+                    <li class="nav-item">
+                        <a class="nav-item nav-link" data-toggle="tab"
+                           href="#body-passenger-{{ ride.id }}">Passenger</a>
+                    </li>
+                {% endif %}
             </ul>
         </nav>
     </div>
@@ -40,8 +46,14 @@
             {% if choice is defined %}
                 <form method="post" name="ride">
                     {{ choice.ride_id(type="hidden", value=ride.id) }}
-                    {{ choice.accept(class="form-control", id="accept") }}
-                    {{ choice.reject(class="form-control", id="reject") }}
+                    <div class="form-row" style="padding:10px">
+                        <div class="ui-widget col-sm" style="margin:0">
+                            {{ wtf.form_field(choice.accept) }}
+                        </div>
+                        <div class="col-sm-auto">
+                            {{ wtf.form_field(choice.reject) }}
+                        </div>
+                    </div>
                 </form>
             {% endif %}
 
@@ -59,20 +71,57 @@
                 <span class="text-left font-weight-bold">fuel: </span>{{ ride.car.fuel }}<br>
                 <span class="text-left font-weight-bold">consumption: </span>{{ ride.car.consumption }}<br>
             {% else %}
-                <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span><br>
+                <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span>
+                <br>
             {% endif %}
         </div>
+        {% if passenger is defined %}
+            <div class="tab-pane fade" id="body-passenger-{{ ride.id }}">
+                User info
+            </div>
+        {% endif %}
     </div>
 </div>
 
 <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+<script src="{{ url_for('.static', filename='leaflet.js') }}"></script>
+<script src="{{ url_for('.static', filename='leaflet-routing-machine.js') }}"></script>
+
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('.nav-tabs a').on('shown.bs.tab', function () {
-            maps.map{{ ride.id }}.invalidateSize();
-            maps.map{{ ride.id }}.setZoom(9);
-        });
+    let map{{ ride.id }} = L.map('map{{ ride.id }}', {
+        minZoom: 2,
+        maxZoom: 20,
     });
 
+    L.Routing.control({
+        show: false,
+        showAlternatives: true,
+        addWaypoints: false,
+        waypoints: [
+            L.latLng({{ ride.depart_from }}),
+            L.latLng({{ ride.arrive_at }})
+        ],
+        lineOptions: {
+            styles: [{color: '#769ad4', opacity: 0.15, weight: 9},
+                {color: '#769ad4', opacity: 0.8, weight: 6},
+                {color: '#769ad4', opacity: 1, weight: 2}]
+        },
+
+        altLineOptions: {
+            styles: [{color: '#b0c5e6', opacity: 0.15, weight: 9},
+                {color: '#b0c5e6', opacity: 0.8, weight: 6},
+                {color: '#b0c5e6', opacity: 1, weight: 2}]
+        },
+        router: L.Routing.mapbox('pk.eyJ1IjoiZnVua3ltYW5pYWMiLCJhIjoiY2s2dDZzeGlxMG1lNzNmcGdoZGljdnp0bCJ9.5WI4sA19cj8iCPNkZemm9Q'),
+    }).addTo(map{{ ride.id }});
+
+    L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map{{ ride.id }});
+
+    $(document).ready(function () {
+        $('.nav-tabs a').on('shown.bs.tab', function () {
+            map{{ ride.id }}.invalidateSize();
+            map{{ ride.id }}.setZoom(9);
+        });
+    });
 
 </script>

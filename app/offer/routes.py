@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, redirect
+from flask import render_template, request, url_for, redirect, flash
 from flask_login import current_user, login_required
 from app.offer import bp
 from app.offer.forms import *
@@ -10,13 +10,14 @@ from app.crud import *
 def requests():
     form = RequestChoiceForm()
 
+    pending = current_user.driver_rides.requests
     if request.method == 'POST':
         if "reject" in request.form:
             print('reject passenger code')
         elif "accept" in request.form:
             print('accept passenger code')
 
-    return render_template('rides.html', title='Requests', choice=form, rides=read_drive_from_driver(current_user))
+    return render_template('requests.html', title='Requests', choice=form, rides=read_passenger_request(current_user))
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -51,7 +52,8 @@ def find():
     elif select.validate_on_submit():
         drive = read_drive_from_id(select.ride_id.data)
         create_passenger_request(current_user, drive)
-        return redirect(url_for('main.index'))  # TODO: wahoo you requested your ride successfully
+        flash('Congratulations, you successfully requested a ride', 'success')
+        return redirect(url_for('main.index'))
 
     return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives())
 

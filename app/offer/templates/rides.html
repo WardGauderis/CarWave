@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
 
+{#do not delete this!!!!1#}
 {% block app_styles %}
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet-routing-machine.css') }}"/>
@@ -9,50 +11,4 @@
     {% for ride in rides %}
         {% include '_ride.html' %}
     {% endfor %}
-{% endblock %}
-
-{% block app_scripts %}
-    <script src="{{ url_for('.static', filename='leaflet.js') }}"></script>
-    <script src="{{ url_for('.static', filename='leaflet-routing-machine.js') }}"></script>
-
-    <script type="text/javascript">
-        let maps = {};
-        function make(name, depart, arrive) {
-
-            let map = L.map(name, {
-                minZoom: 2,
-                maxZoom: 20,
-            });
-
-            L.Routing.control({
-                show: false,
-                showAlternatives: true,
-                addWaypoints: false,
-                waypoints: [
-                    L.latLng(depart),
-                    L.latLng(arrive)
-                ],
-                lineOptions: {
-                    styles: [{color: '#769ad4', opacity: 0.15, weight: 9},
-                        {color: '#769ad4', opacity: 0.8, weight: 6},
-                        {color: '#769ad4', opacity: 1, weight: 2}]
-                },
-
-                altLineOptions: {
-                    styles: [{color: '#b0c5e6', opacity: 0.15, weight: 9},
-                        {color: '#b0c5e6', opacity: 0.8, weight: 6},
-                        {color: '#b0c5e6', opacity: 1, weight: 2}]
-                },
-                router: L.Routing.mapbox('pk.eyJ1IjoiZnVua3ltYW5pYWMiLCJhIjoiY2s2dDZzeGlxMG1lNzNmcGdoZGljdnp0bCJ9.5WI4sA19cj8iCPNkZemm9Q'),
-            }).addTo(map);
-
-            L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
-            maps[name] = map;
-        }
-
-        {% for ride in rides %}
-            make('map{{ ride.id }}', {{ ride.depart_from }}, {{ ride.arrive_at }});
-        {% endfor %}
-
-    </script>
 {% endblock %}

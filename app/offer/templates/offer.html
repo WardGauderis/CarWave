@@ -31,6 +31,12 @@
             <div class="card">
                 <div class="card-body">
                     <h5 id="route" class="card-title">No route selected</h5>
+                    {{ form.from_lon(type="hidden") }}
+                    {{ form.from_lat(type="hidden") }}
+                    {{ form.to_lon(type="hidden") }}
+                    {{ form.to_lat(type="hidden") }}
+                    {{ form.arrival_time(type="hidden") }}
+
                     {{ wtf.form_field(form.passenger_places) }}
                     {{ wtf.form_field(form.car_string) }}
                     {{ wtf.form_field(form.confirm) }}
@@ -115,6 +121,14 @@
                 url: "https://photon.komoot.de/api/?q=" + location + "&lat=51.0&lon=4.0&limit=1",
                 type: "GET",
                 success: function (xhr) {
+                    if (xhr.features.length === 0) {
+                        if (which === 'from') {
+                            alert("could not find departure address location: {{ fl }}")
+                        } else if (which === 'to') {
+                            alert("could not find arrival address location: {{ tl }}")
+                        }
+                    }
+
                     const lnglat = xhr.features[0].geometry.coordinates;
 
                     if (which === 'from') {
@@ -130,7 +144,7 @@
                     }
                 },
                 error: function (xhr) {
-                    alert(xhr);
+                    alert(xhr)
                 }
             });
         };
