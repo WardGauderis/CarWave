@@ -11,9 +11,14 @@
     <h1 class="display-4">{{ title }}</h1>
     <hr>
 
-    {% if not rides %}
+    {% if delete and not rides %}
         <h1> You don't have any offered rides </h1>
     {% endif %}
+
+    {% if delete_req and not rides %}
+        <h1> You don't have any future requests </h1>
+    {% endif %}
+
     {% for ride in rides %}
         {% include '_ride.html' %}
     {% endfor %}
