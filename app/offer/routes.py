@@ -20,7 +20,7 @@ def requests():
         elif "accept" in request.form:
             print('accept passenger code')
 
-    return render_template('requests.html', title='Requests', choice=form, requests=pending)
+    return render_template('requests.html', title='Your Requests', choice=form, requests=pending)
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -92,4 +92,4 @@ def driver_rides():
         delete_drive(drive)
         return redirect(url_for('offer.driver_rides'))
 
-    return render_template('rides.html', title='Driver Drives', rides=read_drive_from_driver(current_user), delete=form)
+    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form)
