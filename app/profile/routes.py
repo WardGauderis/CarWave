@@ -24,7 +24,7 @@ def car_edit(license_plate):
     if request.method == 'GET':
         update.from_database(car)
 
-    return render_template('car-edit.html', title='update cars', update=update)
+    return render_template('car-edit.html', title='Edit Car', update=update)
 
 
 @bp.route('/car/create', methods=['GET', 'POST'])
@@ -36,7 +36,7 @@ def car_create():
     if create.validate_on_submit():
         create_car(create, current_user)
 
-    return render_template('car-create.html', title='update cars', create=create, cars=current_user.cars)
+    return render_template('car-create.html', title='Edit Cars', create=create, cars=current_user.cars)
 
 
 @bp.route('/user/<int:user_id>')

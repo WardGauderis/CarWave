@@ -4,13 +4,14 @@ from wtforms.validators import DataRequired, NumberRange, ValidationError, Optio
 from app.forms import DictForm
 import dateutil.parser
 from datetime import datetime
+from app.models import Ride
 
 
 class OfferForm(DictForm):
-    from_lon = FloatField('', [NumberRange(-180, 180)])
     from_lat = FloatField('', [NumberRange(-90, 90)])
-    to_lon = FloatField('', [NumberRange(-180, 180)])
+    from_lon = FloatField('', [NumberRange(-180, 180)])
     to_lat = FloatField('', [NumberRange(-90, 90)])
+    to_lon = FloatField('', [NumberRange(-180, 180)])
 
     arrival_id = StringField('')
     departure_id = StringField('')
@@ -21,6 +22,20 @@ class OfferForm(DictForm):
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
     car_string = SelectField('Select Car', choices=[('None', 'None')])
     confirm = SubmitField('Confirm')
+
+    def from_database(self, ride: Ride):
+        self.from_lat.data = ride.depart_from[0]
+        self.from_lon.data = ride.depart_from[1]
+        self.to_lat.data = ride.arrive_at[0]
+        self.from_lat.data = ride.arrive_at[1]
+        self.arrival_id.data = ride.arrival_id
+        self.departure_id.data = ride.departure_id
+        if ride.departure_time:
+            self.departure_time.data = ride.departure_time
+        self.arrival_time.data = ride.arrival_time
+        self.passenger_places.data = ride.passenger_places
+        self.car_string.data = ride.car.license_plate
+
 
     def from_json(self, json):
         self.arrival_time.data = json.get('arrive-by')
