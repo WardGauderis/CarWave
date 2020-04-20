@@ -1,48 +1,16 @@
 from datetime import datetime, timedelta
+from hashlib import md5
+from json import loads
 
 import jwt
 import requests
 from flask import current_app
-from json import loads
+from flask_login import UserMixin
 from geoalchemy2 import Geometry
 from sqlalchemy import func
-from flask_login import UserMixin
-from hashlib import md5
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, login
-
-"""
-File with the database models described using SQLAlchemy
-
-TODO:
-    - Add more ease of use functions for fulfilling API requests and the like
-    - Get rides as a passenger or driver for a user
-    - Handle passenger requests for a certain driver
-    - How to delete a passenger request?
-    - Serialise models to JSON for the API requests?
-"""
-
-
-# The secondary tables for the many-to-many relationships
-
-# car_links = db.Table(
-#     # TODO: Cascade on delete
-#     "car_links",
-#     db.metadata,
-#     db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
-#     db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
-# )
-
-
-# ride_links = db.Table(
-#     "ride_links",
-#     db.metadata,
-#     db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
-#     db.Column(
-#         "user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True
-#     ),
-# )
 
 
 class PassengerRequest(db.Model):
@@ -222,62 +190,3 @@ class Car(db.Model):
     def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
-
-# class Driver(db.Model):
-#     """
-#     Driver is a User
-#     """
-#
-#     __tablename__ = "drivers"
-#
-#     id = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-#     )
-#     rating = db.Column(
-#         db.Numeric(precision=2, scale=1),
-#         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-#         nullable=True,
-#     )
-#     num_ratings = db.Column(db.Integer, default=0, nullable=False)
-#
-#     user = db.relationship(
-#         "User", backref=db.backref("driver", uselist=False, passive_deletes=True),
-#     )
-#     rides = db.relationship("Ride", back_populates="driver")
-#     cars = db.relationship("Car", secondary=car_links, back_populates="drivers")
-#
-#     def __repr__(self):
-#         return f"<Driver(id={self.id}, rating={self.rating})>"
-
-
-# class Passenger(db.Model):
-#     """
-#     Passenger is a User
-#     """
-#
-#     __tablename__ = "passengers"
-#
-#     id = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-#     )
-#     rating = db.Column(
-#         db.Numeric(precision=2, scale=1),
-#         db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-#         default=None,
-#         nullable=True,
-#     )
-#     num_ratings = db.Column(db.Integer, default=0, nullable=False)
-#
-#     user = db.relationship(
-#         "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
-#     )
-#     rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
-#     requests = db.relationship(
-#         "Ride", secondary="passenger_requests", back_populates="requests"
-#     )
-#
-#     def __repr__(self):
-#         return f"<Passenger(id={self.id}, rating={self.rating})>"
-#
-#     def to_json(self):
-#         return {"id": self.id, "username": self.user.username}

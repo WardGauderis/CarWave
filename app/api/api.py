@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta, date
 
 from flask import Response, abort, request, g
 
@@ -6,7 +7,7 @@ from app.api import bp
 from app.auth.auth import token_auth
 from app.models import Ride, PassengerRequest
 from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive, create_passenger_request, \
-    update_passenger_request
+    update_passenger_request, search_drives
 from app.auth.forms import CreateUserForm, LoginForm
 from app.offer.forms import OfferForm
 
@@ -173,37 +174,53 @@ def accept_passenger_request(drive_id, user_id):
         abort(401, "Invalid authorization")
 
 
-# TODO search drive -> doe dit in de crud functie search_drives() zodate de site dit ook kan gebruiken
-# TODO voorkeuren: leeftijd, geslacht, verbruik
 @bp.route("/drives/search", methods=["GET"])
 def search_drive():
     MIN_RIDES = 1
     MAX_RIDES = 25
-    DEFAULT_LIMIT = 5
     try:
-        # Clamp if present, else use default value of 5
         limit = request.args.get("limit")
-        # TODO: support these search parameters (https://postgis.net/docs/ST_DWithin.html)
-        # Default distances from given start and stop, should be optional
-        start = json.get("from")
-        stop = json.get("to")
-        arrive_by = json.get("arrive-by")
+        start = request.args.get("from")
+        start_distance = request.args.get("from-distance")
+        stop = request.args.get("to")
+        stop_distance = request.args.get("to-distance")
+        arrive_by = request.args.get("arrive-by")
+        arrival_delta = request.args.get("arrival-delta")
+        depart_by = request.args.get("depart-by")
+        depart_delta = request.args.get("depart-delta")
+        sex = request.args.get("sex")
     except KeyError:
         abort(400, "Invalid format")
+
     if limit:
         limit = max(MIN_RIDES, min(int(limit), MAX_RIDES))
-    rides = Ride.search(limit=limit, departure=start, arrival=stop, arrival_time=arrive_by)
+    if start:
+        start = map(float, start.split(","))
+        start_distance = int(start_distance) if start_distance else 5000
+    if stop:
+        stop = map(float, stop.split(","))
+        stop_distance = int(stop_distance) if stop_distance else 5000
+    if depart_by:
+        depart_by = datetime.strptime(depart_by, "%Y-%m-%dT%H:%M:%S.%f")
+        depart_delta = timedelta(minutes=int(depart_delta)) if depart_delta else timedelta(minutes=30)
+    if arrive_by:
+        arrive_by = datetime.strptime(arrive_by, "%Y-%m-%dT%H:%M:%S.%f")
+        arrival_delta = timedelta(minutes=int(arrival_delta)) if arrival_delta else timedelta(minutes=30)
+
+
+    rides = search_drives(limit, start, start_distance, stop, stop_distance, depart_by,
+                          depart_delta, arrive_by, arrival_delta, sex, age_range=None,
+                          consumption_range=None)
     return Response(
         json.dumps([
             {
                 "id": ride.id,
                 "driver-id": ride.driver_id,
-                "passenger-ids": [passenger.id for passenger in ride.accepted_requests],
+                "passenger-ids": [passenger.id for passenger in ride.accepted_requests()],
                 "from": ride.depart_from,
                 "to": ride.arrive_at,
                 "arrive-by": ride.arrival_time.isoformat(),
-            }
-            for ride in rides
+            } for ride in rides
         ]),
         status=200,
         mimetype="application/json"
