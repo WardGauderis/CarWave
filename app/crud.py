@@ -161,7 +161,7 @@ def update_drive(drive: Ride, form):
     except:
         abort(400, 'Invalid drive update')
     if drive.passenger_places_left() < 0:
-        abort(
+        abort(409,
             'Cannot reduce the amount of passenger places if passengers will be dropped. This has to be done manually.')
     try:
         db.session.commit()
