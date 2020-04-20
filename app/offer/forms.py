@@ -12,8 +12,8 @@ class OfferForm(DictForm):
     to_lon = FloatField('', [NumberRange(-180, 180)])
     to_lat = FloatField('', [NumberRange(-90, 90)])
 
-    from_id = StringField('', [DataRequired()])
-    to_id = StringField('', [DataRequired()])
+    arrival_id = StringField('')
+    departure_id = StringField('')
 
     arrival_time = HiddenField('Arrival Time*', [DataRequired()])
     departure_time = HiddenField('Departure Time')

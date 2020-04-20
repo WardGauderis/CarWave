@@ -160,6 +160,11 @@ class Ride(db.Model):
             setattr(self, key, value)
         self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"
         self.arrival_address = f"SRID=4326;POINT({form.to_lat.data} {form.to_lon.data})"
+        # TODO HIER THOMAS
+        if not form.arrival_id.data:
+            self.arrival_id = "LOOOOOOOOOOOOOOOOL"
+        if not form.departure_id.data:
+            self.departure_id = "LOOOOOOOOOOOOOOOOOOOOOOOOOOOL"
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
