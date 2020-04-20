@@ -57,8 +57,10 @@ def create_app(config=Config):
     # Logging
     @app.after_request
     def after_request(response):
+        if response.content_type != "application/json":
+            return response
+
         timestamp = strftime("[%Y-%b-%d %H:%M]")
-        # res_json = response.data.decode("utf-8")
         res_json = loads(response.data)
         req_json = request.get_json(silent=True)
         logger.error(
@@ -68,7 +70,6 @@ def create_app(config=Config):
             request.method,
             request.scheme,
             request.full_path,
-            # res_json,
             dumps(res_json, indent=2) if res_json is not None else "",
             dumps(req_json, indent=2) if req_json is not None else "",
         )
