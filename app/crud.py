@@ -92,12 +92,12 @@ def read_drive_from_id(id: int) -> Ride:
         abort(400, 'Invalid drive read from user')
 
 
-def read_all_drives(limit: int = None, futureOrPast: str = '') -> list:
+def read_all_drives(future_or_past: str = '', limit: int = None) -> list:
     try:
         query = Ride.query
-        if futureOrPast == 'future':
+        if future_or_past == 'future':
             query.filter(Ride.arrival_time > datetime.utcnow())
-        elif futureOrPast == 'past':
+        elif future_or_past == 'past':
             query.filter(Ride.arrival_time <= datetime.utcnow())
         if limit:
             query = query.limit(limit)

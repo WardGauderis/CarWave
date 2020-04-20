@@ -10,6 +10,14 @@
         .invalid-feedback {
             display: block;
         }
+
+        body {
+            background: url('{{ url_for('main.static', filename='wave2.jpg') }}') no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            background-size: cover;
+            -o-background-size: cover;
+        }
     </style>
     {% block app_styles %}
     {% endblock %}
@@ -33,8 +41,12 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        {% block app_content %}
-        {% endblock %}
+            <div class="card border-0 shadow my-5" style="background-color:#ddddddaa;">
+                <div class="card-body p-5">
+                    {% block app_content %}
+                    {% endblock %}
+                </div>
+        </div>
     </div>
 {% endblock %}
 
