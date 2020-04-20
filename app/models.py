@@ -71,6 +71,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(128))
     age = db.Column(db.Integer, nullable=True)
     sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
+    address_id = db.Column(db.String(32), nullable=True)
 
     driver_rides = db.relationship("Ride", back_populates="driver", cascade="all, delete, delete-orphan")
     cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
@@ -145,8 +146,10 @@ class Ride(db.Model):
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     departure_time = db.Column(db.DateTime, nullable=True)
     departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
+    departure_id = db.Column(db.String(32), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
+    arrival_id = db.Column(db.String(32), nullable=False)
 
     requests = db.relationship(
         "PassengerRequest", back_populates="ride", lazy="dynamic", cascade="all, delete, delete-orphan"
