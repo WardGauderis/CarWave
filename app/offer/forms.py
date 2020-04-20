@@ -1,5 +1,5 @@
 from wtforms import SubmitField
-from wtforms.fields import IntegerField, HiddenField, SelectField, FloatField, StringField
+from wtforms.fields import IntegerField, HiddenField, SelectField, FloatField, StringField, TimeField, DateField
 from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional
 from app.forms import DictForm
 import dateutil.parser
@@ -15,6 +15,9 @@ class OfferForm(DictForm):
 
     arrival_id = StringField('')
     departure_id = StringField('')
+
+    time = TimeField('arrival time', [DataRequired()])
+    date = DateField('arrival date', [DataRequired()])
 
     arrival_time = HiddenField('Arrival Time*', [DataRequired()])
     departure_time = HiddenField('Departure Time')

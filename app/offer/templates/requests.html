@@ -10,6 +10,10 @@
 {% block app_content %}
     <h1 class="display-4">{{ title }}</h1>
     <hr>
+    {% if not requests %}
+        <h1> You don't have any pending requests </h1>
+    {% endif %}
+
     {% for request in requests %}
         {% set ride = request.ride -%}
         {% set passenger = request.passenger -%}
