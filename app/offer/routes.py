@@ -32,21 +32,28 @@ def offer():
     for car in current_user.cars:
         form.car_string.choices.append((car.license_plate, car.license_plate))
 
-    if form.validate_on_submit():
-        create_drive(form, current_user)
-        flash('Congratulations, you successfully offered a ride', 'success')
-        return redirect(url_for('offer.driver_rides'))
-    print(form.get_errors())
-
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
 
     ride_id = request.args.get('rid')
 
+    if form.validate_on_submit():
+        if ride_id is None:
+            create_drive(form, current_user)
+            flash('Congratulations, you successfully offered a ride', 'success')
+        else:
+            update_drive(read_drive_from_id(ride_id), form)
+            flash('Congratulations, you successfully changed your ride', 'success')
+        return redirect(url_for('offer.driver_rides'))
+    print(form.get_errors())
 
-    date = request.args.get('dt')
-
-    return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date)
+    if ride_id is None:
+        date = request.args.get('dt')
+        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date)
+    else:
+        drive = read_drive_from_id(ride_id)
+        form.from_database(drive)
+        return render_template('offer.html', title='Offer', form=form, dt=drive.arrival_time)
 
 
 @bp.route('/find', methods=['POST', 'GET'])
@@ -97,6 +104,6 @@ def driver_rides():
             delete_drive(drive)
             return redirect(url_for('offer.driver_rides'))
         elif "edit" in request.form:
-            return redirect(url_for('offer.offer'))
+            return redirect(url_for('offer.offer', rid=form.ride_id.data))
 
     return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form)

@@ -90,7 +90,6 @@
                 url: "https://photon.komoot.de/api/?q=" + request.term + "&lat=51.1845557&lon=4.4199296",
                 type: "GET",
                 success: function (xhr) {
-                    console.log(xhr);
                     let tempOptions = [];
                     for (let i = 0; i < xhr.features.length; i++) {
                         const properties = xhr.features[i].properties;
