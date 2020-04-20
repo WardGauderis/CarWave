@@ -15,6 +15,9 @@ def index():
                                     tl=request.form['to_location'],
                                     dt=request.form['date'] + 'T' + request.form['time']))
         elif "find" in request.form:
-            return redirect(url_for('offer.find'))
+            return redirect(url_for('offer.find',
+                                    fl=request.form['from_location'],
+                                    tl=request.form['to_location'],
+                                    dt=request.form['date'] + 'T' + request.form['time']))
 
     return render_template('index.html', title='Home', form=form)

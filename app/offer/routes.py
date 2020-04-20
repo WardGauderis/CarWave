@@ -1,5 +1,7 @@
 from flask import render_template, request, url_for, redirect, flash
 from flask_login import current_user, login_required
+import requests as req
+import pytz
 from app.offer import bp
 from app.offer.forms import *
 from app.crud import *
@@ -72,14 +74,39 @@ def find():
         flash('Congratulations, you successfully requested a ride', 'success')
         return redirect(url_for('main.index'))
     print(select.get_errors())
-    if details.refresh.data and details.validate_on_submit():
-        print('this should kinda filter stuff, but it don\'t')
-        return render_template('find.html', title='Find', details=details, select=select,
-                               rides=read_all_drives('future'), background=True)
-    print(details.get_errors())
 
-    return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives('future'),
-                           background=True)
+    from_address = request.args.get('fl')
+    to_address = request.args.get('tl')
+    unaware_time = dateutil.parser.parse(request.args.get('dt'))
+    time = pytz.utc.localize(unaware_time)
+
+    def address_to_location(address):
+        url = "https://nominatim.openstreetmap.org/search/" + address
+        params = {"format": "json"}
+        r = req.get(url=url, params=params)
+        data = r.json()
+        return data[0]['lat'], data[0]['lon']
+
+    from_location = address_to_location(from_address)
+    to_location = address_to_location(to_address)
+
+    if details.refresh.data and details.validate_on_submit():
+        age = details.age
+        consumption = details.cons
+        gender = details.gender
+
+        rides = search_drives(departure=from_location, arrival=to_location, arrival_time=time, departure_distance=5000,
+                              arrival_distance=5000,
+                              arrival_delta=timedelta(minutes=30),
+                              age_range=(age - 10, age + 10),
+                              consumption_range=(None, consumption), sex=gender)
+    else:
+        rides = search_drives(departure=from_location, arrival=to_location, arrival_time=time, departure_distance=5000,
+                              arrival_distance=5000,
+                              arrival_delta=timedelta(minutes=30))
+
+    return render_template('find.html', title='Find', details=details, select=select,
+                           rides=rides, background=True)
 
 
 @bp.route('/rides/all')
@@ -97,7 +124,7 @@ def passenger_rides():
         delete_passenger_request(passenger)
         return redirect(url_for('offer.passenger_rides'))
 
-    return render_template('requests.html', title='Passenger Drives', rides=current_user.future_passenger_requests(),
+    return render_template('requests.html', title='Passenger Drives', requests=current_user.future_passenger_requests(),
                            delete_req=form, background=True)
 
 

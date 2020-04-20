@@ -113,12 +113,7 @@
             let date = new Date('{{ dt }}');
             date = new Date(date.getTime() - time * 60000);
 
-            let eta = date.getHours() + ':';
-
-            if (date.getMinutes() < 10) eta = eta + '0' + date.getMinutes();
-            else eta = eta + date.getMinutes();
-
-            document.getElementById("route").innerHTML = (time + "min (" + dist + "km) - eta: " + eta);
+            document.getElementById("route").innerHTML = (time + "min (" + dist + "km)");
             document.getElementById("departure_time").value = date.toISOString();
         }).addTo(map);
 
@@ -157,7 +152,8 @@
             const from = control.getWaypoints()[0].latLng;
             const to = control.getWaypoints()[1].latLng;
 
-            document.getElementById("arrival_time").value = document.getElementById("date").value + 'T' + document.getElementById("time").value;
+            const date = new Date(document.getElementById("date").value + 'T' + document.getElementById("time").value)
+            document.getElementById("arrival_time").value = date.toISOString();
 
             if (Math.abs(from.lat - document.getElementById("from_lat").value) > 0.00001 ||
                 Math.abs(from.lng - document.getElementById("from_lon").value) > 0.00001 ||
