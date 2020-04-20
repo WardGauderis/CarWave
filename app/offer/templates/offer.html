@@ -41,6 +41,9 @@
                         {{ form.arrival_time(type="hidden") }}
                         {{ form.departure_time(type="hidden") }}
 
+                        {{ wtf.form_field(form.time, type="time", class="form-control") }}
+                        {{ wtf.form_field(form.date, type="date", class="form-control") }}
+
                         {{ wtf.form_field(form.passenger_places) }}
                         {{ wtf.form_field(form.car_string) }}
                         {{ wtf.form_field(form.confirm) }}
@@ -67,6 +70,18 @@
             minZoom: 2,
             maxZoom: 20
         }).setView([50.8, 4.6], 9);
+
+        {% if fl is defined %}
+            temp_date = new Date('{{ dt }}');
+        {% else %}
+            temp_date = new Date(document.getElementById("arrival_time").value);
+        {% endif %}
+
+        const hour = (temp_date.getHours() < 10 ? "0" : "") + temp_date.getHours();
+        const min = (temp_date.getMinutes() < 10 ? "0" : "") + temp_date.getMinutes();
+
+        document.getElementById("time").value = hour + ':' + min;
+        document.getElementById("date").value = temp_date.toISOString().slice(0, 10);
 
         document.getElementById("arrival_time").value = new Date('{{ dt }}').toISOString();
 
@@ -141,6 +156,8 @@
             const from = control.getWaypoints()[0].latLng;
             const to = control.getWaypoints()[1].latLng;
 
+            document.getElementById("arrival_time").value = document.getElementById("date").value + 'T' + document.getElementById("time").value;
+
             if (Math.abs(from.lat - document.getElementById("from_lat").value) > 0.00001 ||
                 Math.abs(from.lng - document.getElementById("from_lon").value) > 0.00001 ||
                 Math.abs(to.lat - document.getElementById("to_lat").value) > 0.00001 ||
@@ -157,6 +174,7 @@
         }
 
         {% if fl is defined %}
+
             let getNewRoutes = function (location, which) {
                 location.replace(/\s/g, '+');
                 $.ajax({
