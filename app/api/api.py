@@ -207,7 +207,6 @@ def search_drive():
         arrive_by = datetime.strptime(arrive_by, "%Y-%m-%dT%H:%M:%S.%f")
         arrival_delta = timedelta(minutes=int(arrival_delta)) if arrival_delta else timedelta(minutes=30)
 
-
     rides = search_drives(limit, start, start_distance, stop, stop_distance, depart_by,
                           depart_delta, arrive_by, arrival_delta, sex, age_range=None,
                           consumption_range=None)
