@@ -126,7 +126,7 @@
         let getNewRoutes = function (location, which) {
             location.replace(/\s/g, '+');
             $.ajax({
-                url: "https://photon.komoot.de/api/?q=" + location + "&lat=51.0&lon=4.0&limit=1",
+                url: "https://nominatim.openstreetmap.org/search/" + location + "?format=geojson",
                 type: "GET",
                 success: function (xhr) {
                     if (xhr.features.length === 0) {
