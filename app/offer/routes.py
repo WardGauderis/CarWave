@@ -97,7 +97,8 @@ def passenger_rides():
         delete_passenger_request(passenger)
         return redirect(url_for('offer.passenger_rides'))
 
-    return render_template('requests.html', title='Passenger Drives', rides=current_user.future_passenger_requests(),
+    return render_template('requests.html', title='Passenger Drives',
+                           requests=current_user.future_passenger_requests(),
                            delete_req=form, background=True)
 
 

@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta
 from hashlib import md5
 from json import loads
+from typing import List, Tuple
 
 import requests
 from flask import Flask
@@ -105,8 +106,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
 
-    def passenger_rides(self):
-        return self.requests.filter_by(status="accepted").all()
+    def accepted_passenger_requests(self) -> List[PassengerRequest]:
+        return self.requests.filter_by(status="accepted")
+
+    def future_passenger_requests(self) -> List[PassengerRequest]:
+        return self.requests.join(Ride).filter(Ride.arrival_time > datetime.utcnow()).all()
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -117,6 +121,7 @@ class User(UserMixin, db.Model):
     @staticmethod
     def from_username(username: str):
         return User.query.filter_by(username=username).one_or_none()
+
 
 class Ride(db.Model):
     __tablename__ = "rides"
@@ -165,22 +170,24 @@ class Ride(db.Model):
 
     @staticmethod
     def search(limit=5,
-               departure=None, departure_distance=1000,
-               arrival=None, arrival_distance=1000,
-               departure_time=None, departure_delta=timedelta(minutes=30),
-               arrival_time=None, arrival_delta=timedelta(minutes=30),
-               sex=None, age_range=None, consumption_range=None):
-        """
-        Departure/arrival = tuple of 2 floats (longitude, latitude)
-        """
+               departure: Tuple[float, float] = None,
+               departure_distance: int = None,
+               arrival: Tuple[float, float] = None,
+               arrival_distance: int = None,
+               departure_time: datetime = None,
+               departure_delta: timedelta = None,
+               arrival_time: datetime = None,
+               arrival_delta: timedelta = None,
+               sex: str = None,
+               age_range: Tuple[int, int] = None,
+               consumption_range: Tuple[float, float] = None) -> List:
         query = Ride.query
+
         if departure:
             query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
         if arrival:
             query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
-        # FIXME: don't think we need to worry about handling rows with a NULL
-        #        value, if the user cares about rides with a specific departure time then
-        #        they likely wouldn't want to see rides without a specified departure time
+
         if departure_time:
             query = query.filter(Ride.departure_time.between(
                 departure_time - departure_delta,
@@ -191,19 +198,23 @@ class Ride(db.Model):
                 arrival_time - arrival_delta,
                 arrival_time + arrival_delta
             ))
-        if sex:  # (͡°͜ʖ͡°)
+
+        if sex:
             if sex not in ["male", "female", "non-binary"]:
                 raise ValueError("Invalid sex")
-            # query = query.filter(Ride.driver.has(sex=sex))
             query = query.join(Ride.driver).filter_by(sex=sex)
 
-        # Allow (min, None) (None, max) & (min, max) for ranges
-        # TODO(Hayaan): Age filter
         if age_range:
-            pass
-        # TODO(Hayaan): Consumption filter
+            min_age, max_age = age_range
+            query = query.join(Ride.driver)
+            query = query.filter(min_age <= User.age) if min_age else query
+            query = query.filter(User.age <= max_age) if max_age else query
+
         if consumption_range:
-            pass
+            query = query.join(Ride.car)
+            min_consumption, max_consumption = consumption_range
+            query = query.filter(min_consumption <= Car.consumption) if min_consumption else query
+            query = query.filter(Car.consumption <= max_consumption) if max_consumption else query
 
         return query.limit(limit).all()
 
@@ -286,6 +297,7 @@ class Car(db.Model):
 
 def add_entities():
     User.create(
+        age=35,
         username="dbsrxvqujuce",
         password="$N:K]r3",
         firstname="John",
@@ -293,6 +305,7 @@ def add_entities():
         sex="male",
     )
     User.create(
+        age=25,
         username="xwhxycctuyce",
         password="]2[xrCh>",
         firstname="Jane",
@@ -300,6 +313,7 @@ def add_entities():
         sex="female",
     )
     User.create(
+        age=55,
         username="qrtdavjtzhwu",
         password="F37ZLv,W",
         firstname="Barack",
@@ -307,6 +321,7 @@ def add_entities():
         sex="male",
     )
     User.create(
+        age=20,
         username="vsvvkeqgkczp",
         password="N%2^t<4_",
         firstname="Ada",
@@ -314,6 +329,7 @@ def add_entities():
         sex="female",
     )
     User.create(
+        age=None,
         username="tvjkgyphhtfw",
         password='Py88"B:$',
         firstname="Edsger",
@@ -321,6 +337,7 @@ def add_entities():
     )
     # Duplicate username, what happens?
     User.create(
+        age=70,
         username="tvjkgyphhtfw",
         password='Py88"B:$',
         firstname="Edsger",
@@ -370,7 +387,6 @@ def add_entities():
     db.session.commit()
 
     db.session.add(
-
         Ride.create(
             arrival_id="something",
             departure_id="testing",
@@ -392,33 +408,67 @@ def add_entities():
     # db.session.commit()
 
     # should work
+    Ride.create(
+        arrival_id="something",
+        departure_id="testing",
+        driver_id=1,
+        passenger_places=3,
+        arrival_time="2020-02-24T10:43:42.00",
+        departure_address=[51.184374, 4.420656],
+        arrival_address=[51.219636, 4.403119],
+    )
+    Ride.create(
+        arrival_id="something",
+        departure_id="testing",
+        driver_id=4,
+        passenger_places=4,
+        arrival_time="2020-10-12T09:00:00.00",
+        departure_address=[50.115498, 4.625988],
+        arrival_address=[51.184374, 4.420656],
+    )
+    Ride.create(
+        arrival_id="something",
+        departure_id="testing",
+        driver_id=5,
+        passenger_places=1,
+        arrival_time="2020-10-12T18:15:00.00",
+        departure_address=[51.184374, 4.420656],
+        arrival_address=[50.115498, 4.625988],
+    )
+
+
+    Ride.create(
+        arrival_id="something",
+        departure_id="testing",
+        driver_id=2,
+        passenger_places=10,
+        arrival_time="2020-11-14T05:03:00.00",
+        departure_address=[51.217320, 4.421832],
+        arrival_address=[51.440195, 5.474330],
+    )
+
+    db.session.commit()
+
     db.session.add_all([
-        Ride.create(
-            arrival_id="something",
-            departure_id="testing",
-            driver_id=1,
-            passenger_places=3,
-            arrival_time="2020-02-24T10:43:42.00",
-            departure_address=[51.184374, 4.420656],
-            arrival_address=[51.219636, 4.403119],
+        PassengerRequest(
+            ride_id=1,
+            user_id=3,
+            status="pending"
         ),
-        Ride.create(
-            arrival_id="something",
-            departure_id="testing",
-            driver_id=4,
-            passenger_places=4,
-            arrival_time="2020-10-12T09:00:00.00",
-            departure_address=[50.115498, 4.625988],
-            arrival_address=[51.184374, 4.420656],
+        PassengerRequest(
+            ride_id=2,
+            user_id=3,
+            status="accepted"
         ),
-        Ride.create(
-            arrival_id="something",
-            departure_id="testing",
-            driver_id=5,
-            passenger_places=1,
-            arrival_time="2020-10-12T18:15:00.00",
-            departure_address=[51.184374, 4.420656],
-            arrival_address=[50.115498, 4.625988],
+        PassengerRequest(
+            ride_id=3,
+            user_id=3,
+            status="rejected"
+        ),
+        PassengerRequest(
+            ride_id=4,
+            user_id=3,
+            status="rejected"
         ),
     ])
     db.session.commit()
@@ -429,19 +479,20 @@ def main():
     all_rides = Ride.query.all()
     time = datetime(year=2020, month=2, day=24, hour=10, minute=38, second=42)
     delta = timedelta(minutes=4, seconds=60)
+    user = User.query.get(3)
     rides = Ride.search(
         # arrival_time=time,
         # time_delta=delta,
-        sex=None
+        # sex=None
+        age_range=(18, 35)
     )
     for ride in rides:
-        print(ride.driver.sex)
-        print(ride.arrival_time)
+        print(f"#{ride.driver.id} is {ride.driver.age} years old")
 
 
 
 if __name__ == "__main__":
-    # main()
-    db.drop_all()
-    db.create_all()
-    add_entities()
+    main()
+    # db.drop_all()
+    # db.create_all()
+    # add_entities()

@@ -215,7 +215,7 @@ def search_drive():
             {
                 "id": ride.id,
                 "driver-id": ride.driver_id,
-                "passenger-ids": [passenger.id for passenger in ride.accepted_requests()],
+                "passenger-ids": [req.user_id for req in ride.accepted_requests()],
                 "from": ride.depart_from,
                 "to": ride.arrive_at,
                 "arrive-by": ride.arrival_time.isoformat(),
