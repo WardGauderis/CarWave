@@ -1,5 +1,7 @@
-from wtforms import StringField, SubmitField, IntegerField, SelectField, FloatField
+from wtforms import StringField, SubmitField, IntegerField, SelectField, FloatField, HiddenField
 from wtforms.validators import DataRequired, Length, ValidationError, NumberRange
+from wtforms.widgets import HiddenInput, SubmitInput
+
 from app.forms import DictForm
 from app.crud import read_car_from_plate
 
@@ -13,6 +15,7 @@ class CreateCarForm(DictForm):
     fuel = SelectField('Fuel Type*', choices=[('gasoline', 'gasoline'), ('diesel', 'diesel'), ('electric', 'electric')])
     consumption = FloatField('Fuel Consumption (l/100km)*', [NumberRange(0, 100)])
     submit = SubmitField('Register Car')
+    delete = SubmitField('Delete Car')
     update = False
 
     def from_database(self, car):
@@ -28,6 +31,9 @@ class CreateCarForm(DictForm):
     def make_update_form(self):
         self.submit.label.text = 'Update Car'
         self.update = True
+
+    def make_create_form(self):
+        self.delete.widget = HiddenInput()
 
     def validate_license_plate(self, license_plate):
         if self.update:

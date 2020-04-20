@@ -15,7 +15,10 @@ def car_edit(license_plate):
     car = read_car_from_plate(license_plate)
 
     if update.validate_on_submit():
-        update_car(car, update)
+        if "submit" in request.form:
+            update_car(car, update)
+        elif "delete" in request.form:
+            delete_car(car)
         return redirect(url_for('profile.car_create'))
 
     if request.method == 'GET':
@@ -28,6 +31,8 @@ def car_edit(license_plate):
 @login_required
 def car_create():
     create = CreateCarForm()
+    create.make_create_form()
+
     if create.validate_on_submit():
         create_car(create, current_user)
 

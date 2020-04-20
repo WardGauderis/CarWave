@@ -17,7 +17,6 @@
                 <div class="media-body mb-5 text-white cen">
                     <h1 class="mt-0 mb-0">{{ user.username }}</h1>
                     <p id="address" class="small mb-4">
-                        loading...
                     </p>
 
                     <ul class="list-inline">
@@ -31,7 +30,7 @@
                             <li class="list-inline-item"><span class="font-weight-bold">Sex: </span>{{ user.sex }}
                             </li>{% endif %}
                         {% if user.age %}
-                            <li class="list-inline-itemé"><span class="font-weight-bold">Age: </span>{{ user.age }}
+                            <li class="list-inline-item"><span class="font-weight-bold">Age: </span>{{ user.age }}
                             </li>{% endif %}
                     </ul>
                 </div>
@@ -40,21 +39,23 @@
     </div>
 {% endblock %}
 
-{% block app_content %}
+{% block app_scripts %}
     <script type="text/javascript">
-        function get_address(lon, lat) {
-            $.ajax({
-                url: "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lon=" + lon + "&lat=" + lat,
-                type: "GET",
-                success: function (xhr) {
-                    document.getElementById("address").innerText = xhr.display_name;
-                },
-                error: function (xhr) {
-                    alert(xhr)
-                }
-            });
-        }
-        {# roep de functie gewoon nog op #}
-        {#get_address({{ ride.depart_from[1] }}, {{ ride.depart_from[0] }});#}
+        {% if user.address_id %}
+            function get_address(id) {
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + id + "&format=json",
+                    type: "GET",
+                    success: function (xhr) {
+                        document.getElementById("from1").innerText = xhr[0].display_name;
+                    },
+                    error: function (xhr) {
+                        alert(xhr)
+                    }
+                });
+            }
+
+            get_address('{{ user.address_id }}');
+        {% endif %}
     </script>
 {% endblock %}

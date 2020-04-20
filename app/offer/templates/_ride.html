@@ -27,9 +27,9 @@
     <div class="tab-content card-body">
         <div class="tab-pane fade show active" id="body-overview-{{ ride.id }}">
             <span class="text-left font-weight-bold">From: </span>
-            <p id="from1">loading...</p> <br>
+            <p id="from1">loading...</p>
             <span class="text-left font-weight-bold">To: </span>
-            <p id="to1">loading...</p> <br>
+            <p id="to1">loading...</p>
             <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).calendar() }}<br>
             <span class="text-left font-weight-bold">Driver: </span><a
                 href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
@@ -90,28 +90,28 @@
 
 <script type="text/javascript">
 
-    function get_address(lon, lat, which) {
+    function get_address(id, which) {
         $.ajax({
-            url: "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lon=" + lon + "&lat=" + lat,
+            url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + id + "&format=json",
             type: "GET",
             success: function (xhr) {
                 if(which === 'from')
                 {
-                    document.getElementById("from1").innerText = xhr.display_name;
+                    document.getElementById("from1").innerText = xhr[0].display_name;
+                    console.log(xhr);
                 }
                 else
                 {
-                   document.getElementById("to1").innerText = xhr.display_name;
+                   document.getElementById("to1").innerText = xhr[0].display_name;
                 }
-
             },
             error: function (xhr) {
                 alert(xhr)
             }
         });
     }
-    get_address({{ ride.depart_from[1] }}, {{ ride.depart_from[0] }}, 'from');
-    get_address({{ ride.arrive_at[1] }}, {{ ride.arrive_at[0] }}, 'to');
+    get_address('{{ ride.departure_id }}', 'from');
+    get_address('{{ ride.arrival_id }}', 'to');
 
     let map{{ ride.id }} = L.map('map{{ ride.id }}', {
         minZoom: 2,
