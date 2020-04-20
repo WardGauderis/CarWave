@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import jwt
+import requests
 from flask import current_app
 from json import loads
 from geoalchemy2 import Geometry
@@ -160,11 +161,18 @@ class Ride(db.Model):
             setattr(self, key, value)
         self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"
         self.arrival_address = f"SRID=4326;POINT({form.to_lat.data} {form.to_lon.data})"
-        # TODO HIER THOMAS
+
+        def location_to_id(lon, lat):
+            url = "https://nominatim.openstreetmap.org/reverse"
+            params = {"lat": lat, "lon": lon, "format": "json"}
+            r = requests.get(url=url, params=params)
+            data = r.json()
+            return data.osm_type + data.osm_id
+
         if not form.arrival_id.data:
-            self.arrival_id = "LOOOOOOOOOOOOOOOOL"
+            self.arrival_id = location_to_id(form.to_lon.data, form.to_lat.data)
         if not form.departure_id.data:
-            self.departure_id = "LOOOOOOOOOOOOOOOOOOOOOOOOOOOL"
+            self.arrival_id = location_to_id(form.from_lon.data, form.from_lat.data)
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
