@@ -36,8 +36,11 @@
                         {{ form.from_lat(type="hidden") }}
                         {{ form.to_lon(type="hidden") }}
                         {{ form.to_lat(type="hidden") }}
+                        {{ form.from_id(type="hidden") }}
+                        {{ form.to_id(type="hidden") }}
                         {{ form.arrival_time(type="hidden") }}
                         {{ form.departure_time(type="hidden") }}
+
 
                         {{ wtf.form_field(form.passenger_places) }}
                         {{ wtf.form_field(form.car_string) }}
@@ -135,14 +138,17 @@
                     }
 
                     const lnglat = xhr.features[0].geometry.coordinates;
+                    const prop = xhr.features[0].properties;
 
                     if (which === 'from') {
                         control.spliceWaypoints(0, 1, L.latLng(lnglat[1], lnglat[0]));
+                        document.getElementById("from_id").value = prop.osm_type + prop.osm_id;
 
                         document.getElementById("from_lon").value = lnglat[0];
                         document.getElementById("from_lat").value = lnglat[1];
                     } else if (which === 'to') {
                         control.spliceWaypoints(1, 1, L.latLng(lnglat[1], lnglat[0]));
+                        document.getElementById("to_id").value = prop.osm_type + prop.osm_id;
 
                         document.getElementById("to_lon").value = lnglat[0];
                         document.getElementById("to_lat").value = lnglat[1];
