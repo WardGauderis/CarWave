@@ -104,6 +104,7 @@ class FilterForm(DictForm):
 
 class RequestChoiceForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
+    user_id = IntegerField('user_id', [DataRequired()])
     reject = SubmitField('reject passenger')
     accept = SubmitField('accept passenger')
 

@@ -10,15 +10,19 @@ from app.crud import *
 def requests():
     form = RequestChoiceForm()
 
+    if request.method == 'POST':
+        drive = read_drive_from_id(form.ride_id.data)
+        passenger = read_user_from_id(form.user_id.data)
+        req = read_passenger_request(passenger, drive)
+
+        if "reject" in request.form:
+            update_passenger_request(req, "reject")
+        elif "accept" in request.form:
+            update_passenger_request(req, "accept")
+
     pending = []
     for drive in current_user.driver_rides:
         pending += drive.pending_requests()
-
-    if request.method == 'POST':
-        if "reject" in request.form:
-            print('reject passenger code')
-        elif "accept" in request.form:
-            print('accept passenger code')
 
     return render_template('requests.html', title='Your Requests', choice=form, requests=pending, background=True)
 
@@ -93,7 +97,7 @@ def passenger_rides():
         delete_passenger_request(passenger)
         return redirect(url_for('offer.passenger_rides'))
 
-    return render_template('rides.html', title='Passenger Drives', rides=current_user.future_passenger_requests(),
+    return render_template('requests.html', title='Passenger Drives', rides=current_user.future_passenger_requests(),
                            delete_req=form, background=True)
 
 
