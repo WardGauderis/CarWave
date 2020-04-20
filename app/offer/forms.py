@@ -82,6 +82,7 @@ class SelectForm(DictForm):
 
 class DeleteOfferForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
+    edit = SubmitField('edit offer')
     delete = SubmitField('delete offer')
 
 

@@ -35,11 +35,15 @@ def offer():
     if form.validate_on_submit():
         create_drive(form, current_user)
         flash('Congratulations, you successfully offered a ride', 'success')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('offer.driver_rides'))
     print(form.get_errors())
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
+
+    ride_id = request.args.get('rid')
+
+
     date = request.args.get('dt')
 
     return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date)
@@ -88,8 +92,11 @@ def driver_rides():
     form = DeleteOfferForm()
 
     if request.method == 'POST':
-        drive = read_drive_from_id(form.ride_id.data)
-        delete_drive(drive)
-        return redirect(url_for('offer.driver_rides'))
+        if "delete" in request.form:
+            drive = read_drive_from_id(form.ride_id.data)
+            delete_drive(drive)
+            return redirect(url_for('offer.driver_rides'))
+        elif "edit" in request.form:
+            return redirect(url_for('offer.offer'))
 
     return render_template('rides.html', title='Driver Drives', rides=read_drive_from_driver(current_user), delete=form)
