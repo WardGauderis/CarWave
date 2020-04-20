@@ -9,7 +9,6 @@ from sqlalchemy import func
 from flask_login import UserMixin
 from hashlib import md5
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from app import db, login
 
 """
@@ -120,7 +119,7 @@ class User(UserMixin, db.Model):
                             algorithms=['HS256'])['reset_password']
         except jwt.DecodeError as e:
             return e
-        return User.get(id)
+        return User.query.get(id)
 
 
 @login.user_loader

@@ -10,9 +10,9 @@ class Config:
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = 1
-    MAIL_USERNAME = 'hallobesteploppers@gmail.com'
-    MAIL_DEFAULT_SENDER = 'hallobesteploppers@gmail.com'
-    MAIL_PASSWORD = 'j3icT8XWy9FB7ig'
+    MAIL_USERNAME = 'carwave.ppdb@gmail.com'
+    MAIL_DEFAULT_SENDER = 'carwave.ppdb@gmail.com'
+    MAIL_PASSWORD = 'SxRTZSMeRL2gdza'
     TEMPLATES_AUTO_RELOAD = True
     SQLALCHEMY_DATABASE_URI = environ.get("DATABASE_URI") or 'postgresql://app@localhost/carwave_db?user=postgres&password=postgres'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
