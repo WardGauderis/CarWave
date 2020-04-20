@@ -22,10 +22,13 @@ db = SQLAlchemy(app)
 class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
 
-    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete='CASCADE'), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), primary_key=True)
-    status = db.Column(db.Enum("accepted", "pending", "rejected", name="status_enum"), default="pending",
-                       nullable=False)
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    status = db.Column(
+        db.Enum("accepted", "pending", "rejected", name="status_enum"),
+        default="pending",
+        nullable=False,
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
@@ -66,11 +69,16 @@ class User(UserMixin, db.Model):
     sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
     address_id = db.Column(db.String(32), nullable=True)
 
-    driver_rides = db.relationship("Ride", back_populates="driver", cascade="all, delete, delete-orphan")
+    driver_rides = db.relationship(
+        "Ride", back_populates="driver", cascade="all, delete, delete-orphan"
+    )
     cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
 
     requests = db.relationship(
-        "PassengerRequest", back_populates="passenger", lazy="dynamic", cascade="all, delete, delete-orphan"
+        "PassengerRequest",
+        back_populates="passenger",
+        lazy="dynamic",
+        cascade="all, delete, delete-orphan",
     )
 
     def __repr__(self):
@@ -93,9 +101,8 @@ class User(UserMixin, db.Model):
             return e
 
     def avatar(self, size):
-        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
-        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
-            digest, size)
+        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
+        return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(digest, size)
 
     def from_form(self, form):
         for key, value in form.generator():
@@ -132,7 +139,9 @@ class Ride(db.Model):
     driver = db.relationship("User", back_populates="driver_rides", single_parent=True)
     passenger_places = db.Column(db.Integer, nullable=False)
 
-    license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate", ondelete='SET NULL'), nullable=True)
+    license_plate = db.Column(
+        db.String(16), db.ForeignKey("cars.license_plate", ondelete="SET NULL"), nullable=True,
+    )
     car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
@@ -144,7 +153,10 @@ class Ride(db.Model):
     arrival_id = db.Column(db.String(32), nullable=False)
 
     requests = db.relationship(
-        "PassengerRequest", back_populates="ride", lazy="dynamic", cascade="all, delete, delete-orphan"
+        "PassengerRequest",
+        back_populates="ride",
+        lazy="dynamic",
+        cascade="all, delete, delete-orphan",
     )
 
     def __repr__(self):
@@ -169,35 +181,50 @@ class Ride(db.Model):
         return Ride.query.get(ride_id)
 
     @staticmethod
-    def search(limit=5,
-               departure: Tuple[float, float] = None,
-               departure_distance: int = None,
-               arrival: Tuple[float, float] = None,
-               arrival_distance: int = None,
-               departure_time: datetime = None,
-               departure_delta: timedelta = None,
-               arrival_time: datetime = None,
-               arrival_delta: timedelta = None,
-               sex: str = None,
-               age_range: Tuple[int, int] = None,
-               consumption_range: Tuple[float, float] = None) -> List:
+    def search(
+        limit=5,
+        departure: Tuple[float, float] = None,
+        departure_distance: int = None,
+        arrival: Tuple[float, float] = None,
+        arrival_distance: int = None,
+        departure_time: datetime = None,
+        departure_delta: timedelta = None,
+        arrival_time: datetime = None,
+        arrival_delta: timedelta = None,
+        sex: str = None,
+        age_range: Tuple[int, int] = None,
+        consumption_range: Tuple[float, float] = None,
+    ) -> List:
+        def to_point(coords):
+            return f"SRID=4326;POINT({' '.join(coords)})"
+
         query = Ride.query
 
         if departure:
-            query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
+            query = query.filter(
+                func.ST_DWithin(
+                    Ride.departure_address, to_point(departure), departure_distance or 5000, True,
+                )
+            )
         if arrival:
-            query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
+            query = query.filter(
+                func.ST_DWithin(
+                    Ride.arrival_address, to_point(arrival), arrival_distance or 5000, True,
+                )
+            )
 
         if departure_time:
-            query = query.filter(Ride.departure_time.between(
-                departure_time - departure_delta,
-                departure_time + departure_delta
-            ))
+            query = query.filter(
+                Ride.departure_time.between(
+                    departure_time - departure_delta, departure_time + departure_delta
+                )
+            )
         if arrival_time:
-            query = query.filter(Ride.arrival_time.between(
-                arrival_time - arrival_delta,
-                arrival_time + arrival_delta
-            ))
+            query = query.filter(
+                Ride.arrival_time.between(
+                    arrival_time - arrival_delta, arrival_time + arrival_delta
+                )
+            )
 
         if sex:
             if sex not in ["male", "female", "non-binary"]:
@@ -283,12 +310,14 @@ class Car(db.Model):
     fuel = db.Column(db.Enum("gasoline", "diesel", "electric", name="fuel_enum"), nullable=False)
     consumption = db.Column(db.Float, nullable=False)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner = db.relationship("User", back_populates="cars", single_parent=True)
     rides = db.relationship("Ride", back_populates="car")
 
     def __repr__(self):
-        return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+        return (
+            f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+        )
 
     def from_form(self, form):
         for key, value in form.generator():
@@ -394,6 +423,7 @@ def add_entities():
             passenger_places=3,
             arrival_time="2020-02-12T10:00:00.00",
             departure_address=[51.184374, 4.420656],
+            #  51.193153, 4.422027 1.3km away
             arrival_address=[50.880623, 4.700622],
         )
     )
@@ -435,8 +465,6 @@ def add_entities():
         departure_address=[51.184374, 4.420656],
         arrival_address=[50.115498, 4.625988],
     )
-
-
     Ride.create(
         arrival_id="something",
         departure_id="testing",
@@ -449,28 +477,14 @@ def add_entities():
 
     db.session.commit()
 
-    db.session.add_all([
-        PassengerRequest(
-            ride_id=1,
-            user_id=3,
-            status="pending"
-        ),
-        PassengerRequest(
-            ride_id=2,
-            user_id=3,
-            status="accepted"
-        ),
-        PassengerRequest(
-            ride_id=3,
-            user_id=3,
-            status="rejected"
-        ),
-        PassengerRequest(
-            ride_id=4,
-            user_id=3,
-            status="rejected"
-        ),
-    ])
+    db.session.add_all(
+        [
+            PassengerRequest(ride_id=1, user_id=3, status="pending"),
+            PassengerRequest(ride_id=2, user_id=3, status="accepted"),
+            PassengerRequest(ride_id=3, user_id=3, status="rejected"),
+            PassengerRequest(ride_id=4, user_id=3, status="rejected"),
+        ]
+    )
     db.session.commit()
 
 
@@ -481,14 +495,15 @@ def main():
     delta = timedelta(minutes=4, seconds=60)
     user = User.query.get(3)
     rides = Ride.search(
-        # arrival_time=time,
-        # time_delta=delta,
-        # sex=None
-        age_range=(18, 35)
+        departure=["51.193153", "4.422027"],
+        departure_distance=2000,
+        arrival=["51.219636", "4.403119"],
+        age_range=(18, 70),
     )
     for ride in rides:
         print(f"#{ride.driver.id} is {ride.driver.age} years old")
-
+        print(ride.depart_from)
+        print(ride.arrive_at)
 
 
 if __name__ == "__main__":

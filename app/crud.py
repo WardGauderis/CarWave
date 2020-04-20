@@ -3,7 +3,7 @@ from typing import Tuple, List
 from sqlalchemy import func
 from sqlalchemy.exc import DatabaseError
 
-from app.models import User, db, current_app, Ride, PassengerRequest, Car
+from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point
 from flask import abort
 from jwt import decode, DecodeError
 from datetime import datetime, timedelta
@@ -123,27 +123,35 @@ def search_drives(limit=5,
                   sex: str = None,
                   age_range: Tuple[int] = None,
                   consumption_range: Tuple[float] = None) -> List[Ride]:
-    """
-    Departure/arrival = tuple of 2 floats (longitude, latitude
-    Max distances from locations are in metres
-    sex = {"male", "female", "non-binary"}
-    age_range = (minimum age, maximum age)
-    """
+
     query = Ride.query
+
     if departure:
-        query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
+        query = query.filter(
+            func.ST_DWithin(
+                Ride.departure_address, to_point(departure), departure_distance or 5000, True,
+            )
+        )
     if arrival:
-        query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
+        query = query.filter(
+            func.ST_DWithin(
+                Ride.arrival_address, to_point(arrival), arrival_distance or 5000, True,
+            )
+        )
+
     if departure_time:
-        query = query.filter(Ride.departure_time.between(
-            departure_time - departure_delta,
-            departure_time + departure_delta
-        ))
+        query = query.filter(
+            Ride.departure_time.between(
+                departure_time - departure_delta, departure_time + departure_delta
+            )
+        )
     if arrival_time:
-        query = query.filter(Ride.arrival_time.between(
-            arrival_time - arrival_delta,
-            arrival_time + arrival_delta
-        ))
+        query = query.filter(
+            Ride.arrival_time.between(
+                arrival_time - arrival_delta, arrival_time + arrival_delta
+            )
+        )
+
     if sex:
         if sex not in ["male", "female", "non-binary"]:
             raise ValueError("Invalid sex")
@@ -161,7 +169,7 @@ def search_drives(limit=5,
         query = query.filter(min_consumption <= Car.consumption) if min_consumption else query
         query = query.filter(Car.consumption <= max_consumption) if max_consumption else query
 
-        return query.limit(limit).all()
+    return query.limit(limit).all()
 
 
 def update_drive(drive: Ride, form):
