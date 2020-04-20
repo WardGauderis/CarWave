@@ -93,7 +93,7 @@
         let getNewRoutes = function (request, response, which) {
             request.term.replace(/\s/g, '+');
             $.ajax({
-                url: "https://photon.komoot.de/api/?q=" + request.term + "&lat=51.0&lon=4.0",
+                url: "https://photon.komoot.de/api/?q=" + request.term + "&lat=51.1845557&lon=4.4199296",
                 type: "GET",
                 success: function (xhr) {
                     console.log(xhr);
