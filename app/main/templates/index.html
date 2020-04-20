@@ -73,26 +73,18 @@
 
         document.getElementById("date").setAttribute("min", new Date().toISOString().split("T")[0]);
 
-        let fromOptions = [];
-        let toOptions = [];
-
         let from = $("#from");
         let to = $("#to");
 
-        from.val('');
-        to.val('');
-
-        let getNewRoutes = function (request, response, which) {
+        let getNewRoutes = function (request, response) {
             request.term.replace(/\s/g, '+');
             $.ajax({
                 url: "https://photon.komoot.de/api/?q=" + request.term + "&lat=51.1845557&lon=4.4199296",
                 type: "GET",
                 success: function (xhr) {
-                    console.log(xhr);
                     let tempOptions = [];
                     for (let i = 0; i < xhr.features.length; i++) {
                         const properties = xhr.features[i].properties;
-                        const lnglat = xhr.features[i].geometry.coordinates;
 
                         let name = properties.name + ", ";
                         if (properties.city != null) name += properties.city + ", ";
@@ -100,9 +92,6 @@
 
                         tempOptions.push(name);
                         tempOptions = [...new Set(tempOptions)];
-
-                        if (which === 'from') fromOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
-                        else if (which === 'to') toOptions.push({name: name, latlng: [lnglat[1], lnglat[0]]});
                     }
                     response(tempOptions);
                 },
@@ -115,14 +104,14 @@
         from.autocomplete({
             delay: 500,
             source: function (request, response) {
-                getNewRoutes(request, response, 'from');
+                getNewRoutes(request, response);
             },
         });
 
         to.autocomplete({
             delay: 500,
             source: function (request, response) {
-                getNewRoutes(request, response, 'to');
+                getNewRoutes(request, response);
             },
         });
 

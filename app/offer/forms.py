@@ -27,14 +27,17 @@ class OfferForm(DictForm):
         self.from_lat.data = ride.depart_from[0]
         self.from_lon.data = ride.depart_from[1]
         self.to_lat.data = ride.arrive_at[0]
-        self.from_lat.data = ride.arrive_at[1]
+        self.to_lon.data = ride.arrive_at[1]
         self.arrival_id.data = ride.arrival_id
         self.departure_id.data = ride.departure_id
         if ride.departure_time:
             self.departure_time.data = ride.departure_time
         self.arrival_time.data = ride.arrival_time
         self.passenger_places.data = ride.passenger_places
-        self.car_string.data = ride.car.license_plate
+        if ride.car is not None:
+            self.car_string.data = ride.car.license_plate
+        else:
+            self.car_string.data = 'None'
 
     def from_json(self, json):
         self.arrival_time.data = json.get('arrive-by')
@@ -96,6 +99,7 @@ class SelectForm(DictForm):
 
 class DeleteOfferForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
+    edit = SubmitField('edit offer')
     delete = SubmitField('delete offer')
 
 
