@@ -49,7 +49,7 @@ def login():
             next_page = url_for('main.index')
         flash('Successfully logged in', 'success')
         return redirect(next_page)
-    return render_template('login.html', title='Login', form=form)
+    return render_template('login.html', title='Login', form=form, background=True)
 
 
 @bp.route('/logout')
@@ -69,7 +69,7 @@ def register():
         flash('Congratulations, you are now a CarWave user!', 'success')
         return redirect(url_for('auth.login'))
 
-    return render_template('register.html', title='Register', form=form)
+    return render_template('register.html', title='Register', form=form, background=True)
 
 
 @bp.route('/reset_password_request', methods=['GET', 'POST'])
@@ -86,7 +86,7 @@ def reset_password_request():
             flash('No account found with that email', 'error')
         return redirect(url_for('auth.login'))
     return render_template('reset_password_request.html',
-                           title='Reset Password', form=form)
+                           title='Reset Password', form=form, background=True)
 
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -102,4 +102,4 @@ def reset_password(token):
         db.session.commit()
         flash('Your password has been reset.', 'success')
         return redirect(url_for('auth.login'))
-    return render_template('reset_password.html', form=form)
+    return render_template('reset_password.html', form=form, background=True)

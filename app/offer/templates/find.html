@@ -8,10 +8,10 @@
 {% endblock %}
 
 {% block app_content %}
-    <div class="card card-body">
-        <form method="post" name="ride">
+    <div class="card m-3">
+        <div class=" card-body">
             {{ wtf.quick_form(details) }}
-        </form>
+        </div>
     </div>
 
     {% if not rides %}

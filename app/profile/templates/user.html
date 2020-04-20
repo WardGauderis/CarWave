@@ -2,20 +2,18 @@
 
 {% block app_content %}
     {#    TODO MOOI MAKEN#}
-    <div class="bg-white shadow rounded overflow-hidden">
-        <div class="px-4 pt-0 pb-4 bg-dark">
             <div class="media align-items-end profile-header">
                 <div class="profile mr-3">
                     <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
                     {% if user == current_user %}
                         <a href="{{ url_for('profile.user_edit', username=current_user.username) }}"
-                           class="btn btn-dark btn-sm btn-block">Edit profile</a>
+                           class="btn btn-primary btn-block">Edit profile</a>
                         <a href="{{ url_for('profile.car_create', username=current_user.username) }}"
-                           class="btn btn-dark btn-sm btn-block">Edit Cars</a>
+                           class="btn btn-primary btn-block">Edit Cars</a>
                     {% endif %}
                 </div>
-                <div class="media-body mb-5 text-white cen">
-                    <h1 class="mt-0 mb-0">{{ user.username }}</h1>
+                <div class="media-body mb-5 cen">
+                    <h1 class="mt-0 mb-0 display-4">{{ user.username }}</h1>
                     <p id="address" class="small mb-4">
                     </p>
 
@@ -35,8 +33,6 @@
                     </ul>
                 </div>
             </div>
-        </div>
-    </div>
 {% endblock %}
 
 {% block app_scripts %}

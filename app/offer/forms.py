@@ -81,6 +81,9 @@ class OfferForm(DictForm):
         if departure_time.data >= self.arrival_time.data:
             raise ValidationError('Departure time must be before arrival time')
 
+    def validate_car_string(self, car_string):
+        pass
+
 
 class FilterForm(DictForm):
     gender = SelectField('select gender', choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')])

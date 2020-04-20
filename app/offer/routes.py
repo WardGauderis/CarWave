@@ -20,7 +20,7 @@ def requests():
         elif "accept" in request.form:
             print('accept passenger code')
 
-    return render_template('requests.html', title='Your Requests', choice=form, requests=pending)
+    return render_template('requests.html', title='Your Requests', choice=form, requests=pending, background=True)
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -49,11 +49,11 @@ def offer():
 
     if ride_id is None:
         date = request.args.get('dt')
-        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date)
+        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date, background=True)
     else:
         drive = read_drive_from_id(ride_id)
         form.from_database(drive)
-        return render_template('offer.html', title='Offer', form=form, dt=drive.arrival_time)
+        return render_template('offer.html', title='Offer', form=form, dt=drive.arrival_time, background=True)
 
 
 @bp.route('/find', methods=['POST', 'GET'])
@@ -63,7 +63,7 @@ def find():
 
     if details.validate_on_submit():
         print('this should kinda filter stuff, but it don\'t')
-        return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives())
+        return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives('future'), background=True)
 
     elif select.validate_on_submit():
         drive = read_drive_from_id(select.ride_id.data)
@@ -71,12 +71,12 @@ def find():
         flash('Congratulations, you successfully requested a ride', 'success')
         return redirect(url_for('main.index'))
 
-    return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives())
+    return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives('future'), background=True)
 
 
 @bp.route('/rides/all')
 def all_rides():
-    return render_template('rides.html', title='Available Drives', rides=read_all_drives())
+    return render_template('rides.html', title='Available Drives', rides=read_all_drives('future'), background=True)
 
 
 @bp.route('/rides/passenger', methods=['POST', 'GET'])
@@ -91,7 +91,7 @@ def passenger_rides():
 
     # TODO: ik heb hier nog een read_drive_from_passenger nodig,
     #  deze gaat alle drives die voor hem nog moeten komen tonen
-    return render_template('rides.html', title='Passenger Drives', rides=read_all_drives(), delete=form)
+    return render_template('rides.html', title='Passenger Drives', rides=read_all_drives('future'), delete=form, background=True)
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
@@ -106,4 +106,4 @@ def driver_rides():
         elif "edit" in request.form:
             return redirect(url_for('offer.offer', rid=form.ride_id.data))
 
-    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form)
+    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form, background=True)

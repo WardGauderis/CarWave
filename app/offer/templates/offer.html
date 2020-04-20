@@ -23,35 +23,28 @@
 {% endblock %}
 
 {% block app_content %}
+    <h1 class="display-4">Create Drive</h1>
 
-    <div id="map" style="height: 600px;"></div>
+    <div id="map" class="mb-3" style="height: 600px;"></div>
 
-    <div class="row">
-        <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <h5 id="route" class="card-title">No route selected</h5>
-                    <form method="post" name="ride" onsubmit="beforeSubmit()">
-                        {{ form.from_lon(type="hidden") }}
-                        {{ form.from_lat(type="hidden") }}
-                        {{ form.to_lon(type="hidden") }}
-                        {{ form.to_lat(type="hidden") }}
-                        {{ form.departure_id(type="hidden") }}
-                        {{ form.arrival_id(type="hidden") }}
-                        {{ form.arrival_time(type="hidden") }}
-                        {{ form.departure_time(type="hidden") }}
+    <h5 id="route" class="card-title">No route selected</h5>
+    <form method="post" name="ride" onsubmit="beforeSubmit()">
+        {{ form.from_lon(type="hidden") }}
+        {{ form.from_lat(type="hidden") }}
+        {{ form.to_lon(type="hidden") }}
+        {{ form.to_lat(type="hidden") }}
+        {{ form.departure_id(type="hidden") }}
+        {{ form.arrival_id(type="hidden") }}
+        {{ form.arrival_time(type="hidden") }}
+        {{ form.departure_time(type="hidden") }}
 
-                        {{ wtf.form_field(form.time, type="time", class="form-control") }}
-                        {{ wtf.form_field(form.date, type="date", class="form-control") }}
+        {{ wtf.form_field(form.time, type="time", class="form-control") }}
+        {{ wtf.form_field(form.date, type="date", class="form-control") }}
 
-                        {{ wtf.form_field(form.passenger_places) }}
-                        {{ wtf.form_field(form.car_string) }}
-                        {{ wtf.form_field(form.confirm) }}
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+        {{ wtf.form_field(form.passenger_places) }}
+        {{ wtf.form_field(form.car_string) }}
+        {{ wtf.form_field(form.confirm) }}
+    </form>
 
 
 

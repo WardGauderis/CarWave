@@ -1,71 +1,36 @@
 {% extends 'base.html' %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
-{% block app_styles %}
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela+Round"/>
-
-    <style>
-        body, html {
-            background-image: url('{{ url_for('main.static', filename='wave2.jpg') }}');
-            background-position: center;
-            background-size: cover;
-            background-repeat: no-repeat;
-            height: 100%;
-        }
-
-        h1 {
-            font-family: Varela Round, sans-serif
-        }
-
-        t1 {
-            background-color: white;
-            font-family: Varela Round, sans-serif;
-            color: black;
-            display: block;
-        }
-
-        @media only screen and (max-device-width: 1024px) {
-            .display-1 {
-                font-size: 4rem;
-            }
-
-            .display-4 {
-                font-size: 2.5rem;
-            }
-        }
-
-    </style>
-{% endblock %}
-
 {% block app_content %}
-    <div class="jumbotron" style = "margin-top: 20px; opacity:0.8;">
+    <div class="jumbotron" style="margin-top: 20px; background-color: #ddddddaa;">
         <div class="container">
-          <h1 class="display-3">Why carpooling?</h1>
-          <p> Daily commuting by car can be expensive, monotonous and frustrating. All problems
-which can be solved by carpooling. Carpooling together allows you to share costs,
-is more fun, reduces the number of cars on the road and is better for the environment. Organizing it however can be quite the struggle. This is where CarWave comes in.</p>
+            <h1 class="display-2">Why Carpooling?</h1>
+            <p> Daily commuting by car can be expensive, monotonous and frustrating. All problems
+                which can be solved by carpooling. Carpooling together allows you to share costs,
+                is more fun, reduces the number of cars on the road and is better for the environment. Organizing it
+                however can be quite the struggle. This is where CarWave comes in.</p>
         </div>
-      </div>
+    </div>
 
-      <div class="container">
-        <!-- Example row of columns -->
+    <div class="jumbotron" style="margin-top: 20px; background-color: #ddddddaa;">
         <div class="row">
-          <div class="col-md-4" style="opacity:0.8; background-color: #e9ecef">
-            <h2>Easy to use</h2>
-            <p>Just enter your route and see all possible rides within 1 click! find your ideal carpool partner. Enter a ride that you often ride or place an advertisement and CarWave automatically matches you with possible fellow CarSurfers. </p>
-          </div>
-          <div class="col-md-4" style="opacity:0.8; background-color: #e9ecef">
-            <h2>Flexible</h2>
-            <p>Where other carpool applications mainly target one specific target group, CarWave tries to remain as accessible and flexible as possible and we focus on the most pleasant and at the same time efficient user experience.</p>
-          </div>
-          <div class="col-md-4" style="opacity:0.8; background-color: #e9ecef">
-            <h2>Social</h2>
-            <p>Make chat groups with multiple CarSurfers, see detailed info about your passengers and drivers to find your ideal partners. Maybe you can even find your dream lover through CarWave! </p>
-          </div>
+            <div class="col-md-4 ">
+                <h2 class="display-4">Easy to use</h2>
+                <p>Just enter your route and see all possible rides within 1 click! find your ideal carpool partner.
+                    Enter a ride that you often ride or place an advertisement and CarWave automatically matches you
+                    with possible fellow CarSurfers. </p>
+            </div>
+            <div class="col-md-4">
+                <h2 class="display-4">Flexible</h2>
+                <p>Where other carpool applications mainly target one specific target group, CarWave tries to remain as
+                    accessible and flexible as possible and we focus on the most pleasant and at the same time efficient
+                    user experience.</p>
+            </div>
+            <div class="col-md-4">
+                <h2 class="display-4">Social</h2>
+                <p>Make chat groups with multiple CarSurfers, see detailed info about your passengers and drivers to
+                    find your ideal partners. Maybe you can even find your dream lover through CarWave! </p>
+            </div>
         </div>
-
-        <hr>
-
-      </div> <!-- /container -->
+    </div>
 {% endblock %}
