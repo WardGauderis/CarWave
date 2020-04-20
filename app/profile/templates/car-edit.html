@@ -3,9 +3,6 @@
 
 {% block app_content %}
     <div class="card card-body">
-        {{ wtf.quick_form(update) }}
+        {{ wtf.quick_form(update, button_map={'delete':'danger'}) }}
     </div>
-
-
-
 {% endblock %}

@@ -24,7 +24,7 @@ def car_edit(license_plate):
     if request.method == 'GET':
         update.from_database(car)
 
-    return render_template('car-edit.html', title='Edit Car', update=update)
+    return render_template('car-edit.html', title='Edit Car', update=update, background=True)
 
 
 @bp.route('/car/create', methods=['GET', 'POST'])
@@ -36,7 +36,7 @@ def car_create():
     if create.validate_on_submit():
         create_car(create, current_user)
 
-    return render_template('car-create.html', title='Edit Cars', create=create, cars=current_user.cars)
+    return render_template('car-create.html', title='My Cars', create=create, cars=current_user.cars, background=True)
 
 
 @bp.route('/user/<int:user_id>')
@@ -44,7 +44,7 @@ def user(user_id):
     temp_user = read_user_from_id(user_id)
     if temp_user is None:
         abort(404, 'User does not exist')
-    return render_template('user.html', title=temp_user.username, user=temp_user)
+    return render_template('user.html', title=temp_user.username, user=temp_user, background=True)
 
 
 @bp.route('/user/update', methods=['GET', 'POST'])
@@ -64,4 +64,4 @@ def user_edit():
         return redirect(url_for('auth.logout'))
     elif request.method == 'GET':
         form.from_database(current_user)
-    return render_template('user-edit.html', title="Edit profile", form=form, delete=delete)
+    return render_template('user-edit.html', title="Edit profile", form=form, delete=delete, background=True)

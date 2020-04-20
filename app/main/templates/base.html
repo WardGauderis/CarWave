@@ -18,6 +18,10 @@
             background-size: cover;
             -o-background-size: cover;
         }
+
+        .background_color{
+            background-color: {% if background is defined %}#ddddddaa{% else %}#dddddd00{% endif %};
+        }
     </style>
     {% block app_styles %}
     {% endblock %}
@@ -41,11 +45,11 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-            <div class="card border-0 shadow my-5" style="background-color:#ddddddaa;">
-                <div class="card-body p-5">
-                    {% block app_content %}
-                    {% endblock %}
-                </div>
+        <div class="card border-0 shadow my-5 background_color">
+            <div class="card-body p-5">
+                {% block app_content %}
+                {% endblock %}
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -114,7 +114,8 @@ def update_drive(drive: Ride, form):
     try:
         drive.from_form(form)
         db.session.commit()
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid drive update')
 
