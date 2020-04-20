@@ -134,7 +134,13 @@ class Ride(db.Model):
             params = {"lat": lat, "lon": lon, "format": "json"}
             r = requests.get(url=url, params=params)
             data = r.json()
-            return data.osm_type + data.osm_id
+            if data['osm_type'] == 'way':
+                return 'W' + str(data['osm_id'])
+            if data['osm_type'] == 'relation':
+                return 'R' + str(data['osm_id'])
+            if data['osm_type'] == 'node':
+                return 'N' + str(data['osm_id'])
+            return data['osm_type'] + data['osm_id']
 
         if not form.arrival_id.data:
             self.arrival_id = location_to_id(form.to_lon.data, form.to_lat.data)
