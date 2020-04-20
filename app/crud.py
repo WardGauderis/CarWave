@@ -167,6 +167,12 @@ def search_drives(limit=5,
 def update_drive(drive: Ride, form):
     try:
         drive.from_form(form)
+    except:
+        abort(400, 'Invalid drive update')
+    if drive.passenger_places_left() < 0:
+        abort(409,
+            'Cannot reduce the amount of passenger places if passengers will be dropped. This has to be done manually.')
+    try:
         db.session.commit()
     except Exception as e:
         print(e)

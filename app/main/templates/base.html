@@ -45,8 +45,8 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        <div class="card border-0 shadow my-5 background_color">
-            <div class="card-body p-5">
+        <div class="card border-0 shadow my-3 mx-0 background_color">
+            <div class="card-body px-4 py-5 {% if title is defined and title == "Home" %}text-center{% endif %}">
                 {% block app_content %}
                 {% endblock %}
             </div>
