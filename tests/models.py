@@ -213,6 +213,7 @@ class Ride(db.Model):
                 )
             )
 
+
         if departure_time:
             query = query.filter(
                 Ride.departure_time.between(
@@ -500,7 +501,7 @@ def main():
         arrival=["51.219636", "4.403119"],
         age_range=(18, 70),
     )
-    for ride in rides:
+    for ride in all_rides:
         print(f"#{ride.driver.id} is {ride.driver.age} years old")
         print(ride.depart_from)
         print(ride.arrive_at)
