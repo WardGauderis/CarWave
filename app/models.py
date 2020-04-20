@@ -63,8 +63,8 @@ class User(UserMixin, db.Model):
     def accepted_passenger_requests(self):
         return self.requests.filter_by(status="accepted")
 
-    def future_passenger_rides(self):
-        return self.requests.join(Ride).filter(Ride.arrival_time > datetime.utcnow())
+    def future_passenger_requests(self):
+        return self.requests.join(Ride).filter(Ride.arrival_time > datetime.utcnow()).all()
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
