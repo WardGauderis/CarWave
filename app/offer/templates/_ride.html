@@ -27,9 +27,9 @@
     <div class="tab-content card-body">
         <div class="tab-pane fade show active" id="body-overview-{{ ride.id }}">
             <span class="text-left font-weight-bold">From: </span>
-            <p id="from1">loading...</p>
+            <p id="from1{{ ride.id }}">loading...</p>
             <span class="text-left font-weight-bold">To: </span>
-            <p id="to1">loading...</p>
+            <p id="to1{{ ride.id }}">loading...</p>
             <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).calendar() }}<br>
             <span class="text-left font-weight-bold">Driver: </span><a
                 href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
@@ -40,7 +40,8 @@
             {% if delete is defined %}
                 <form method="post" name="ride">
                     {{ delete.ride_id(type="hidden", value=ride.id) }}
-                    {{ delete.delete(class="form-control", id="delete") }}
+                    {{ wtf.form_field(delete.delete) }}
+                    {{ wtf.form_field(delete.edit) }}
                 </form>
             {% endif %}
 
@@ -97,12 +98,12 @@
             success: function (xhr) {
                 if(which === 'from')
                 {
-                    document.getElementById("from1").innerText = xhr[0].display_name;
+                    document.getElementById("from1{{ ride.id }}").innerText = xhr[0].display_name;
                     console.log(xhr);
                 }
                 else
                 {
-                   document.getElementById("to1").innerText = xhr[0].display_name;
+                   document.getElementById("to1{{ ride.id }}").innerText = xhr[0].display_name;
                 }
             },
             error: function (xhr) {

@@ -31,7 +31,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 id="route" class="card-title">No route selected</h5>
-                    <form method="post" name="ride">
+                    <form method="post" name="ride" onsubmit="beforeSubmit()">
                         {{ form.from_lon(type="hidden") }}
                         {{ form.from_lat(type="hidden") }}
                         {{ form.to_lon(type="hidden") }}
@@ -41,6 +41,8 @@
                         {{ form.arrival_time(type="hidden") }}
                         {{ form.departure_time(type="hidden") }}
 
+                        {{ wtf.form_field(form.time, type="time", class="form-control") }}
+                        {{ wtf.form_field(form.date, type="date", class="form-control") }}
 
                         {{ wtf.form_field(form.passenger_places) }}
                         {{ wtf.form_field(form.car_string) }}
@@ -69,7 +71,19 @@
             maxZoom: 20
         }).setView([50.8, 4.6], 9);
 
-        document.getElementById("departure_time").value = new Date('{{ dt }}').toISOString();
+        {% if fl is defined %}
+            temp_date = new Date('{{ dt }}');
+        {% else %}
+            temp_date = new Date(document.getElementById("arrival_time").value);
+        {% endif %}
+
+        const hour = (temp_date.getHours() < 10 ? "0" : "") + temp_date.getHours();
+        const min = (temp_date.getMinutes() < 10 ? "0" : "") + temp_date.getMinutes();
+
+        document.getElementById("time").value = hour + ':' + min;
+        document.getElementById("date").value = temp_date.toISOString().slice(0, 10);
+
+        document.getElementById("arrival_time").value = new Date('{{ dt }}').toISOString();
 
         // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
@@ -104,7 +118,7 @@
 
             // add minutes to the date object, so we multiply by 60 000 because javascript
             let date = new Date('{{ dt }}');
-            date = new Date(date.getTime() + time * 60000);
+            date = new Date(date.getTime() - time * 60000);
 
             let eta = date.getHours() + ':';
 
@@ -112,7 +126,7 @@
             else eta = eta + date.getMinutes();
 
             document.getElementById("route").innerHTML = (time + "min (" + dist + "km) - eta: " + eta);
-            document.getElementById("arrival_time").value = date.toISOString();
+            document.getElementById("departure_time").value = date.toISOString();
         }).addTo(map);
 
         // this hides the plan from the map
@@ -123,45 +137,96 @@
         // {s} is the subdomain of cartodb
         L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png').addTo(map);
 
-        let getNewRoutes = function (location, which) {
-            location.replace(/\s/g, '+');
+
+        function reverse(lat, lon, which) {
             $.ajax({
-                url: "https://nominatim.openstreetmap.org/search/" + location + "?format=geojson",
+                url: "https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json",
                 type: "GET",
                 success: function (xhr) {
-                    if (xhr.features.length === 0) {
-                        if (which === 'from') {
-                            alert("could not find departure address location: {{ fl }}")
-                        } else if (which === 'to') {
-                            alert("could not find arrival address location: {{ tl }}")
-                        }
-                    }
-
-                    const lnglat = xhr.features[0].geometry.coordinates;
-                    const prop = xhr.features[0].properties;
-
-                    if (which === 'from') {
-                        control.spliceWaypoints(0, 1, L.latLng(lnglat[1], lnglat[0]));
-                        document.getElementById("departure_id").value = prop.osm_type + prop.osm_id;
-
-                        document.getElementById("from_lon").value = lnglat[0];
-                        document.getElementById("from_lat").value = lnglat[1];
-                    } else if (which === 'to') {
-                        control.spliceWaypoints(1, 1, L.latLng(lnglat[1], lnglat[0]));
-                        document.getElementById("arrival_id").value = prop.osm_type + prop.osm_id;
-
-                        document.getElementById("to_lon").value = lnglat[0];
-                        document.getElementById("to_lat").value = lnglat[1];
-                    }
+                    if (which === 'form') document.getElementById("departure_id").value = xhr.osm_type + xhr.osm_id;
+                    else document.getElementById("arrival_id").value = xhr.osm_type + xhr.osm_id;
                 },
                 error: function (xhr) {
                     alert(xhr)
                 }
             });
-        };
+        }
 
-        getNewRoutes('{{ fl }}', 'from');
-        getNewRoutes('{{ tl }}', 'to');
+        function beforeSubmit() {
+            const from = control.getWaypoints()[0].latLng;
+            const to = control.getWaypoints()[1].latLng;
 
+            document.getElementById("arrival_time").value = document.getElementById("date").value + 'T' + document.getElementById("time").value;
+
+            if (Math.abs(from.lat - document.getElementById("from_lat").value) > 0.00001 ||
+                Math.abs(from.lng - document.getElementById("from_lon").value) > 0.00001 ||
+                Math.abs(to.lat - document.getElementById("to_lat").value) > 0.00001 ||
+                Math.abs(to.lng - document.getElementById("to_lon").value) > 0.00001) {
+                document.getElementById("from_lat").value = from.lat;
+                document.getElementById("from_lon").value = from.lng;
+                document.getElementById("to_lat").value = to.lat;
+                document.getElementById("to_lon").value = to.lng;
+
+                reverse(from.lat, from.lng, 'from');
+                reverse(to.lat, to.lng, 'to');
+            }
+            return true;
+        }
+
+        {% if fl is defined %}
+
+            let getNewRoutes = function (location, which) {
+                location.replace(/\s/g, '+');
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/search/" + location + "?format=geojson",
+                    type: "GET",
+                    success: function (xhr) {
+                        if (xhr.features.length === 0) {
+                            if (which === 'from') {
+                                alert("could not find departure address location: {{ fl }}")
+                            } else if (which === 'to') {
+                                alert("could not find arrival address location: {{ tl }}")
+                            }
+                        }
+
+                        const lnglat = xhr.features[0].geometry.coordinates;
+                        const prop = xhr.features[0].properties;
+
+                        let res;
+                        if (prop.osm_type === 'way') res = 'W';
+                        else if (prop.osm_type === 'relation') res = 'R';
+                        else if (prop.osm_type === 'node') res = 'N';
+                        res += prop.osm_id;
+
+                        if (which === 'from') {
+                            control.spliceWaypoints(0, 1, L.latLng(lnglat[1], lnglat[0]));
+                            document.getElementById("departure_id").value = res;
+
+                            document.getElementById("from_lon").value = lnglat[0];
+                            document.getElementById("from_lat").value = lnglat[1];
+                        } else if (which === 'to') {
+                            control.spliceWaypoints(1, 1, L.latLng(lnglat[1], lnglat[0]));
+                            document.getElementById("arrival_id").value = res;
+
+                            document.getElementById("to_lon").value = lnglat[0];
+                            document.getElementById("to_lat").value = lnglat[1];
+                        }
+                    },
+                    error: function (xhr) {
+                        alert(xhr)
+                    }
+                });
+            };
+
+            getNewRoutes('{{ fl }}', 'from');
+            getNewRoutes('{{ tl }}', 'to');
+        {% else %}
+            const flat = document.getElementById("from_lat").value;
+            const flon = document.getElementById("from_lon").value;
+            const tlat = document.getElementById("to_lat").value;
+            const tlon = document.getElementById("to_lon").value;
+            control.spliceWaypoints(0, 1, L.latLng(flat, flon));
+            control.spliceWaypoints(1, 1, L.latLng(tlat, tlon));
+        {% endif %}
     </script>
 {% endblock %}

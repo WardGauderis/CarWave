@@ -9,12 +9,10 @@ from flask_login import UserMixin
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from app import db, login
 
 
 class PassengerRequest(db.Model):
-    # TODO DELETION
     __tablename__ = "passenger_requests"
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete='CASCADE'), primary_key=True)
@@ -29,7 +27,6 @@ class PassengerRequest(db.Model):
 
 
 class User(UserMixin, db.Model):
-    # TODO checks in database want alle checks gebeuren nu in de forms
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -91,7 +88,7 @@ class User(UserMixin, db.Model):
                             algorithms=['HS256'])['reset_password']
         except jwt.DecodeError as e:
             return e
-        return User.get(id)
+        return User.query.get(id)
 
 
 @login.user_loader
@@ -100,7 +97,6 @@ def load_user(id):
 
 
 class Ride(db.Model):
-    # TODO alle checks gebeuren voorlopig in CRUD
     __tablename__ = "rides"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -169,7 +165,6 @@ class Ride(db.Model):
 
 
 class Car(db.Model):
-    # TODO checks in database, on delete
     __tablename__ = "cars"
 
     license_plate = db.Column(db.String(16), primary_key=True)
