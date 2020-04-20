@@ -2,15 +2,16 @@ import logging
 from logging.handlers import RotatingFileHandler
 from time import strftime
 
-from flask import Flask, app, request
-from flask.json import dumps
+from flask import Flask, request
+from flask.json import dumps, loads
 from flask_bootstrap import Bootstrap
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail
-from config import Config
 from flask_login import LoginManager
+from flask_mail import Mail
+from flask_migrate import Migrate
 from flask_moment import Moment
+from flask_sqlalchemy import SQLAlchemy
+
+from config import Config
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
@@ -25,6 +26,7 @@ moment = Moment()
 logger = logging.getLogger(__name__)
 handler = RotatingFileHandler("logs/requests.log", maxBytes=100000, backupCount=10)
 logger.addHandler(handler)
+
 
 def create_app(config=Config):
     app = Flask(__name__)
@@ -56,15 +58,18 @@ def create_app(config=Config):
     @app.after_request
     def after_request(response):
         timestamp = strftime("[%Y-%b-%d %H:%M]")
+        # res_json = response.data.decode("utf-8")
+        res_json = loads(response.data)
         req_json = request.get_json(silent=True)
         logger.error(
-            "%s %s %s %s %s %s\n%s",
+            "%s %s %s %s %s\n%s\n%s\n",
             timestamp,
             request.remote_addr,
             request.method,
             request.scheme,
             request.full_path,
-            response.status,
+            # res_json,
+            dumps(res_json, indent=2) if res_json is not None else "",
             dumps(req_json, indent=2) if req_json is not None else "",
         )
         return response
