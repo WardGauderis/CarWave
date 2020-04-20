@@ -45,6 +45,20 @@
                 </form>
             {% endif %}
 
+            {% if delete_req is defined %}
+                <form method="post" name="ride">
+                    {{ delete_req.ride_id(type="hidden", value=ride.id) }}
+                    {{ wtf.form_field(delete_req.delete) }}
+                </form>
+            {% endif %}
+
+            {% if select is defined %}
+                <form method="post" name="ride">
+                    {{ select.ride_id(type="hidden", value=ride.id) }}
+                    {{ wtf.form_field(select.request) }}
+                </form>
+            {% endif %}
+
             {% if choice is defined %}
                 <form method="post" name="ride">
                     {{ choice.ride_id(type="hidden", value=ride.id) }}
@@ -96,14 +110,11 @@
             url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + id + "&format=json",
             type: "GET",
             success: function (xhr) {
-                if(which === 'from')
-                {
+                if (which === 'from') {
                     document.getElementById("from1{{ ride.id }}").innerText = xhr[0].display_name;
                     console.log(xhr);
-                }
-                else
-                {
-                   document.getElementById("to1{{ ride.id }}").innerText = xhr[0].display_name;
+                } else {
+                    document.getElementById("to1{{ ride.id }}").innerText = xhr[0].display_name;
                 }
             },
             error: function (xhr) {
@@ -111,6 +122,7 @@
             }
         });
     }
+
     get_address('{{ ride.departure_id }}', 'from');
     get_address('{{ ride.arrival_id }}', 'to');
 
