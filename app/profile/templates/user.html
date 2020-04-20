@@ -4,7 +4,7 @@
     {#    TODO MOOI MAKEN#}
             <div class="media align-items-end profile-header">
                 <div class="profile mr-3">
-                    <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
+                    <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail ">
                     {% if user == current_user %}
                         <a href="{{ url_for('profile.user_edit', username=current_user.username) }}"
                            class="btn btn-primary btn-block">Edit profile</a>

@@ -5,37 +5,40 @@
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Varela+Round"/>
 
-    <style>
-        h1 {
-            font-family: Varela Round, sans-serif
-        }
-
-        .big {
-            font-size: 8rem
-        }
-
-        @media only screen and (max-device-width: 1024px) {
-            .big {
-                font-size: 3rem
-            }
-            .smaller{
-                font-size: 2rem;
-            }
-        }
-    </style>
+    {#    <style>#}
+    {#        h1 {#}
+    {#            font-family: Varela Round, sans-serif#}
+    {#        }#}
+    {##}
+    {#        .big {#}
+    {#            font-size: 8rem#}
+    {#        }#}
+    {##}
+    {#        @media only screen and (max-device-width: 1024px) {#}
+    {#            .big {#}
+    {#                font-size: 3rem#}
+    {#            }#}
+    {##}
+    {#            .smaller {#}
+    {#                font-size: 2rem;#}
+    {#            }#}
+    {#        }#}
+    {#    </style>#}
 {% endblock %}
 
 {% block app_content %}
-    <div>
-        <h1 class="text-center font-weight-bold display-1 big"
-            style="color:#f7931e">
-            CarWave
-        </h1>
-        <h1 class="text-center font-weight-bold display-4 m-3 smaller"
-            style="color:#0e0f3b">
-            surf to your destination
-        </h1>
-    </div>
+    {#    <div class="text-center mb-5">#}
+    <img class="img-fluid mb-5" style="max-width: 75%" src="{{ url_for('main.static', filename='logo.png') }}"
+         alt="CARWAVE">
+    {#        <h1 class="text-center font-weight-bold display-1 big"#}
+    {#            style="color:#f7931e">#}
+    {#            CarWave#}
+    {#        </h1>#}
+    {#        <h1 class="text-center font-weight-bold display-4 m-3 smaller"#}
+    {#            style="color:#0e0f3b">#}
+    {#            surf to your destination#}
+    {#        </h1>#}
+    {#    </div>#}
     <div class="container">
         <form method="post" name="ride">
             <div class="form-row" style="padding:10px">
@@ -43,7 +46,7 @@
                     {{ form.from_location(class="form-control", id="from", placeholder="from", style="border-radius:100px") }}
                 </div>
                 <div class="col-sm-auto">
-                    <button id="reverse" type="button" class="btn btn-white d-none d-sm-block">&#8646</button>
+                    <button id="reverse" type="button" class="btn d-none d-sm-block">&#8646</button>
                 </div>
                 <div class="ui-widget col-sm">
                     {{ form.to_location(class="form-control", id="to", placeholder="to", style="border-radius:100px") }}

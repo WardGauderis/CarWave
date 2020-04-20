@@ -54,6 +54,14 @@ r22 = requests.post(
 
 prints.append(request_and_response(r22))
 
+r23 = requests.post(
+    f"{BASE_URL}/users/auth",
+    headers={"Content-Type": "application/json"},
+    data=json.dumps({"username": "qrtdavjtzhwu", "password": "F37ZLv,W"}),
+)
+
+prints.append(request_and_response(r23))
+
 # POST RIDE
 TOKEN = r21.json()["token"]
 BEARER_AUTH = f"Bearer {TOKEN}"

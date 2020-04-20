@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from hashlib import md5
 from json import loads
+from typing import List
 
 import jwt
 import requests
@@ -63,7 +64,7 @@ class User(UserMixin, db.Model):
     def accepted_passenger_requests(self):
         return self.requests.filter_by(status="accepted")
 
-    def future_passenger_requests(self):
+    def future_passenger_requests(self) -> List[PassengerRequest]:
         return self.requests.join(Ride).filter(Ride.arrival_time > datetime.utcnow()).all()
 
     def set_password(self, password: str):
@@ -182,7 +183,7 @@ class Car(db.Model):
     passenger_places = db.Column(db.Integer, nullable=False)
     build_year = db.Column(db.Integer, nullable=False)
     fuel = db.Column(db.Enum("gasoline", "diesel", "electric", name="fuel_enum"), nullable=False)
-    consumption = db.Column(db.Float, nullable=False)
+    consumption = db.Column(db.Float, nullable=False)  # liter per 100 kilometer
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
     owner = db.relationship("User", back_populates="cars", single_parent=True)
