@@ -60,8 +60,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
 
-    def passenger_rides(self):
-        return self.requests.filter_by(status="accepted").all()
+    def accepted_passenger_requests(self):
+        return self.requests.filter_by(status="accepted")
+
+    def future_passenger_requests(self):
+        return self.requests.join(Ride).filter(Ride.arrival_time > datetime.utcnow()).all()
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -131,7 +134,13 @@ class Ride(db.Model):
             params = {"lat": lat, "lon": lon, "format": "json"}
             r = requests.get(url=url, params=params)
             data = r.json()
-            return data.osm_type + data.osm_id
+            if data['osm_type'] == 'way':
+                return 'W' + str(data['osm_id'])
+            if data['osm_type'] == 'relation':
+                return 'R' + str(data['osm_id'])
+            if data['osm_type'] == 'node':
+                return 'N' + str(data['osm_id'])
+            return data['osm_type'] + data['osm_id']
 
         if not form.arrival_id.data:
             self.arrival_id = location_to_id(form.to_lon.data, form.to_lat.data)

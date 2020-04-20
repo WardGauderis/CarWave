@@ -2,7 +2,6 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <div class="card card-body">
-        {{ wtf.quick_form(update, button_map={'delete':'danger'}) }}
-    </div>
+    <h1 class="display-4">Edit Car</h1>
+    {{ wtf.quick_form(update, button_map={'delete':'danger'}) }}
 {% endblock %}

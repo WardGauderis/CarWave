@@ -49,7 +49,8 @@ def offer():
 
     if ride_id is None:
         date = request.args.get('dt')
-        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date, background=True)
+        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date,
+                               background=True)
     else:
         drive = read_drive_from_id(ride_id)
         form.from_database(drive)
@@ -58,20 +59,23 @@ def offer():
 
 @bp.route('/find', methods=['POST', 'GET'])
 def find():
-    select = SelectForm()
+    select = SelectForm(meta={'csrf': False})
     details = FilterForm()
 
-    if details.validate_on_submit():
-        print('this should kinda filter stuff, but it don\'t')
-        return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives('future'), background=True)
-
-    elif select.validate_on_submit():
+    if select.request.data and select.validate_on_submit():
         drive = read_drive_from_id(select.ride_id.data)
         create_passenger_request(current_user, drive)
         flash('Congratulations, you successfully requested a ride', 'success')
         return redirect(url_for('main.index'))
+    print(select.get_errors())
+    if details.refresh.data and details.validate_on_submit():
+        print('this should kinda filter stuff, but it don\'t')
+        return render_template('find.html', title='Find', details=details, select=select,
+                               rides=read_all_drives('future'), background=True)
+    print(details.get_errors())
 
-    return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives('future'), background=True)
+    return render_template('find.html', title='Find', details=details, select=select, rides=read_all_drives('future'),
+                           background=True)
 
 
 @bp.route('/rides/all')
@@ -89,9 +93,8 @@ def passenger_rides():
         delete_passenger_request(passenger)
         return redirect(url_for('offer.passenger_rides'))
 
-    # TODO: ik heb hier nog een read_drive_from_passenger nodig,
-    #  deze gaat alle drives die voor hem nog moeten komen tonen
-    return render_template('rides.html', title='Passenger Drives', rides=read_all_drives('future'), delete=form, background=True)
+    return render_template('rides.html', title='Passenger Drives', rides=current_user.future_passenger_requests(),
+                           delete_req=form, background=True)
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
@@ -106,4 +109,5 @@ def driver_rides():
         elif "edit" in request.form:
             return redirect(url_for('offer.offer', rid=form.ride_id.data))
 
-    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form, background=True)
+    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form,
+                           background=True)
