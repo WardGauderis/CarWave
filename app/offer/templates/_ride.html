@@ -62,6 +62,7 @@
             {% if choice is defined %}
                 <form method="post" name="ride">
                     {{ choice.ride_id(type="hidden", value=ride.id) }}
+                    {{ choice.user_id(type="hidden", value=passenger.id) }}
                     <div class="form-row" style="padding:10px">
                         <div class="ui-widget col-sm" style="margin:0">
                             {{ wtf.form_field(choice.accept) }}
