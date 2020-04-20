@@ -2,11 +2,17 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Edit profile:</h1>
-    <div class="row">
+    <h1 class="display-4">Edit profile</h1>
+    <div class="card">
+        <div class="card-body">
+            Your profile picture is generated automatically based on you email address through Gravatar. You can change it
+            <a href="https://en.gravatar.com/">here</a>.
+        </div>
+    </div>
+    <div class="row mt-4">
         <div class="col-md-4">
-{#            TODO mention gravatar#}
             {{ wtf.quick_form(form) }}
+            <br>
             {{ wtf.quick_form(delete, button_map={'delete':'danger'}) }}
         </div>
     </div>

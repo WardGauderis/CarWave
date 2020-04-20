@@ -27,7 +27,6 @@ TODO:
 # The secondary tables for the many-to-many relationships
 
 # car_links = db.Table(
-#     # TODO: Cascade on delete
 #     "car_links",
 #     db.metadata,
 #     db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
@@ -46,7 +45,6 @@ TODO:
 
 
 class PassengerRequest(db.Model):
-    # TODO DELETION
     __tablename__ = "passenger_requests"
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete='CASCADE'), primary_key=True)
@@ -61,7 +59,6 @@ class PassengerRequest(db.Model):
 
 
 class User(UserMixin, db.Model):
-    # TODO checks in database want alle checks gebeuren nu in de forms
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -132,7 +129,6 @@ def load_user(id):
 
 
 class Ride(db.Model):
-    # TODO alle checks gebeuren voorlopig in CRUD
     __tablename__ = "rides"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -201,7 +197,6 @@ class Ride(db.Model):
 
 
 class Car(db.Model):
-    # TODO checks in database, on delete
     __tablename__ = "cars"
 
     license_plate = db.Column(db.String(16), primary_key=True)

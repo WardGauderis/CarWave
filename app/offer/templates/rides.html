@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block app_content %}
+    <h1 class="display-4">{{ title }}</h1>
     {% for ride in rides %}
         {% include '_ride.html' %}
     {% endfor %}

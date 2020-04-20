@@ -92,4 +92,4 @@ def driver_rides():
         delete_drive(drive)
         return redirect(url_for('offer.driver_rides'))
 
-    return render_template('rides.html', title='Driver Drives', rides=read_drive_from_driver(current_user), delete=form)
+    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form)
