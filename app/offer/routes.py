@@ -20,7 +20,7 @@ def requests():
         elif "accept" in request.form:
             print('accept passenger code')
 
-    return render_template('requests.html', title='Requests', choice=form, requests=pending)
+    return render_template('requests.html', title='Your Requests', choice=form, requests=pending)
 
 
 @bp.route('/offer', methods=['POST', 'GET'])

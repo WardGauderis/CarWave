@@ -36,7 +36,6 @@ class OfferForm(DictForm):
         self.passenger_places.data = ride.passenger_places
         self.car_string.data = ride.car.license_plate
 
-
     def from_json(self, json):
         self.arrival_time.data = json.get('arrive-by')
         try:
