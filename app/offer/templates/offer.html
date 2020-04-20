@@ -135,9 +135,17 @@
             $.ajax({
                 url: "https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json",
                 type: "GET",
+                async: false,
                 success: function (xhr) {
-                    if (which === 'form') document.getElementById("departure_id").value = xhr.osm_type + xhr.osm_id;
-                    else document.getElementById("arrival_id").value = xhr.osm_type + xhr.osm_id;
+                    let res;
+                    if (xhr.osm_type === 'way') res = 'W';
+                    else if (xhr.osm_type === 'relation') res = 'R';
+                    else if (xhr.osm_type === 'node') res = 'N';
+                    res += xhr.osm_id;
+
+                    if (which === 'from') document.getElementById("departure_id").value = res;
+                    else if (which === 'to') document.getElementById("arrival_id").value = res;
+                    else alert("yeeet")
                 },
                 error: function (xhr) {
                     alert(xhr)
