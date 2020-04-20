@@ -1,14 +1,15 @@
 import os
 from datetime import datetime, timedelta
-from random import uniform
-
-from flask import Flask
+from hashlib import md5
 from json import loads
-from geoalchemy2 import Geometry
+
+import requests
+from flask import Flask
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from geoalchemy2 import Geometry
 from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError, DatabaseError
+from sqlalchemy.exc import DatabaseError, IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -16,56 +17,19 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
-"""
-File with the database models described using SQLAlchemy
-
-TODO:
-    - Add more ease of use functions for fulfilling API requests and the like
-    - Get rides as a passenger or driver for a user
-    - Handle passenger requests for a certain driver
-    - How to delete a passenger request?
-    - Serialise models to JSON for the API requests?
-    - Remove redundant accepted passenger request/ride links vs. 
-"""
-
-# The secondary tables for the many-to-many relationships
-
-car_links = db.Table(
-    # TODO: Cascade on delete
-    "car_links",
-    db.metadata,
-    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
-    db.Column("car_license_plate", db.String, db.ForeignKey("cars.license_plate"), primary_key=True),
-)
-
-ride_links = db.Table(
-    # TODO: Cascade on delete
-    # is dit geen overbodige informatie als er al en tabel is met accepted requests?
-    "ride_links",
-    db.metadata,
-    db.Column("ride_id", db.Integer, db.ForeignKey("rides.id"), primary_key=True),
-    db.Column(
-        "passenger_id", db.Integer, db.ForeignKey("passengers.id"), primary_key=True
-    ),
-)
-
 
 class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
 
-    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id"), primary_key=True)
-    passenger_id = db.Column(db.Integer, db.ForeignKey("passengers.id"), primary_key=True)
-    status = db.Column(db.Enum("accepted", "pending", "declined", name="status_enum"), default="pending",
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete='CASCADE'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), primary_key=True)
+    status = db.Column(db.Enum("accepted", "pending", "rejected", name="status_enum"), default="pending",
                        nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
-    ride = db.relationship(
-        "Ride", backref=db.backref("rides", cascade="all, delete-orphan")
-    )
-    passenger = db.relationship(
-        "Passenger", backref=db.backref("passengers", cascade="all, delete-orphan")
-    )
+    ride = db.relationship("Ride", back_populates="requests", single_parent=True)
+    passenger = db.relationship("User", back_populates="requests", single_parent=True)
 
     def update(self, action):
         if action == "accept":
@@ -97,9 +61,16 @@ class User(UserMixin, db.Model):
     firstname = db.Column(db.String(64), nullable=False)
     lastname = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(128))
+    age = db.Column(db.Integer, nullable=True)
+    sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
+    address_id = db.Column(db.String(32), nullable=True)
 
-    rides = db.relationship("Ride", back_populates="driver")
-    cars = db.relationship("Car", secondary=car_links, back_populates="owners")
+    driver_rides = db.relationship("Ride", back_populates="driver", cascade="all, delete, delete-orphan")
+    cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
+
+    requests = db.relationship(
+        "PassengerRequest", back_populates="passenger", lazy="dynamic", cascade="all, delete, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"
@@ -120,6 +91,23 @@ class User(UserMixin, db.Model):
             db.session.rollback()
             return e
 
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
+            digest, size)
+
+    def from_form(self, form):
+        for key, value in form.generator():
+            setattr(self, key, value)
+        if not form.update:
+            self.set_password(form.password.data)
+
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username})>"
+
+    def passenger_rides(self):
+        return self.requests.filter_by(status="accepted").all()
+
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
@@ -130,76 +118,28 @@ class User(UserMixin, db.Model):
     def from_username(username: str):
         return User.query.filter_by(username=username).one_or_none()
 
-
-class Passenger(db.Model):
-    """
-    Passenger is a User
-    """
-
-    __tablename__ = "passengers"
-
-    id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
-    )
-    rating = db.Column(
-        db.Numeric(precision=2, scale=1),
-        db.CheckConstraint("0.0 <= rating AND rating <= 5.0"),
-        default=None,
-        nullable=True,
-    )
-    num_ratings = db.Column(db.Integer, default=0, nullable=False)
-
-    user = db.relationship(
-        "User", backref=db.backref("passenger", uselist=False, passive_deletes=True),
-    )
-    rides = db.relationship("Ride", secondary=ride_links, back_populates="passengers")
-    requests = db.relationship(
-        "Ride", secondary="passenger_requests", back_populates="requests"
-    )
-
-    def __repr__(self):
-        return f"<Passenger(id={self.id}, rating={self.rating})>"
-
-    def to_json(self):
-        return {"id": self.id, "username": self.user.username}
-
-
 class Ride(db.Model):
     __tablename__ = "rides"
 
     id = db.Column(db.Integer, primary_key=True)
 
-    driver_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    driver = db.relationship("User", back_populates="rides")
-    passenger_places = db.Column(
-        db.Integer,
-        # TODO: driver counts as one so there should be space for at least one more
-        # TODO: len(ride.passengers) <= passenger_places
-        db.CheckConstraint("passenger_places >= 2"),
-        nullable=False,
-    )
+    driver_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    driver = db.relationship("User", back_populates="driver_rides", single_parent=True)
+    passenger_places = db.Column(db.Integer, nullable=False)
 
-    # car_license_plate = db.Column(
-    #     db.String(16),
-    #     db.ForeignKey("cars.license_plate"),
-    #     # db.CheckConstraint("passenger_places <= car"),
-    #     nullable=True,
-    # )
-    # car = db.relationship("Car")
+    license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate", ondelete='SET NULL'), nullable=True)
+    car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     departure_time = db.Column(db.DateTime, nullable=True)
     departure_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
+    departure_id = db.Column(db.String(32), nullable=False)
     arrival_time = db.Column(db.DateTime, nullable=False)
     arrival_address = db.Column(Geometry("POINT", srid=4326), nullable=False)
+    arrival_id = db.Column(db.String(32), nullable=False)
 
-    passengers = db.relationship(
-        "Passenger",
-        secondary=ride_links,
-        back_populates="rides"
-    )
     requests = db.relationship(
-        "Passenger", secondary="passenger_requests", back_populates="requests"
+        "PassengerRequest", back_populates="ride", lazy="dynamic", cascade="all, delete, delete-orphan"
     )
 
     def __repr__(self):
@@ -225,29 +165,46 @@ class Ride(db.Model):
 
     @staticmethod
     def search(limit=5,
-               departure=None,
-               departure_distance=1000,
-               arrival=None,
-               arrival_distance=1000,
-               arrival_time=None,
-               time_delta=timedelta(minutes=30)):
+               departure=None, departure_distance=1000,
+               arrival=None, arrival_distance=1000,
+               departure_time=None, departure_delta=timedelta(minutes=30),
+               arrival_time=None, arrival_delta=timedelta(minutes=30),
+               sex=None, age_range=None, consumption_range=None):
         """
         Departure/arrival = tuple of 2 floats (longitude, latitude)
         """
         query = Ride.query
-        # https://stackoverflow.com/questions/20803878/geoalchemy2-query-all-users-within-x-meteres
-        # https://stackoverflow.com/questions/8444753/st-dwithin-takes-parameter-as-degree-not-meters-why
         if departure:
             query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
         if arrival:
             query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
+        # FIXME: don't think we need to worry about handling rows with a NULL
+        #        value, if the user cares about rides with a specific departure time then
+        #        they likely wouldn't want to see rides without a specified departure time
+        if departure_time:
+            query = query.filter(Ride.departure_time.between(
+                departure_time - departure_delta,
+                departure_time + departure_delta
+            ))
         if arrival_time:
             query = query.filter(Ride.arrival_time.between(
-                arrival_time - time_delta,
-                arrival_time + time_delta
+                arrival_time - arrival_delta,
+                arrival_time + arrival_delta
             ))
-        # Sort by distance to departure/arrival?
-        # Move the limit out, only really needed for the API AFAIK
+        if sex:  # (͡°͜ʖ͡°)
+            if sex not in ["male", "female", "non-binary"]:
+                raise ValueError("Invalid sex")
+            # query = query.filter(Ride.driver.has(sex=sex))
+            query = query.join(Ride.driver).filter_by(sex=sex)
+
+        # Allow (min, None) (None, max) & (min, max) for ranges
+        # TODO(Hayaan): Age filter
+        if age_range:
+            pass
+        # TODO(Hayaan): Consumption filter
+        if consumption_range:
+            pass
+
         return query.limit(limit).all()
 
     def post_passenger_request(self, passenger_id):
@@ -259,6 +216,39 @@ class Ride(db.Model):
             db.session.rollback()
             return e
         return request
+
+    def from_form(self, form):
+        for key, value in form.generator():
+            setattr(self, key, value)
+        self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"
+        self.arrival_address = f"SRID=4326;POINT({form.to_lat.data} {form.to_lon.data})"
+
+        def location_to_id(lon, lat):
+            url = "https://nominatim.openstreetmap.org/reverse"
+            params = {"lat": lat, "lon": lon, "format": "json"}
+            r = requests.get(url=url, params=params)
+            data = r.json()
+            return data.osm_type + data.osm_id
+
+        if not form.arrival_id.data:
+            self.arrival_id = location_to_id(form.to_lon.data, form.to_lat.data)
+        if not form.departure_id.data:
+            self.arrival_id = location_to_id(form.from_lon.data, form.from_lat.data)
+
+    def __repr__(self):
+        return f"<Ride(id={self.id}, driver={self.driver_id})>"
+
+    def accepted_requests(self):
+        return self.requests.filter_by(status="accepted")
+
+    def pending_requests(self):
+        return self.requests.filter_by(status="pending")
+
+    def passenger_places_left(self) -> int:
+        return self.passenger_places - self.accepted_requests().count()
+
+    def has_place_left(self) -> bool:
+        return self.passenger_places_left() != 0
 
     @property
     def depart_from(self):
@@ -277,15 +267,21 @@ class Car(db.Model):
     license_plate = db.Column(db.String(16), primary_key=True)
     model = db.Column(db.String(128), nullable=False)
     colour = db.Column(db.String(32), nullable=False)
-    # TODO: # of passengers driver counts as one of the passengers
-    passenger_places = db.Column(
-        db.Integer, db.CheckConstraint("passenger_places >= 2"), nullable=False
-    )
+    passenger_places = db.Column(db.Integer, nullable=False)
+    build_year = db.Column(db.Integer, nullable=False)
+    fuel = db.Column(db.Enum("gasoline", "diesel", "electric", name="fuel_enum"), nullable=False)
+    consumption = db.Column(db.Float, nullable=False)
 
-    owners = db.relationship("User", secondary=car_links, back_populates="cars")
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    owner = db.relationship("User", back_populates="cars", single_parent=True)
+    rides = db.relationship("Ride", back_populates="car")
 
     def __repr__(self):
         return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+
+    def from_form(self, form):
+        for key, value in form.generator():
+            setattr(self, key, value)
 
 
 def add_entities():
@@ -294,24 +290,28 @@ def add_entities():
         password="$N:K]r3",
         firstname="John",
         lastname="Smith",
+        sex="male",
     )
     User.create(
         username="xwhxycctuyce",
         password="]2[xrCh>",
         firstname="Jane",
         lastname="Doe",
+        sex="female",
     )
     User.create(
         username="qrtdavjtzhwu",
         password="F37ZLv,W",
         firstname="Barack",
         lastname="Obama",
+        sex="male",
     )
     User.create(
         username="vsvvkeqgkczp",
         password="N%2^t<4_",
         firstname="Ada",
         lastname="Lovelace",
+        sex="female",
     )
     User.create(
         username="tvjkgyphhtfw",
@@ -327,28 +327,27 @@ def add_entities():
         lastname="Dijkstra",
     )
 
-    passengers = [
-        Passenger(id=1, rating=uniform(0.0, 5.0)),
-        Passenger(id=2, rating=uniform(0.0, 5.0)),
-        Passenger(id=4, rating=uniform(0.0, 5.0)),
-    ]
-
-    for passenger in passengers:
-        db.session.add(passenger)
-
     db.session.add_all(
         [
             Car(
                 license_plate="1-QDE-002",
+                user_id=2,
                 model="Volkswagen Golf",
                 colour="Red",
                 passenger_places=5,
+                build_year=2000,
+                fuel="diesel",
+                consumption=1,
             ),
             Car(
                 license_plate="5-THX-435",
+                user_id=2,
                 model="Renault Clio",
                 colour="Black",
                 passenger_places=5,
+                build_year=2000,
+                fuel="diesel",
+                consumption=1,
             ),
         ]
     )
@@ -358,9 +357,13 @@ def add_entities():
     driver1.cars.append(
         Car(
             license_plate="8-ABC-001",
+            user_id=1,
             model="Audi R8",
             colour="White",
             passenger_places=2,
+            build_year=2000,
+            fuel="diesel",
+            consumption=1,
         )
     )
 
@@ -369,6 +372,8 @@ def add_entities():
     db.session.add(
 
         Ride.create(
+            arrival_id="something",
+            departure_id="testing",
             driver_id=2,
             passenger_places=3,
             arrival_time="2020-02-12T10:00:00.00",
@@ -387,40 +392,56 @@ def add_entities():
     # db.session.commit()
 
     # should work
-    db.session.add(
+    db.session.add_all([
         Ride.create(
-            driver_id=5,
+            arrival_id="something",
+            departure_id="testing",
+            driver_id=1,
             passenger_places=3,
             arrival_time="2020-02-24T10:43:42.00",
             departure_address=[51.184374, 4.420656],
             arrival_address=[51.219636, 4.403119],
-        )
-    )
+        ),
+        Ride.create(
+            arrival_id="something",
+            departure_id="testing",
+            driver_id=4,
+            passenger_places=4,
+            arrival_time="2020-10-12T09:00:00.00",
+            departure_address=[50.115498, 4.625988],
+            arrival_address=[51.184374, 4.420656],
+        ),
+        Ride.create(
+            arrival_id="something",
+            departure_id="testing",
+            driver_id=5,
+            passenger_places=1,
+            arrival_time="2020-10-12T18:15:00.00",
+            departure_address=[51.184374, 4.420656],
+            arrival_address=[50.115498, 4.625988],
+        ),
+    ])
     db.session.commit()
 
-    ride = Ride.query.get(2)
-    ride.requests.append(Passenger.query.get(4))
-    ride.requests.append(Passenger.query.get(1))
-    db.session.commit()
-
-    ride_requests = Ride.query.get(2).requests
-    ride_requests.remove(Passenger.query.get(1))
-    db.session.commit()
-
-    ride = Ride.query.get(1)
-    ride.accepted_requests.append(Passenger.query.get(4))
-    ride.accepted_requests.append(Passenger.query.get(1))
-    db.session.commit()
 
 def main():
     # add_entities()
+    all_rides = Ride.query.all()
     time = datetime(year=2020, month=2, day=24, hour=10, minute=38, second=42)
     delta = timedelta(minutes=4, seconds=60)
-    rides = Ride.search(arrival_time=time, time_delta=delta)
+    rides = Ride.search(
+        # arrival_time=time,
+        # time_delta=delta,
+        sex=None
+    )
     for ride in rides:
+        print(ride.driver.sex)
         print(ride.arrival_time)
 
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    db.drop_all()
+    db.create_all()
+    add_entities()
