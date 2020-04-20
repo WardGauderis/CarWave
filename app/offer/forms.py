@@ -5,6 +5,7 @@ from app.forms import DictForm
 import dateutil.parser
 from datetime import datetime
 from app.models import Ride
+from app.crud import read_car_from_plate
 
 
 class OfferForm(DictForm):
@@ -82,7 +83,14 @@ class OfferForm(DictForm):
             raise ValidationError('Departure time must be before arrival time')
 
     def validate_car_string(self, car_string):
-        pass
+        if not car_string.data:
+            car_string.data = None
+            return
+        car = read_car_from_plate(car_string.data)
+        if not car:
+            raise ValidationError('Car does not exist')
+        if car.passenger_places < self.passenger_places.data:
+            raise ValidationError('Car has not enough passenger places for this ride')
 
 
 class FilterForm(DictForm):
