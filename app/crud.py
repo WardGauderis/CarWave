@@ -114,53 +114,58 @@ def search_drives(limit=5,
                   departure_time=None, departure_delta=None,
                   arrival_time=None, arrival_delta=None,
                   sex=None, age_range=None, consumption_range=None) -> list:
-        """
-        Departure/arrival = tuple of 2 floats (longitude, latitude
-        Max distances from locations are in metres
-        sex = {"male", "female", "non-binary"}
-        age_range = (minimum age, maximum age)
-        """
-        # TODO: if None, then assign default value checks
-        query = Ride.query
-        if departure:
-            query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
-        if arrival:
-            query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
-        # FIXME: don't think we need to worry about handling rows with a NULL
-        #        value, if the user cares about rides with a specific departure time then
-        #        they likely wouldn't want to see rides without a specified departure time
-        if departure_time:
-            query = query.filter(Ride.departure_time.between(
-                departure_time - departure_delta,
-                departure_time + departure_delta
-            ))
-        if arrival_time:
-            query = query.filter(Ride.arrival_time.between(
-                arrival_time - arrival_delta,
-                arrival_time + arrival_delta
-            ))
-        if sex:  # (͡°͜ʖ͡°)
-            if sex not in ["male", "female", "non-binary"]:
-                raise ValueError("Invalid sex")
-            query = query.join(Ride.driver).filter_by(sex=sex)
+    """
+    Departure/arrival = tuple of 2 floats (longitude, latitude
+    Max distances from locations are in metres
+    sex = {"male", "female", "non-binary"}
+    age_range = (minimum age, maximum age)
+    """
+    # TODO: if None, then assign default value checks
+    query = Ride.query
+    if departure:
+        query = query.filter(func.ST_DWithin(Ride.departure_address, departure, departure_distance, True))
+    if arrival:
+        query = query.filter(func.ST_DWithin(Ride.arrival_address, arrival, arrival_distance, True))
+    # FIXME: don't think we need to worry about handling rows with a NULL
+    #        value, if the user cares about rides with a specific departure time then
+    #        they likely wouldn't want to see rides without a specified departure time
+    if departure_time:
+        query = query.filter(Ride.departure_time.between(
+            departure_time - departure_delta,
+            departure_time + departure_delta
+        ))
+    if arrival_time:
+        query = query.filter(Ride.arrival_time.between(
+            arrival_time - arrival_delta,
+            arrival_time + arrival_delta
+        ))
+    if sex:  # (͡°͜ʖ͡°)
+        if sex not in ["male", "female", "non-binary"]:
+            raise ValueError("Invalid sex")
+        query = query.join(Ride.driver).filter_by(sex=sex)
 
-        # Allow (min, None) (None, max) & (min, max) for ranges
-        # TODO(Hayaan): Age filter
-        if age_range:
-            pass
-        # TODO(Hayaan): Consumption filter
-        if consumption_range:
-            pass
+    # Allow (min, None) (None, max) & (min, max) for ranges
+    # TODO(Hayaan): Age filter
+    if age_range:
+        pass
+    # TODO(Hayaan): Consumption filter
+    if consumption_range:
+        pass
 
-        return query.limit(limit).all()
+    return query.limit(limit).all()
 
 
 def update_drive(drive: Ride, form):
     try:
         drive.from_form(form)
+    except:
+        abort(400, 'Invalid drive update')
+    if drive.passenger_places_left() < 0:
+        abort(
+            'Cannot reduce the amount of passenger places if passengers will be dropped. This has to be done manually.')
+    try:
         db.session.commit()
-    except Exception as e:
-        print(e)
+    except:
         db.session.rollback()
         abort(400, 'Invalid drive update')
 
