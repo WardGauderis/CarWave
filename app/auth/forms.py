@@ -70,7 +70,6 @@ class ResetPasswordRequestForm(DictForm):
 
 
 class ResetPasswordForm(DictForm):
-    password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    password = PasswordField('Password*', validators=[DataRequired(), Length(8, 64)])
+    password_validation = PasswordField('Repeat Password*', [Optional(), EqualTo('password')])
     submit = SubmitField('Request Password Reset')
