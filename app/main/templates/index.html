@@ -10,25 +10,28 @@
             font-family: Varela Round, sans-serif
         }
 
-        {#@media only screen and (max-device-width: 1024px) {#}
-        {#    .display-1 {#}
-        {#        font-size: 4rem;#}
-        {#    }#}
-        {##}
-        {#    .display-4 {#}
-        {#        font-size: 2.5rem;#}
-        {#    }#}
-        {#}#}
+        .big {
+            font-size: 8rem
+        }
+
+        @media only screen and (max-device-width: 1024px) {
+            .big {
+                font-size: 3rem
+            }
+            .smaller{
+                font-size: 2rem;
+            }
+        }
     </style>
 {% endblock %}
 
 {% block app_content %}
     <div>
-        <h1 class="text-center font-weight-bold display-1 m-4"
+        <h1 class="text-center font-weight-bold display-1 mb-4 big"
             style="color:#f7931e">
             CarWave
         </h1>
-        <h1 class="text-center font-weight-bold display-4 m-3"
+        <h1 class="text-center font-weight-bold display-4 m-3 smaller"
             style="color:#0e0f3b">
             surf to your destination
         </h1>
