@@ -85,7 +85,7 @@ def find():
         params = {"format": "json"}
         r = req.get(url=url, params=params)
         data = r.json()
-        return data[0]['lat'], data[0]['lon']
+        return [data[0]['lat'], data[0]['lon']]
 
     from_location = address_to_location(from_address)
     to_location = address_to_location(to_address)

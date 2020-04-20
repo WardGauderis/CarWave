@@ -112,17 +112,17 @@ def read_all_drives(future_or_past: str = '', limit: int = None) -> list:
 
 
 def search_drives(limit=5,
-                  departure: Tuple[float, float] = None,
+                  departure: List[float] = None,
                   departure_distance: int = None,
-                  arrival: Tuple[float, float] = None,
+                  arrival: List[float] = None,
                   arrival_distance: int = None,
                   departure_time: datetime = None,
                   departure_delta: timedelta = None,
                   arrival_time: datetime = None,
                   arrival_delta: timedelta = None,
                   sex: str = None,
-                  age_range: Tuple[int, int] = None,
-                  consumption_range: Tuple[float, float] = None) -> List[Ride]:
+                  age_range: Tuple[int] = None,
+                  consumption_range: Tuple[float] = None) -> List[Ride]:
     """
     Departure/arrival = tuple of 2 floats (longitude, latitude
     Max distances from locations are in metres
@@ -161,7 +161,7 @@ def search_drives(limit=5,
         query = query.filter(min_consumption <= Car.consumption) if min_consumption else query
         query = query.filter(Car.consumption <= max_consumption) if max_consumption else query
 
-    return query.limit(limit).all()
+        return query.limit(limit).all()
 
 
 def update_drive(drive: Ride, form):
@@ -184,7 +184,8 @@ def delete_drive(drive: Ride):
     try:
         db.session.delete(drive)
         db.session.commit()
-    except:
+    except DatabaseError as e:
+        print(e)
         abort(400, 'Invalid drive deletion')
 
 
@@ -200,8 +201,7 @@ def create_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
         db.session.add(request)
         db.session.commit()
         return request
-    except DatabaseError as e:
-        print(e)
+    except:
         db.session.rollback()
         abort(400, 'Invalid passenger request')
 
