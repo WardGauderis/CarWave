@@ -283,8 +283,8 @@ def update_car(car: Car, form) -> Car:
     except:
         abort(400, 'Invalid car update')
 
-    for ride in car.rides:
-        if ride.passenger_places < car.passenger_places:
+    for ride in car.rides.filter(Ride.arrival_time > datetime.utcnow()).all():
+        if ride.passenger_places > car.passenger_places:
             abort(409,
                   'Cannot change the amount of passenger places in this car because some drives would have to be cancelled.')
 
