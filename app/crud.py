@@ -83,7 +83,7 @@ def create_drive(form, user: User) -> Ride:
         abort(400, 'Invalid drive creation')
 
 
-def read_drive_from_driver(driver: User, future: bool = False) -> Ride:
+def read_drive_from_driver(driver: User, future: bool = False) -> list:
     try:
         if future:
             return driver.driver_rides.filter(Ride.arrival_time > datetime.utcnow()).all()

@@ -97,10 +97,10 @@ def requests():
             return res
 
     pending = []
-    for drive in current_user.driver_rides:
+    for drive in read_drive_from_driver(current_user, True):
         pending += drive.pending_requests()
 
-    return render_template('requests.html', title='Your Requests', form=form, requests=pending, background=True)
+    return render_template('rides.html', none_found='No future pending requests found',title='Your Requests', form=form, requests=pending, background=True)
 
 
 @bp.route('/find', methods=['POST', 'GET'])
@@ -153,7 +153,7 @@ def find():
     # return render_template('find.html', title='Find', details=details, select=select,
     #                        rides=rides, background=True)
 
-    return render_template('rides.html', title='Find', none_found='No suitable rides found for you', details=details,
+    return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
                            form=form,
                            rides=read_all_drives('future'), background=True)
 
@@ -167,7 +167,7 @@ def all_rides():
         if res is not None:
             return res
 
-    return render_template('rides.html', title='Available Drives', none_found='No rides found', form=form,
+    return render_template('rides.html', title='Available Drives', none_found='No future rides found', form=form,
                            rides=read_all_drives('future'),
                            background=True)
 
@@ -183,7 +183,7 @@ def passenger_rides():
             return res
 
     else:
-        return render_template('rides.html', title='Passenger Drives',
+        return render_template('rides.html', title='Passenger Drives', none_found='No future drives with you as passenger found',
                                requests=current_user.future_passenger_requests(),
                                form=form, background=True)
 
@@ -198,5 +198,6 @@ def driver_rides():
         if res is not None:
             return res
     else:
-        return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), form=form,
+        return render_template('rides.html', title='Your Drives', none_found='No Future drives organised by you found',
+                               rides=read_drive_from_driver(current_user, True), form=form,
                                background=True)
