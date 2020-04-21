@@ -169,7 +169,7 @@ class Ride(db.Model):
         if not form.arrival_id.data:
             self.arrival_id = location_to_id(form.to_lon.data, form.to_lat.data)
         if not form.departure_id.data:
-            self.arrival_id = location_to_id(form.from_lon.data, form.from_lat.data)
+            self.departure_id = location_to_id(form.from_lon.data, form.from_lat.data)
 
     def __repr__(self):
         return f"<Ride(id={self.id}, driver={self.driver_id})>"
