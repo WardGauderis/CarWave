@@ -22,7 +22,7 @@ class UserForm(DictForm):
     firstname = StringField('First Name*', validators=[DataRequired(), Length(max=64)])
     lastname = StringField('Last Name*', validators=[DataRequired(), Length(max=64)])
     age = IntegerField('Age', validators=[Optional(), NumberRange(18, 100)])
-    address = StringField('Address', [Optional(), Length(max=128)])
+    address = StringField('Address', [Length(max=128)])
     sex = SelectField('Sex', choices=[('', ''), ('male', 'male'), ('female', 'female'), ('non-binary', 'non-binary')],
                       default='')
     password = PasswordField('Password*', validators=[DataRequired(), Length(8, 64)])
@@ -52,6 +52,7 @@ class UserForm(DictForm):
         self.lastname.data = user.lastname
         self.age.data = user.age
         self.sex.data = user.sex
+        self.address.data = user.address
 
     def validate_sex(self, sex):
         if not sex.data:
