@@ -101,8 +101,11 @@ def find():
                               age_range=(age - 10, age + 10),
                               consumption_range=(None, consumption), sex=gender)
     else:
-        rides = search_drives(departure=from_location, arrival=to_location, arrival_time=time, departure_distance=5000,
+        rides = search_drives(departure=from_location,
+                              departure_distance=5000,
+                              arrival=to_location,
                               arrival_distance=5000,
+                              arrival_time=time,
                               arrival_delta=timedelta(minutes=30))
 
     return render_template('find.html', title='Find', details=details, select=select,

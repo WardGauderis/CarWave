@@ -13,13 +13,20 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import db, login
 
 
+def to_point(coords):
+    return f"SRID=4326;POINT({' '.join(coords)})"
+
+
 class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
 
-    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete='CASCADE'), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), primary_key=True)
-    status = db.Column(db.Enum("accepted", "pending", "rejected", name="status_enum"), default="pending",
-                       nullable=False)
+    ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    status = db.Column(
+        db.Enum("accepted", "pending", "rejected", name="status_enum"),
+        default="pending",
+        nullable=False,
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     last_modified = db.Column(db.DateTime, default=datetime.utcnow())
 
@@ -40,17 +47,21 @@ class User(UserMixin, db.Model):
     sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
     address_id = db.Column(db.String(32), nullable=True)
 
-    driver_rides = db.relationship("Ride", back_populates="driver", cascade="all, delete, delete-orphan")
+    driver_rides = db.relationship(
+        "Ride", back_populates="driver", cascade="all, delete, delete-orphan"
+    )
     cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
 
     requests = db.relationship(
-        "PassengerRequest", back_populates="passenger", lazy="dynamic", cascade="all, delete, delete-orphan"
+        "PassengerRequest",
+        back_populates="passenger",
+        lazy="dynamic",
+        cascade="all, delete, delete-orphan",
     )
 
     def avatar(self, size):
-        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
-        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
-            digest, size)
+        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
+        return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(digest, size)
 
     def from_form(self, form):
         for key, value in form.generator():
@@ -82,14 +93,17 @@ class User(UserMixin, db.Model):
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
-            {'reset_password': self.id, 'exp': datetime.utcnow() + timedelta(expires_in)},
-            current_app.config['SECRET_KEY'], algorithm='HS256').decode('utf-8')
+            {"reset_password": self.id, "exp": datetime.utcnow() + timedelta(expires_in),},
+            current_app.config["SECRET_KEY"],
+            algorithm="HS256",
+        ).decode("utf-8")
 
     @staticmethod
     def verify_reset_password_token(token):
         try:
-            id = jwt.decode(token, current_app.config['SECRET_KEY'],
-                            algorithms=['HS256'])['reset_password']
+            id = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])[
+                "reset_password"
+            ]
         except jwt.DecodeError as e:
             return e
         return User.query.get(id)
@@ -109,7 +123,9 @@ class Ride(db.Model):
     driver = db.relationship("User", back_populates="driver_rides", single_parent=True)
     passenger_places = db.Column(db.Integer, nullable=False)
 
-    license_plate = db.Column(db.String(16), db.ForeignKey("cars.license_plate", ondelete='SET NULL'), nullable=True)
+    license_plate = db.Column(
+        db.String(16), db.ForeignKey("cars.license_plate", ondelete="SET NULL"), nullable=True,
+    )
     car = db.relationship("Car", back_populates="rides")
 
     request_time = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
@@ -121,12 +137,17 @@ class Ride(db.Model):
     arrival_id = db.Column(db.String(32), nullable=False)
 
     requests = db.relationship(
-        "PassengerRequest", back_populates="ride", lazy="dynamic", cascade="all, delete, delete-orphan"
+        "PassengerRequest",
+        back_populates="ride",
+        lazy="dynamic",
+        cascade="all, delete, delete-orphan",
     )
 
     def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
+        # FIXME(Hayaan): replace with to_point if List[String]
+        # self.departure_address = to_point([form.from_lat.data, form.from_lon.data])
         self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"
         self.arrival_address = f"SRID=4326;POINT({form.to_lat.data} {form.to_lon.data})"
 
@@ -135,13 +156,13 @@ class Ride(db.Model):
             params = {"lat": lat, "lon": lon, "format": "json"}
             r = requests.get(url=url, params=params)
             data = r.json()
-            if data['osm_type'] == 'way':
-                return 'W' + str(data['osm_id'])
-            if data['osm_type'] == 'relation':
-                return 'R' + str(data['osm_id'])
-            if data['osm_type'] == 'node':
-                return 'N' + str(data['osm_id'])
-            return data['osm_type'] + data['osm_id']
+            if data["osm_type"] == "way":
+                return "W" + str(data["osm_id"])
+            if data["osm_type"] == "relation":
+                return "R" + str(data["osm_id"])
+            if data["osm_type"] == "node":
+                return "N" + str(data["osm_id"])
+            return data["osm_type"] + data["osm_id"]
 
         if not form.arrival_id.data:
             self.arrival_id = location_to_id(form.to_lon.data, form.to_lat.data)
@@ -185,12 +206,14 @@ class Car(db.Model):
     fuel = db.Column(db.Enum("gasoline", "diesel", "electric", name="fuel_enum"), nullable=False)
     consumption = db.Column(db.Float, nullable=False)  # liter per 100 kilometer
 
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner = db.relationship("User", back_populates="cars", single_parent=True)
     rides = db.relationship("Ride", back_populates="car")
 
     def __repr__(self):
-        return f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+        return (
+            f"<Car(license_plate={self.license_plate}, passenger_places={self.passenger_places})>"
+        )
 
     def from_form(self, form):
         for key, value in form.generator():
