@@ -166,7 +166,7 @@ def all_rides():
             return res
 
     return render_template('rides.html', title='Available Drives', none_found='No future rides found', form=form,
-                           rides=read_all_drives('future', limit=10),
+                           rides=read_all_drives('future', limit=20),
                            background=True)
 
 
