@@ -121,16 +121,28 @@
 
 <script type="text/javascript">
 
+    function address_to_string(address)
+    {
+        console.log(address);
+        let res = '';
+        if(address.road != null) res += address.road + ', ';
+
+        if(address.town != null) res += address.town + ', ';
+        else if(address.city != null) res += address.city + ', ';
+
+        if(address.county != null) res += address.county + ', ';
+        if(address.country != null) res += address.country;
+        return res;
+    }
     function get_address(id, which) {
         $.ajax({
             url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + id + "&format=json",
             type: "GET",
             success: function (xhr) {
                 if (which === 'from') {
-                    document.getElementById("from1{{ ride.id }}").innerText = xhr[0].display_name;
-                    console.log(xhr);
+                    document.getElementById("from1{{ ride.id }}").innerText = address_to_string(xhr[0].address);
                 } else {
-                    document.getElementById("to1{{ ride.id }}").innerText = xhr[0].display_name;
+                    document.getElementById("to1{{ ride.id }}").innerText = address_to_string(xhr[0].address);
                 }
             },
             error: function (xhr) {
