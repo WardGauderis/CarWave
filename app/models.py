@@ -45,7 +45,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(128))
     age = db.Column(db.Integer, nullable=True)
     sex = db.Column(db.Enum("male", "female", "non-binary", name="sex_enum"), nullable=True)
-    address_id = db.Column(db.String(32), nullable=True)
+    address = db.Column(db.String(128), nullable=True)
 
     driver_rides = db.relationship(
         "Ride", back_populates="driver", cascade="all, delete, delete-orphan", lazy="dynamic"
