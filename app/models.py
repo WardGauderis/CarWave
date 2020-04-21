@@ -206,7 +206,7 @@ class Car(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     owner = db.relationship("User", back_populates="cars", single_parent=True)
-    rides = db.relationship("Ride", back_populates="car")
+    rides = db.relationship("Ride", back_populates="car", lazy='dynamic')
 
     def __repr__(self):
         return (
