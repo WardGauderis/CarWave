@@ -3,5 +3,6 @@
 
 {% block app_content %}
     <h1 class="display-4">Edit Car</h1>
+    <hr>
     {{ wtf.quick_form(update, button_map={'delete':'danger'}) }}
 {% endblock %}
