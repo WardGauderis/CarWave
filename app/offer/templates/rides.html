@@ -11,17 +11,28 @@
     <h1 class="display-4">{{ title }}</h1>
     <hr>
 
-    {% if not rides %}
-        {% if delete %}
-            <h4>You don't have any offered rides yet for the future</h4>
-        {% elif delete_req %}
-            <h4>You don't have any future requests yet for the future</h4>
-        {% else %}
-            <h4>No rides were found for the future</h4>
-        {% endif %}
+    {% if details is defined %}
+        <div class="card m-3">
+            <div class=" card-body">
+                {{ wtf.quick_form(details) }}
+            </div>
+        </div>
     {% endif %}
 
-    {% for ride in rides %}
-        {% include '_ride.html' %}
-    {% endfor %}
+    {% if rides is defined %}
+        {% if not rides %}
+            <h4>{{ none_found }}</h4>
+        {% endif %}
+        {% for ride in rides %}
+            {% include '_ride.html' %}
+        {% endfor %}
+    {% elif requests is defined %}
+        {% if not requests %}
+            <h4>Generic not found message</h4>
+        {% endif %}
+        {% for request in requests %}
+            {% set ride = request.ride -%}
+            {% include '_ride.html' %}
+        {% endfor %}
+    {% endif %}
 {% endblock %}

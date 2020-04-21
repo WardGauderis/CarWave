@@ -49,43 +49,69 @@
                 <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
             </p>
 
+            <form method="post" name="ride">
+                {% if rides is defined %}
+                    {{ form.ride_id(type="hidden", value=ride.id) }}
+                    {% if not current_user.is_authenticated %}
+                        {#show nothing if user is not authenticated#}
+                    {% elif ride.driver_id == current_user.id %}
+                        {{ wtf.form_field(form.button1, value="Edit ride") }}
+                        {{ wtf.form_field(form.button2, value="Delete ride", button_map={'button2':'danger'}) }}
+                    {% else %}
+                        {{ wtf.form_field(form.button1, value="Request ride") }}
+                    {% endif %}
+                {% elif requests is defined %}
+                    {{ form.ride_id(type="hidden", value=request.ride_id) }}
+                    {{ form.user_id(type="hidden", value=request.user_id) }}
+                    {% if request.user_id == current_user.id %}
+                        {{ wtf.form_field(form.button2, value="Delete request", button_map={'button2':'danger'}) }}
+                    {% elif request.ride.driver_id == current_user.id %}
+                        {{ wtf.form_field(form.button1, value="Accept request") }}
+                        {{ wtf.form_field(form.button2, value="Reject request", button_map={'button2':'danger'}) }}
+                    {% else %}
+                        {#show nothing if ride is neither from passenger nor from driver#}
+                    {% endif %}
+                {% else %}
+                    {#show nothing the list is either rides or requests#}
+                {% endif %}
+            </form>
             {# delete button for the rides which can be edited #}
-            {% if delete is defined %}
-                <form method="post" name="ride">
-                    {{ delete.ride_id(type="hidden", value=ride.id) }}
-                    {{ wtf.form_field(delete.edit) }}
-                    {{ wtf.form_field(delete.delete,  button_map={'delete':'danger'}) }}
-                </form>
-            {% endif %}
-
-            {% if delete_req is defined %}
-                <form method="post" name="ride">
-                    {{ delete_req.ride_id(type="hidden", value=ride.id) }}
-                    {{ wtf.form_field(delete_req.delete) }}
-                </form>
-            {% endif %}
-
-            {% if select is defined %}
-                <form method="post" name="ride">
-                    {{ select.ride_id(type="hidden", value=ride.id) }}
-                    {{ wtf.form_field(select.request) }}
-                </form>
-            {% endif %}
-
-            {% if choice is defined %}
-                <form method="post" name="ride">
-                    {{ choice.ride_id(type="hidden", value=ride.id) }}
-                    {{ choice.user_id(type="hidden", value=passenger.id) }}
-                    <div class="form-row" style="padding:10px">
-                        <div class="ui-widget col-sm" style="margin:0">
-                            {{ wtf.form_field(choice.accept, button_map={'accept':'success'}) }}
-                        </div>
-                        <div class="col-sm-auto">
-                            {{ wtf.form_field(choice.reject, button_map={'reject':'danger'}) }}
-                        </div>
-                    </div>
-                </form>
-            {% endif %}
+            {#            {% if delete is defined %}#}
+            {#                <form method="post" name="ride">#}
+            {#                    {{ delete.ride_id(type="hidden", value=ride.id) }}#}
+            {#                    {{ wtf.form_field(delete.edit) }}#}
+            {#                    {{ wtf.form_field(delete.delete,  button_map={'delete':'danger'}) }}#}
+            {#                </form>#}
+            {#            {% endif %}#}
+            {##}
+            {#            {% if delete_req is defined %}#}
+            {#                <form method="post" name="ride">#}
+            {#                    {{ delete_req.ride_id(type="hidden", value=ride.id) }}#}
+            {#                    {{ wtf.form_field(delete_req.delete) }}#}
+            {#                </form>#}
+            {#            {% endif %}#}
+            {##}
+            {#            {% if select is defined %}#}
+            {#                <form method="post" name="ride">#}
+            {#                    {{ select.ride_id(type="hidden", value=ride.id) }}#}
+            {#                    {{ wtf.form_field(select.request) }}#}
+            {#                </form>#}
+            {#            {% endif %}#}
+            {##}
+            {#            {% if choice is defined %}#}
+            {#                <form method="post" name="ride">#}
+            {#                    {{ choice.ride_id(type="hidden", value=ride.id) }}#}
+            {#                    {{ choice.user_id(type="hidden", value=passenger.id) }}#}
+            {#                    <div class="form-row" style="padding:10px">#}
+            {#                        <div class="ui-widget col-sm" style="margin:0">#}
+            {#                            {{ wtf.form_field(choice.accept, button_map={'accept':'success'}) }}#}
+            {#                        </div>#}
+            {#                        <div class="col-sm-auto">#}
+            {#                            {{ wtf.form_field(choice.reject, button_map={'reject':'danger'}) }}#}
+            {#                        </div>#}
+            {#                    </div>#}
+            {#                </form>#}
+            {#            {% endif %}#}
 
         </div>
         <div class="tab-pane fade" id="body-map-{{ ride.id }}">
@@ -121,19 +147,19 @@
 
 <script type="text/javascript">
 
-    function address_to_string(address)
-    {
+    function address_to_string(address) {
         console.log(address);
         let res = '';
-        if(address.road != null) res += address.road + ', ';
+        if (address.road != null) res += address.road + ', ';
 
-        if(address.town != null) res += address.town + ', ';
-        else if(address.city != null) res += address.city + ', ';
+        if (address.town != null) res += address.town + ', ';
+        else if (address.city != null) res += address.city + ', ';
 
-        if(address.county != null) res += address.county + ', ';
-        if(address.country != null) res += address.country;
+        if (address.county != null) res += address.county + ', ';
+        if (address.country != null) res += address.country;
         return res;
     }
+
     function get_address(id, which) {
         $.ajax({
             url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + id + "&format=json",

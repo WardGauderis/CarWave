@@ -12,5 +12,7 @@ class DriveForm(DictForm):
     time = TimeField('', [DataRequired()])
     date = DateField('', [DataRequired()])
 
+    arrival_time = StringField('', [DataRequired()])
+
     offer = SubmitField('offer')
     find = SubmitField('find')

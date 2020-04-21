@@ -6,6 +6,7 @@ import dateutil.parser
 from datetime import datetime
 from app.models import Ride
 from app.crud import read_car_from_plate
+import pytz
 
 
 class OfferForm(DictForm):
@@ -26,6 +27,7 @@ class OfferForm(DictForm):
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
     license_plate = SelectField('Select Car', choices=[('None', 'None')])
     confirm = SubmitField('Confirm')
+    json = False
 
     def from_database(self, ride: Ride):
         self.from_lat.data = ride.depart_from[0]
@@ -44,6 +46,7 @@ class OfferForm(DictForm):
             self.license_plate.data = 'None'
 
     def from_json(self, json):
+        self.json = True
         self.time.validators = []
         self.date.validators = []
         self.arrival_time.data = json.get('arrive-by')
@@ -66,6 +69,9 @@ class OfferForm(DictForm):
     def validate_arrival_time(self, arrival_time):
         try:
             self.arrival_time.data = dateutil.parser.isoparse(arrival_time.data).replace(tzinfo=None)
+            if self.json:
+                self.arrival_time.data = pytz.utc.normalize(
+                    pytz.timezone('Europe/Brussels').localize(self.arrival_time.data)).replace(tzinfo=None)
         except:
             raise ValidationError('Not a valid date format')
         if arrival_time.data <= datetime.utcnow():
@@ -96,10 +102,18 @@ class OfferForm(DictForm):
 
 
 class FilterForm(DictForm):
-    gender = SelectField('Select gender', [Optional()], choices=[('Any', 'Any'), ('Male', 'Male'), ('Female', 'Female'), ('Non Binary', 'Non Binary')])
+    gender = SelectField('Select gender', [Optional()],
+                         choices=[('Any', 'Any'), ('Male', 'Male'), ('Female', 'Female'), ('Non Binary', 'Non Binary')])
     age = IntegerField('Age', [Optional(), NumberRange(min=18, max=100, message='age must be between 18 and 100')])
     usage = IntegerField('Maximal Fuel Consumption (l/100km)', [Optional(), NumberRange(min=0, max=100)])
     refresh = SubmitField('Refresh')
+
+
+class RideDataForm(DictForm):
+    ride_id = IntegerField('ride_id')
+    user_id = IntegerField('user_id')
+    button1 = SubmitField('')
+    button2 = SubmitField('')
 
 
 class RequestChoiceForm(DictForm):
