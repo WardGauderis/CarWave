@@ -40,7 +40,8 @@
     {#        </h1>#}
     {#    </div>#}
     <div class="container">
-        <form method="post" name="ride">
+        <form method="post" name="ride" onsubmit="fill_utc()">
+            {{ form.arrival_time(type="hidden") }}
             <div class="form-row" style="padding:10px">
                 <div class="ui-widget col-sm" style="margin:0">
                     {{ form.from_location(class="form-control", id="from", placeholder="from", style="border-radius:100px") }}
@@ -63,9 +64,11 @@
                 </div>
             </div>
             <div class="form-row justify-content-md-center" style="padding:10px">
-                {{ form.offer(value='offer', class="col-4 btn text-white form-control", placeholder="offer drive", style="border-radius:100px; background-color:#f7931e") }}
+                {{ form.offer(value='offer', class="col-4 btn text-white form-control",
+                placeholder="offer drive", style="border-radius:100px; background-color:#f7931e") }}
                 <div class="col-2"></div>
-                {{ form.find(value = 'find', class="col-4 btn text-white form-control", placeholder="find drive", style="border-radius:100px; background-color:#0e0f3b") }}
+                {{ form.find(value = 'find', class="col-4 btn text-white form-control",
+                placeholder="find drive", style="border-radius:100px; background-color:#0e0f3b") }}
             </div>
         </form>
     </div>
@@ -76,6 +79,12 @@
     <script src="//code.jquery.com/jquery-1.12.4.js"></script>
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript">
+
+        function fill_utc()
+        {
+            const date = new Date(document.getElementById("date").value + 'T' + document.getElementById("time").value)
+            document.getElementById("arrival_time").value = date.toISOString();
+        }
 
         document.getElementById("date").setAttribute("min", new Date().toISOString().split("T")[0]);
 
@@ -102,7 +111,7 @@
                     response(tempOptions);
                 },
                 error: function (xhr) {
-                    alert(xhr);
+                    console.log(xhr);
                 }
             });
         };
