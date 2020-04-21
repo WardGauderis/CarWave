@@ -26,15 +26,28 @@
 
     <div class="tab-content card-body">
         <div class="tab-pane fade show active" id="body-overview-{{ ride.id }}">
-            <span class="text-left font-weight-bold">From: </span>
-            <span id="from1{{ ride.id }}">loading...</span><br>
-            <span class="text-left font-weight-bold">To: </span>
-            <span id="to1{{ ride.id }}">loading...</span><br>
-            <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
-            <span class="text-left font-weight-bold">Driver: </span><a
-                href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
-            {#            TODO places left, passengers, ...#}
-            <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
+            <p>
+                <span class="text-left font-weight-bold">From: </span>
+                <span id="from1{{ ride.id }}">loading...</span><br>
+                <span class="text-left font-weight-bold">To: </span>
+                <span id="to1{{ ride.id }}">loading...</span><br>
+
+                <span class="text-left font-weight-bold">Departure Time: </span>
+                {% if ride.departure_time %}
+                    {{ moment(ride.departure_time).format('LLLL') }}
+                {% else %}
+                    Unknown
+                {% endif %}<br>
+                <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
+                <span class="text-left font-weight-bold">Driver: </span><a
+                    href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
+                <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
+                <span class="text-left font-weight-bold">Current passengers: </span>
+                {% for request in ride.accepted_requests().all() %}
+                    <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
+                {% endfor %}<br>
+                <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
+            </p>
 
             {# delete button for the rides which can be edited #}
             {% if delete is defined %}
@@ -65,10 +78,10 @@
                     {{ choice.user_id(type="hidden", value=passenger.id) }}
                     <div class="form-row" style="padding:10px">
                         <div class="ui-widget col-sm" style="margin:0">
-                            {{ wtf.form_field(choice.accept) }}
+                            {{ wtf.form_field(choice.accept, button_map={'accept':'success'}) }}
                         </div>
                         <div class="col-sm-auto">
-                            {{ wtf.form_field(choice.reject) }}
+                            {{ wtf.form_field(choice.reject, button_map={'reject':'danger'}) }}
                         </div>
                     </div>
                 </form>

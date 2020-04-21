@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from flask import Response, abort, request, g
 
@@ -43,6 +43,7 @@ def register_drive():
     if form.from_json(json):
         driver = g.current_user
         drive = create_drive(form, driver)
+        print(drive.arrival_time)
         return (
             {
                 "id": drive.id,
@@ -51,7 +52,7 @@ def register_drive():
                 "passenger-places": drive.passenger_places,
                 "from": drive.depart_from,
                 "to": drive.arrive_at,
-                "arrive-by": drive.arrival_time,
+                "arrive-by": drive.arrival_time.isoformat(),
             },
             201,
             {"Location": f"/drives/{drive.id}"}

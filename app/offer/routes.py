@@ -110,7 +110,9 @@ def find():
                               arrival_delta=timedelta(minutes=30))
 
     return render_template('find.html', title='Find', details=details, select=select,
-                           rides=rides, background=True)
+                           rides=read_all_drives('future'), background=True)
+    # return render_template('find.html', title='Find', details=details, select=select,
+    #                        rides=rides, background=True)
 
 
 @bp.route('/rides/all')

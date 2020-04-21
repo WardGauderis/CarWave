@@ -11,22 +11,26 @@
     {% for car in cars %}
         <div class="card m-3">
             <div class=" card-header">
-{#                TODO MAKEUP ZOALS RIDES#}
-                <p>{{ car.license_plate }}</p>
-                <p>{{ car.model }}</p>
-                <p>{{ car.colour }}</p>
-                <p>{{ car.passenger_places }}</p>
-                <p>{{ car.build_year }}</p>
-                <p>{{ car.fuel }}</p>
-                <p>{{ car.consumption }}</p>
-
+                <span class="text-left font-weight-bold">{{ car.license_plate }}</span>
+            </div>
+            <div class="card-body">
+                <p>
+                    <span class="text-left font-weight-bold">Model: </span>{{ car.model }}<br>
+                    <span class="text-left font-weight-bold">Color: </span>{{ car.colour }}<br>
+                    <span class="text-left font-weight-bold">Passenger places: </span>{{ car.passenger_places }}<br>
+                    <span class="text-left font-weight-bold">Build year: </span>{{ car.build_year }}<br>
+                    <span class="text-left font-weight-bold">Fuel type: </span>{{ car.fuel }}<br>
+                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ car.consumption }}<br>
+                </p>
                 <a href="{{ url_for('profile.car_edit', username=current_user.username, license_plate=car.license_plate) }}"
                    class="btn btn-primary">Edit car</a>
             </div>
         </div>
     {% endfor %}
     <h1 class="display-4">Add a Car</h1>
-
-    {{ wtf.quick_form(create) }}
-
+{#    <div class="card border-0" style="background-color: #00000000">#}
+{#    <div class="card-body">#}
+        {{ wtf.quick_form(create) }}
+{#        </div>#}
+{#    </div>#}
 {% endblock %}
