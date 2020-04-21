@@ -48,7 +48,7 @@ class User(UserMixin, db.Model):
     address_id = db.Column(db.String(32), nullable=True)
 
     driver_rides = db.relationship(
-        "Ride", back_populates="driver", cascade="all, delete, delete-orphan"
+        "Ride", back_populates="driver", cascade="all, delete, delete-orphan", lazy="dynamic"
     )
     cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
 

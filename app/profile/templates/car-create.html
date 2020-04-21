@@ -9,18 +9,12 @@
     {% endif %}
 
     {% for car in cars %}
-        <div class="card m-3">
+        <div class="card m-2">
             <div class=" card-header">
                 <span class="text-left font-weight-bold">{{ car.license_plate }}</span>
             </div>
             <div class="card-body">
                 <p>
-                    <span class="text-left font-weight-bold">Model: </span>{{ car.model }}<br>
-                    <span class="text-left font-weight-bold">Color: </span>{{ car.colour }}<br>
-                    <span class="text-left font-weight-bold">Passenger places: </span>{{ car.passenger_places }}<br>
-                    <span class="text-left font-weight-bold">Build year: </span>{{ car.build_year }}<br>
-                    <span class="text-left font-weight-bold">Fuel type: </span>{{ car.fuel }}<br>
-                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ car.consumption }}<br>
                 </p>
                 <a href="{{ url_for('profile.car_edit', username=current_user.username, license_plate=car.license_plate) }}"
                    class="btn btn-primary">Edit car</a>

@@ -38,9 +38,9 @@ def requests():
 def offer():
     form = OfferForm(meta={'csrf': False})
 
-    form.car_string.choices = [('None', 'None')]
+    form.license_plate.choices = [('None', 'None')]
     for car in current_user.cars:
-        form.car_string.choices.append((car.license_plate, car.license_plate))
+        form.license_plate.choices.append((car.license_plate, car.license_plate))
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
@@ -134,6 +134,7 @@ def all_rides():
 
 
 @bp.route('/rides/passenger', methods=['POST', 'GET'])
+@login_required
 def passenger_rides():
     form = DeleteRequestForm()
 
@@ -148,6 +149,7 @@ def passenger_rides():
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
+@login_required
 def driver_rides():
     form = DeleteOfferForm()
 
@@ -159,5 +161,6 @@ def driver_rides():
         elif "edit" in request.form:
             return redirect(url_for('offer.offer', rid=form.ride_id.data))
 
-    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form,
+    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user, True),
+                           delete=form,
                            background=True)
