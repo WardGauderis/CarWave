@@ -125,7 +125,8 @@ def search_drives(limit=5,
                   arrival_delta: timedelta = None,
                   sex: str = None,
                   age_range: Tuple[int] = None,
-                  consumption_range: Tuple[float] = None) -> List[Ride]:
+                  consumption_range: Tuple[float] = None,
+                  exclude_past_rides=False) -> List[Ride]:
     query = Ride.query
 
     if departure:
@@ -170,6 +171,9 @@ def search_drives(limit=5,
         min_consumption, max_consumption = consumption_range
         query = query.filter(min_consumption <= Car.consumption) if min_consumption else query
         query = query.filter(Car.consumption <= max_consumption) if max_consumption else query
+
+    if exclude_past_rides:
+        query = query.filter(datetime.utcnow() <= Ride.arrival_time)
 
     return query.limit(limit).all()
 

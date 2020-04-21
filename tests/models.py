@@ -182,18 +182,19 @@ class Ride(db.Model):
 
     @staticmethod
     def search(
-        limit=5,
-        departure: Tuple[float, float] = None,
-        departure_distance: int = None,
-        arrival: Tuple[float, float] = None,
-        arrival_distance: int = None,
-        departure_time: datetime = None,
-        departure_delta: timedelta = None,
-        arrival_time: datetime = None,
-        arrival_delta: timedelta = None,
-        sex: str = None,
-        age_range: Tuple[int, int] = None,
-        consumption_range: Tuple[float, float] = None,
+            limit=5,
+            departure: Tuple[float, float] = None,
+            departure_distance: int = None,
+            arrival: Tuple[float, float] = None,
+            arrival_distance: int = None,
+            departure_time: datetime = None,
+            departure_delta: timedelta = None,
+            arrival_time: datetime = None,
+            arrival_delta: timedelta = None,
+            sex: str = None,
+            age_range: Tuple[int, int] = None,
+            consumption_range: Tuple[float, float] = None,
+            exclude_past_rides= False,
     ) -> List:
         def to_point(coords):
             return f"SRID=4326;POINT({' '.join(coords)})"
@@ -212,7 +213,6 @@ class Ride(db.Model):
                     Ride.arrival_address, to_point(arrival), arrival_distance or 5000, True,
                 )
             )
-
 
         if departure_time:
             query = query.filter(
@@ -243,6 +243,9 @@ class Ride(db.Model):
             min_consumption, max_consumption = consumption_range
             query = query.filter(min_consumption <= Car.consumption) if min_consumption else query
             query = query.filter(Car.consumption <= max_consumption) if max_consumption else query
+
+        if exclude_past_rides:
+            query = query.filter(datetime.utcnow() <= Ride.arrival_time)
 
         return query.limit(limit).all()
 
@@ -384,7 +387,7 @@ def add_entities():
                 passenger_places=5,
                 build_year=2000,
                 fuel="diesel",
-                consumption=1,
+                consumption=1.6,
             ),
             Car(
                 license_plate="5-THX-435",
@@ -394,7 +397,7 @@ def add_entities():
                 passenger_places=5,
                 build_year=2000,
                 fuel="diesel",
-                consumption=1,
+                consumption=12,
             ),
         ]
     )
@@ -426,6 +429,7 @@ def add_entities():
             departure_address=[51.184374, 4.420656],
             #  51.193153, 4.422027 1.3km away
             arrival_address=[50.880623, 4.700622],
+            license_plate="8-ABC-001"
         )
     )
     db.session.commit()
@@ -474,6 +478,7 @@ def add_entities():
         arrival_time="2020-11-14T05:03:00.00",
         departure_address=[51.217320, 4.421832],
         arrival_address=[51.440195, 5.474330],
+        license_plate="1-QDE-002"
     )
 
     db.session.commit()
@@ -489,6 +494,12 @@ def add_entities():
     db.session.commit()
 
 
+def reset():
+    db.drop_all()
+    db.create_all()
+    add_entities()
+
+
 def main():
     # add_entities()
     all_rides = Ride.query.all()
@@ -496,15 +507,21 @@ def main():
     delta = timedelta(minutes=4, seconds=60)
     user = User.query.get(3)
     rides = Ride.search(
-        departure=["51.193153", "4.422027"],
-        departure_distance=2000,
-        arrival=["51.219636", "4.403119"],
-        age_range=(18, 70),
+        # departure=["51.193153", "4.422027"],
+        # departure_distance=2000,
+        # arrival=["51.219636", "4.403119"],
+        # age_range=(18, 70),
+        arrival_time=datetime(year=2020, month=11, day=14, hour=5),
+        arrival_delta=timedelta(minutes=5),
+        consumption_range=(None, None),
+        exclude_past_rides=True,
     )
-    for ride in all_rides:
+    users = User.query.all()
+    for ride in rides:
         print(f"#{ride.driver.id} is {ride.driver.age} years old")
-        print(ride.depart_from)
-        print(ride.arrive_at)
+        print(f"Ride goes from {ride.depart_from} to {ride.arrive_at}")
+        if ride.car:
+            print(f"Car: {ride.car.license_plate}, consumption: {ride.car.consumption}")
 
 
 if __name__ == "__main__":
