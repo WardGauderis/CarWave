@@ -38,6 +38,9 @@
                 {% else %}
                     Unknown
                 {% endif %}<br>
+                {% if requests is defined %}
+                    <span class="text-left font-weight-bold">Request status: </span>{{ request.status }}
+                {% endif %}
                 <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
                 <span class="text-left font-weight-bold">Driver: </span><a
                     href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
@@ -123,10 +126,12 @@
                     <span class="text-left font-weight-bold">License Plate: </span>{{ ride.car.license_plate }}<br>
                     <span class="text-left font-weight-bold">Model: </span>{{ ride.car.model }}<br>
                     <span class="text-left font-weight-bold">Color: </span>{{ ride.car.colour }}<br>
-                    <span class="text-left font-weight-bold">Passenger places: </span>{{ ride.car.passenger_places }}<br>
+                    <span class="text-left font-weight-bold">Passenger places: </span>{{ ride.car.passenger_places }}
+                    <br>
                     <span class="text-left font-weight-bold">Build year: </span>{{ ride.car.build_year }}<br>
                     <span class="text-left font-weight-bold">Fuel type: </span>{{ ride.car.fuel }}<br>
-                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ ride.car.consumption }}<br>
+                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ ride.car.consumption }}
+                    <br>
                 {% else %}
                     <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span>
                     <br>

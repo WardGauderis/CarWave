@@ -1,7 +1,6 @@
 from flask import render_template, request, url_for, redirect, flash
 from flask_login import current_user, login_required
 import requests as req
-import pytz
 from app.offer import bp
 from app.offer.forms import *
 from app.crud import *
@@ -147,7 +146,7 @@ def find():
                           arrival_time=utc_time,
                           departure_distance=5000,
                           arrival_distance=5000,
-                          arrival_delta=timedelta(minutes=30),
+                          arrival_delta=timedelta(minutes=200),
                           age_range=age_range,
                           consumption_range=consumption_range,
                           sex=sex,
@@ -167,7 +166,7 @@ def all_rides():
             return res
 
     return render_template('rides.html', title='Available Drives', none_found='No future rides found', form=form,
-                           rides=read_all_drives('future', limit=10),
+                           rides=read_all_drives('future', limit=20),
                            background=True)
 
 
