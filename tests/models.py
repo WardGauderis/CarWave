@@ -194,7 +194,7 @@ class Ride(db.Model):
             sex: str = None,
             age_range: Tuple[int, int] = None,
             consumption_range: Tuple[float, float] = None,
-            exclude_past_rides= False,
+            exclude_past_rides=False,
     ) -> List:
         def to_point(coords):
             return f"SRID=4326;POINT({' '.join(coords)})"
@@ -216,15 +216,13 @@ class Ride(db.Model):
 
         if departure_time:
             query = query.filter(
-                Ride.departure_time.between(
-                    departure_time - departure_delta, departure_time + departure_delta
-                )
+                departure_time - departure_delta <= Ride.departure_time,
+                Ride.departure_time <= departure_time + departure_delta
             )
         if arrival_time:
             query = query.filter(
-                Ride.arrival_time.between(
-                    arrival_time - arrival_delta, arrival_time + arrival_delta
-                )
+                arrival_time - arrival_delta <= Ride.arrival_time,
+                Ride.arrival_time <= arrival_time + arrival_delta
             )
 
         if sex:
@@ -500,20 +498,23 @@ def reset():
     add_entities()
 
 
+from dateutil.tz import tzutc
+
+
 def main():
     # add_entities()
     all_rides = Ride.query.all()
-    time = datetime(year=2020, month=2, day=24, hour=10, minute=38, second=42)
-    delta = timedelta(minutes=4, seconds=60)
+    time = datetime(year=2020, month=4, day=29, hour=14, minute=1, second=42, tzinfo=tzutc())
+    delta = timedelta(minutes=5)
     user = User.query.get(3)
     rides = Ride.search(
         # departure=["51.193153", "4.422027"],
         # departure_distance=2000,
         # arrival=["51.219636", "4.403119"],
         # age_range=(18, 70),
-        arrival_time=datetime(year=2020, month=11, day=14, hour=5),
-        arrival_delta=timedelta(minutes=5),
-        consumption_range=(None, None),
+        arrival_time=time,
+        arrival_delta=delta,
+        # consumption_range=(None, None),
         exclude_past_rides=True,
     )
     users = User.query.all()
