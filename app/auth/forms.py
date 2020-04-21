@@ -22,7 +22,7 @@ class UserForm(DictForm):
     firstname = StringField('First Name*', validators=[DataRequired(), Length(max=64)])
     lastname = StringField('Last Name*', validators=[DataRequired(), Length(max=64)])
     age = IntegerField('Age', validators=[Optional(), NumberRange(18, 100)])
-    address_id = StringField('Address', [Optional()])
+    address = StringField('Address', [Optional(), Length(max=128)])
     sex = SelectField('Sex', choices=[('', ''), ('male', 'male'), ('female', 'female'), ('non-binary', 'non-binary')],
                       default='')
     password = PasswordField('Password*', validators=[DataRequired(), Length(8, 64)])
