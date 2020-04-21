@@ -68,7 +68,6 @@
 
         {% if fl is defined %}
             temp_date = new Date('{{ at }}');
-            alert(temp_date)
         {% else %}
             secs = Date.parse(document.getElementById("arrival_time").value);
             temp_date = new Date(secs - new Date().getTimezoneOffset() * 60 * 1000);
