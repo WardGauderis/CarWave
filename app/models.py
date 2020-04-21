@@ -60,7 +60,11 @@ class User(UserMixin, db.Model):
     )
 
     def avatar(self, size):
-        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
+        if self.email:
+            mail = self.email
+        else:
+            mail = self.username
+        digest = md5(mail.lower().encode("utf-8")).hexdigest()
         return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(digest, size)
 
     def from_form(self, form):
