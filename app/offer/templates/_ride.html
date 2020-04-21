@@ -40,7 +40,7 @@
             {% if delete is defined %}
                 <form method="post" name="ride">
                     {{ delete.ride_id(type="hidden", value=ride.id) }}
-                    {{ wtf.form_field(delete.delete) }}
+                    {{ wtf.form_field(delete.delete,  button_map={'delete':'danger'}) }}
                     {{ wtf.form_field(delete.edit) }}
                 </form>
             {% endif %}

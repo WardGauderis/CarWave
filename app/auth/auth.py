@@ -5,7 +5,7 @@ from werkzeug.urls import url_parse
 
 from app.auth import bp
 from app import db
-from app.auth.forms import LoginForm, CreateUserForm
+from app.auth.forms import LoginForm, UserForm
 from app.crud import create_user, read_user_from_token, read_user_from_login
 from app.error.errors import api_error
 from app.models import User
@@ -63,7 +63,8 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
 
-    form = CreateUserForm()
+    form = UserForm()
+    form.make_create_form()
     if form.validate_on_submit():
         create_user(form)
         flash('Congratulations, you are now a CarWave user!', 'success')

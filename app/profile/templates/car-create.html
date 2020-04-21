@@ -4,6 +4,10 @@
 {% block app_content %}
     <h1 class="display-4">My Cars</h1>
 
+    {% if not cars %}
+        <h4>You don't have any registered cars yet</h4>
+    {% endif %}
+
     {% for car in cars %}
         <div class="card m-3">
             <div class=" card-header">
