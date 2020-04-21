@@ -48,7 +48,7 @@ class User(UserMixin, db.Model):
     address_id = db.Column(db.String(32), nullable=True)
 
     driver_rides = db.relationship(
-        "Ride", back_populates="driver", cascade="all, delete, delete-orphan"
+        "Ride", back_populates="driver", cascade="all, delete, delete-orphan", lazy="dynamic"
     )
     cars = db.relationship("Car", back_populates="owner", cascade="all, delete, delete-orphan")
 
@@ -93,7 +93,7 @@ class User(UserMixin, db.Model):
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
-            {"reset_password": self.id, "exp": datetime.utcnow() + timedelta(expires_in),},
+            {"reset_password": self.id, "exp": datetime.utcnow() + timedelta(expires_in), },
             current_app.config["SECRET_KEY"],
             algorithm="HS256",
         ).decode("utf-8")
@@ -146,8 +146,6 @@ class Ride(db.Model):
     def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
-        # FIXME(Hayaan): replace with to_point if List[String]
-        # self.departure_address = to_point([form.from_lat.data, form.from_lon.data])
         self.departure_address = f"SRID=4326;POINT({form.from_lat.data} {form.from_lon.data})"
         self.arrival_address = f"SRID=4326;POINT({form.to_lat.data} {form.to_lon.data})"
 

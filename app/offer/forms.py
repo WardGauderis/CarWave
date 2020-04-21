@@ -24,7 +24,7 @@ class OfferForm(DictForm):
     departure_time = HiddenField('Departure Time')
 
     passenger_places = IntegerField('Number of Passengers*', [NumberRange(1)])
-    car_string = SelectField('Select Car', choices=[('None', 'None')])
+    license_plate = SelectField('Select Car', choices=[('None', 'None')])
     confirm = SubmitField('Confirm')
 
     def from_database(self, ride: Ride):
@@ -39,9 +39,9 @@ class OfferForm(DictForm):
         self.arrival_time.data = ride.arrival_time
         self.passenger_places.data = ride.passenger_places
         if ride.car is not None:
-            self.car_string.data = ride.car.license_plate
+            self.license_plate.data = ride.car.license_plate
         else:
-            self.car_string.data = 'None'
+            self.license_plate.data = 'None'
 
     def from_json(self, json):
         self.time.validators = []
@@ -84,7 +84,7 @@ class OfferForm(DictForm):
         if departure_time.data >= self.arrival_time.data:
             raise ValidationError('Departure time must be before arrival time')
 
-    def validate_car_string(self, car_string):
+    def validate_license_plate(self, car_string):
         if not car_string.data or car_string.data == 'None':
             car_string.data = None
             return

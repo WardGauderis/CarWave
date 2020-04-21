@@ -118,18 +118,20 @@
             <div id="map{{ ride.id }}" style="height: 500px;"></div>
         </div>
         <div class="tab-pane fade" id="body-car-{{ ride.id }}">
-            {% if ride.car %}
-                <span class="text-left font-weight-bold">license_plate: </span>{{ ride.car.license_plate }}<br>
-                <span class="text-left font-weight-bold">model: </span>{{ ride.car.model }}<br>
-                <span class="text-left font-weight-bold">colour: </span>{{ ride.car.colour }}<br>
-                <span class="text-left font-weight-bold">passenger_places: </span>{{ ride.car.passenger_places }}<br>
-                <span class="text-left font-weight-bold">build_year: </span>{{ ride.car.build_year }}<br>
-                <span class="text-left font-weight-bold">fuel: </span>{{ ride.car.fuel }}<br>
-                <span class="text-left font-weight-bold">consumption: </span>{{ ride.car.consumption }}<br>
-            {% else %}
-                <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span>
-                <br>
-            {% endif %}
+            <p>
+                {% if ride.car %}
+                    <span class="text-left font-weight-bold">License Plate: </span>{{ ride.car.license_plate }}<br>
+                    <span class="text-left font-weight-bold">Model: </span>{{ ride.car.model }}<br>
+                    <span class="text-left font-weight-bold">Color: </span>{{ ride.car.colour }}<br>
+                    <span class="text-left font-weight-bold">Passenger places: </span>{{ ride.car.passenger_places }}<br>
+                    <span class="text-left font-weight-bold">Build year: </span>{{ ride.car.build_year }}<br>
+                    <span class="text-left font-weight-bold">Fuel type: </span>{{ ride.car.fuel }}<br>
+                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ ride.car.consumption }}<br>
+                {% else %}
+                    <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span>
+                    <br>
+                {% endif %}
+            </p>
         </div>
         {% if passenger is defined %}
             <div class="tab-pane fade" id="body-passenger-{{ ride.id }}">

@@ -53,9 +53,9 @@ def crud_logic():
 def offer():
     form = OfferForm(meta={'csrf': False})
 
-    form.car_string.choices = [('None', 'None')]
+    form.license_plate.choices = [('None', 'None')]
     for car in current_user.cars:
-        form.car_string.choices.append((car.license_plate, car.license_plate))
+        form.license_plate.choices.append((car.license_plate, car.license_plate))
 
     from_location = request.args.get('fl')
     to_location = request.args.get('tl')
@@ -171,6 +171,7 @@ def all_rides():
 
 
 @bp.route('/rides/passenger', methods=['POST', 'GET'])
+@login_required
 def passenger_rides():
     form = RideDataForm(meta={'csrf': False})
 
@@ -186,6 +187,7 @@ def passenger_rides():
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
+@login_required
 def driver_rides():
     form = RideDataForm(meta={'csrf': False})
 
