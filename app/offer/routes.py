@@ -147,10 +147,11 @@ def find():
                           arrival_time=utc_time,
                           departure_distance=5000,
                           arrival_distance=5000,
-                          arrival_delta=timedelta(minutes=119),
+                          arrival_delta=timedelta(minutes=30),
                           age_range=age_range,
                           consumption_range=consumption_range,
-                          sex=sex)
+                          sex=sex,
+                          exclude_past_rides=True)
 
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
                            form=form, rides=rides, background=True)
