@@ -5,6 +5,7 @@ from json import loads
 from typing import List, Tuple
 
 import requests
+from dateutil.tz import tzutc
 from flask import Flask
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -215,11 +216,18 @@ class Ride(db.Model):
             )
 
         if departure_time:
+            if departure_time.tzinfo:
+                # TODO(Hayaan)
+                # Check, must be UTC else raise Error
+                departure_time = departure_time.replace(tzinfo=None)
             query = query.filter(
                 departure_time - departure_delta <= Ride.departure_time,
                 Ride.departure_time <= departure_time + departure_delta
             )
         if arrival_time:
+            if arrival_time.tzinfo:
+                # Check, must be UTC else raise Error
+                arrival_time = arrival_time.replace(tzinfo=None)
             query = query.filter(
                 arrival_time - arrival_delta <= Ride.arrival_time,
                 Ride.arrival_time <= arrival_time + arrival_delta
@@ -498,9 +506,6 @@ def reset():
     add_entities()
 
 
-from dateutil.tz import tzutc
-
-
 def main():
     # add_entities()
     all_rides = Ride.query.all()
@@ -511,10 +516,9 @@ def main():
         # departure=["51.193153", "4.422027"],
         # departure_distance=2000,
         # arrival=["51.219636", "4.403119"],
-        # age_range=(18, 70),
+        age_range=(18, 70),
         arrival_time=time,
         arrival_delta=delta,
-        # consumption_range=(None, None),
         exclude_past_rides=True,
     )
     users = User.query.all()

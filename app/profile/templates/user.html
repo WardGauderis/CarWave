@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    {#    TODO MOOI MAKEN#}
-    <div class="media align-items-end profile-header">
+    <div class="media align-items-start profile-header">
         <div class="profile mr-3">
-            <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail ">
+            <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
             {% if user == current_user %}
                 <a href="{{ url_for('profile.user_edit', username=current_user.username) }}"
                    class="btn btn-primary btn-block">Edit profile</a>
@@ -12,23 +11,23 @@
                    class="btn btn-primary btn-block">Edit Cars</a>
             {% endif %}
         </div>
-        <div class="media-body mb-5 cen">
+        <div class="media-body cen">
             <h1 class="mt-0 mb-0 display-4">{{ user.username }}</h1>
-            <p id="address" class="small mb-4">
-            </p>
+            <hr>
 
             <ul class="list-inline">
                 <li class="list-inline-item"><span
                         class="font-weight-bold">Full Name: </span>{{ user.firstname }} {{ user.lastname }}</li>
-                {% if user.email %}
-                    <li class="list-inline-item"><span class="font-weight-bold">Email: </span>{{ user.email }}
-                    </li>
-                {% endif %}
                 {% if user.sex %}
                     <li class="list-inline-item"><span class="font-weight-bold">Sex: </span>{{ user.sex }}
                     </li>{% endif %}
                 {% if user.age %}
                     <li class="list-inline-item"><span class="font-weight-bold">Age: </span>{{ user.age }}</li>
+                {% endif %}
+                {% if user.email %}
+                    <li class="list-inline-item"><span class="font-weight-bold">Email: </span><a
+                            href="mailto:{{ user.email }}">{{ user.email }}</a>
+                    </li>
                 {% endif %}
                 {% if user.address %}
                     <li class="list-inline-item"><span class="font-weight-bold">Address: </span>{{ user.address }}</li>
