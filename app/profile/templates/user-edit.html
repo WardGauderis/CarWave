@@ -11,6 +11,41 @@
             <a href="https://en.gravatar.com/">here</a>.
         </div>
     </div>
-    {{ wtf.quick_form(form, button_map={'delete':'danger'}) }}
+    <form method="post" name="ride" onsubmit="beforeSubmit()">
+        {{ wtf.quick_form(form, button_map={'delete':'danger'}) }}
+    </form>
     <br>
+{% endblock %}
+
+{% block app_scripts %}
+    <script type="text/javascript">
+
+        function beforeSubmit() {
+            let location = document.getElementById('address_id').value;
+            location.replace(/\s/g, '+');
+            $.ajax({
+                url: "https://nominatim.openstreetmap.org/search/" + location + "?format=geojson",
+                type: "GET",
+                success: function (xhr) {
+                    if (xhr.features.length === 0) {
+                        if (which === 'from') {
+                            alert("could not find departure address location: {{ fl }}")
+                        } else if (which === 'to') {
+                            alert("could not find arrival address location: {{ tl }}")
+                        }
+                    }
+
+                    const prop = xhr.features[0].properties;
+                    let res;
+                    if (prop.osm_type === 'way') res = 'W';
+                    else if (prop.osm_type === 'relation') res = 'R';
+                    else if (prop.osm_type === 'node') res = 'N';
+                    document.getElementById('address_id').value = res + prop.osm_id;
+                },
+                error: function (xhr) {
+                    alert(xhr)
+                }
+            });
+        }
+    </script>
 {% endblock %}
