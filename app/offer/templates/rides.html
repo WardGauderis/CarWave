@@ -21,7 +21,7 @@
 
     {% if rides is defined %}
         {% if not rides %}
-            <h4>Generic not found message</h4>
+            <h4>{{ none_found }}</h4>
         {% endif %}
         {% for ride in rides %}
             {% include '_ride.html' %}

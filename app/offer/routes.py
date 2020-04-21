@@ -153,7 +153,7 @@ def find():
     # return render_template('find.html', title='Find', details=details, select=select,
     #                        rides=rides, background=True)
 
-    return render_template('find.html', title='Find', details=details, form=form,
+    return render_template('rides.html', title='Find', none_found='No suitable rides found for you', details=details, form=form,
                            rides=read_all_drives('future'), background=True)
 
 
@@ -166,7 +166,7 @@ def all_rides():
         if res is not None:
             return res
 
-    return render_template('rides.html', title='Available Drives', form=form, rides=read_all_drives('future'),
+    return render_template('rides.html', title='Available Drives', none_found='No rides found', form=form, rides=read_all_drives('future'),
                            background=True)
 
 
