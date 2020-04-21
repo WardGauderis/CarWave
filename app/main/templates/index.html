@@ -98,7 +98,7 @@
                 type: "GET",
                 success: function (xhr) {
                     let tempOptions = [];
-                    for (let i = 0; i < xhr.features.length; i++) {
+                    for (let i = 0; i < Math.max(xhr.features.length, 10); i++) {
                         const properties = xhr.features[i].properties;
 
                         let name = properties.name + ", ";

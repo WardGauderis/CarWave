@@ -99,6 +99,7 @@ def requests():
     pending = []
     for drive in read_drive_from_driver(current_user, True):
         pending += drive.pending_requests()
+    pending = pending[:10]
 
     return render_template('rides.html', none_found='No future pending requests found', title='Your Requests',
                            form=form, requests=pending, background=True)
@@ -118,7 +119,6 @@ def find():
     to_address = request.args.get('tl')
     utc_string = request.args.get('at')
     utc_time = dateutil.parser.parse(utc_string)
-    print(utc_time)
 
     def address_to_location(address):
         url = "https://nominatim.openstreetmap.org/search/" + address
@@ -166,7 +166,7 @@ def all_rides():
             return res
 
     return render_template('rides.html', title='Available Drives', none_found='No future rides found', form=form,
-                           rides=read_all_drives('future'),
+                           rides=read_all_drives('future', limit=10),
                            background=True)
 
 
