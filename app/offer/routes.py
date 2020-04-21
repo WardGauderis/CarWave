@@ -70,20 +70,20 @@ def offer():
         else:
             try:
                 update_drive(read_drive_from_id(ride_id), form)
-                flash('Congratulations, you successfully offered a ride', 'success')
+                flash('Congratulations, you successfully updated your ride', 'success')
                 return redirect(url_for('offer.driver_rides'))
             except Exception as e:
                 flash(e.description, 'danger')
 
     if ride_id is None:
         arrival_time = request.args.get('at')
-        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location,
+        return render_template('offer.html', title='Create ride', form=form, fl=from_location, tl=to_location,
                                at=arrival_time,
                                background=True)
     else:
         drive = read_drive_from_id(ride_id)
         form.from_database(drive)
-        return render_template('offer.html', title='Offer', form=form, at=drive.arrival_time, background=True)
+        return render_template('offer.html', title='Edit ride', form=form, at=drive.arrival_time, background=True)
 
 
 @bp.route('/requests', methods=['POST', 'GET'])

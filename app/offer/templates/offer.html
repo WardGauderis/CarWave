@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block app_content %}
-    <h1 class="display-4">Create Drive</h1>
+    <h1 class="display-4">{{ title }}</h1>
 
     <div id="map" class="mb-3" style="height: 600px;"></div>
 
@@ -68,7 +68,6 @@
 
         {% if fl is defined %}
             temp_date = new Date('{{ at }}');
-            alert(temp_date)
         {% else %}
             secs = Date.parse(document.getElementById("arrival_time").value);
             temp_date = new Date(secs - new Date().getTimezoneOffset() * 60 * 1000);
@@ -144,7 +143,6 @@
 
                     if (which === 'from') document.getElementById("departure_id").value = res;
                     else if (which === 'to') document.getElementById("arrival_id").value = res;
-                    else alert("yeeet")
                 },
                 error: function (xhr) {
                     alert(xhr)
