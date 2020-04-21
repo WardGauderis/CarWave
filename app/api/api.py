@@ -10,6 +10,11 @@ from app.crud import create_user, read_user_from_login, read_drive_from_id, crea
     update_passenger_request, search_drives
 from app.auth.forms import UserForm, LoginForm
 from app.offer.forms import OfferForm
+import pytz
+
+
+def belgian_iso_string(time):
+    return pytz.timezone('Europe/Brussels').normalize(pytz.utc.localize(time)).replace(tzinfo=None).isoformat()
 
 
 @bp.route("/users/register", methods=["POST"])
@@ -43,7 +48,6 @@ def register_drive():
     if form.from_json(json):
         driver = g.current_user
         drive = create_drive(form, driver)
-        print(drive.arrival_time)
         return (
             {
                 "id": drive.id,
@@ -52,7 +56,7 @@ def register_drive():
                 "passenger-places": drive.passenger_places,
                 "from": drive.depart_from,
                 "to": drive.arrive_at,
-                "arrive-by": drive.arrival_time.isoformat(),
+                "arrive-by": belgian_iso_string(drive.arrival_time),
             },
             201,
             {"Location": f"/drives/{drive.id}"}
@@ -77,7 +81,7 @@ def get_drive(drive_id: int):
             "passenger-places": ride.passenger_places,
             "from": ride.depart_from,
             "to": ride.arrive_at,
-            "arrive-by": ride.arrival_time.isoformat(),
+            "arrive-by": belgian_iso_string(ride.arrival_time),
         },
         200,
     )
@@ -114,7 +118,7 @@ def passenger_requests(drive_id):
                         "id": p_request.user_id,
                         "username": p_request.passenger.username,
                         "status": p_request.status,
-                        "time-created": p_request.created_at.isoformat(),
+                        "time-created": belgian_iso_string(p_request.created_at),
                     }
                     for p_request in ride.requests
                 ]),
@@ -130,7 +134,7 @@ def passenger_requests(drive_id):
                 "id": p_request.user_id,
                 "username": p_request.passenger.username,
                 "status": p_request.status,
-                "time-created": p_request.created_at.isoformat(),
+                "time-created": belgian_iso_string(p_request.created_at),
             },
             201,
             {"Location": f"/drives/{p_request.ride_id}/passenger-requests/{p_request.user_id}"},
@@ -166,8 +170,8 @@ def accept_passenger_request(drive_id, user_id):
                 "id": p_request.user_id,
                 "username": p_request.passenger.username,
                 "status": p_request.status,
-                "time-created": p_request.created_at.isoformat(),
-                "time-updated": p_request.last_modified.isoformat(),
+                "time-created": belgian_iso_string(p_request.created_at),
+                "time-updated": belgian_iso_string(p_request.last_modified),
             },
             200,
         )
