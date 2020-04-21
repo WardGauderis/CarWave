@@ -144,15 +144,13 @@ def search_drives(limit=5,
 
     if departure_time:
         query = query.filter(
-            Ride.departure_time.between(
-                departure_time - departure_delta, departure_time + departure_delta
-            )
+            departure_time - departure_delta <= Ride.departure_time,
+            Ride.departure_time <= departure_time + departure_delta
         )
     if arrival_time:
         query = query.filter(
-            Ride.arrival_time.between(
-                arrival_time - arrival_delta, arrival_time + arrival_delta
-            )
+            arrival_time - arrival_delta <= Ride.arrival_time,
+            Ride.arrival_time <= arrival_time + arrival_delta
         )
 
     if sex:

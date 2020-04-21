@@ -3,6 +3,7 @@
 
 {% block app_content %}
     <h1 class="display-4">My Cars</h1>
+    <hr>
 
     {% if not cars %}
         <h4>You don't have any registered cars yet</h4>
@@ -10,7 +11,7 @@
 
     {% for car in cars %}
         <div class="card m-2">
-            <div class=" card-header">
+            <div class="card-header">
                 <span class="text-left font-weight-bold">{{ car.license_plate }}</span>
             </div>
             <div class="card-body">
@@ -27,10 +28,13 @@
             </div>
         </div>
     {% endfor %}
-    <h1 class="display-4">Add a Car</h1>
-{#    <div class="card border-0" style="background-color: #00000000">#}
-{#    <div class="card-body">#}
+    <div class="mt-5">
+        <h1 class="display-4">Add a Car</h1>
+        <hr>
+        {#    <div class="card border-0" style="background-color: #00000000">#}
+        {#    <div class="card-body">#}
         {{ wtf.quick_form(create) }}
-{#        </div>#}
-{#    </div>#}
+        {#        </div>#}
+        {#    </div>#}
+    </div>
 {% endblock %}
