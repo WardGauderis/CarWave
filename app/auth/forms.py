@@ -16,11 +16,7 @@ class LoginForm(DictForm):
         return self.validate_json()
 
 
-class DeleteUserForm(DictForm):
-    delete = SubmitField('Delete account')
-
-
-class CreateUserForm(DictForm):
+class UserForm(DictForm):
     username = StringField('Username*', validators=[DataRequired(), Length(max=64)])
     email = StringField('Email', validators=[Optional(), Length(max=128), Email()])
     firstname = StringField('First Name*', validators=[DataRequired(), Length(max=64)])
@@ -32,7 +28,11 @@ class CreateUserForm(DictForm):
     password = PasswordField('Password*', validators=[DataRequired(), Length(8, 64)])
     password_validation = PasswordField('Repeat Password*', [Optional(), EqualTo('password')])
     submit = SubmitField('Register')
+    delete = SubmitField('Delete account')
     update = False
+
+    def make_create_form(self):
+        del self.delete
 
     def make_update_form(self):
         self.submit.label.text = 'Update'

@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 
 from app.profile import bp
 from app.crud import *
-from app.auth.forms import CreateUserForm, DeleteUserForm
+from app.auth.forms import UserForm
 from app.profile.forms import CreateCarForm
 
 
@@ -55,18 +55,17 @@ def user(user_id):
 @bp.route('/user/update', methods=['GET', 'POST'])
 @login_required
 def user_edit():
-    form = CreateUserForm()
-    delete = DeleteUserForm()
+    form = UserForm()
     form.make_update_form()
-    if form.submit.data and form.validate():
-        update_user(current_user, form)
-        flash('Your changes have been saved.', 'success')
-        return redirect(url_for('profile.user', user_id=current_user.id))
-    if delete.delete.data and delete.validate():
+    if form.delete.data:
         user = current_user
         delete_user(user)
         flash('Your account has successfully been removed.', 'success')
         return redirect(url_for('auth.logout'))
+    if form.submit.data and form.validate():
+        update_user(current_user, form)
+        flash('Your changes have been saved.', 'success')
+        return redirect(url_for('profile.user', user_id=current_user.id))
     elif request.method == 'GET':
         form.from_database(current_user)
-    return render_template('user-edit.html', title="Edit profile", form=form, delete=delete, background=True)
+    return render_template('user-edit.html', title="Edit profile", form=form, background=True)

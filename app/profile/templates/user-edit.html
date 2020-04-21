@@ -11,7 +11,6 @@
             <a href="https://en.gravatar.com/">here</a>.
         </div>
     </div>
-    {{ wtf.quick_form(form) }}
+    {{ wtf.quick_form(form, button_map={'delete':'danger'}) }}
     <br>
-    {{ wtf.quick_form(delete, button_map={'delete':'danger'}) }}
 {% endblock %}

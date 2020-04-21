@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 
 from flask import Response, abort, request, g
 
@@ -8,14 +8,14 @@ from app.auth.auth import token_auth
 from app.models import Ride, PassengerRequest
 from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive, create_passenger_request, \
     update_passenger_request, search_drives
-from app.auth.forms import CreateUserForm, LoginForm
+from app.auth.forms import UserForm, LoginForm
 from app.offer.forms import OfferForm
 
 
 @bp.route("/users/register", methods=["POST"])
 def register_user():
     json = request.get_json() or {}
-    form = CreateUserForm()
+    form = UserForm()
     if form.from_json(json):
         user = create_user(form)
         return {"id": user.id}, 201
@@ -43,6 +43,7 @@ def register_drive():
     if form.from_json(json):
         driver = g.current_user
         drive = create_drive(form, driver)
+        print(drive.arrival_time)
         return (
             {
                 "id": drive.id,
@@ -51,7 +52,7 @@ def register_drive():
                 "passenger-places": drive.passenger_places,
                 "from": drive.depart_from,
                 "to": drive.arrive_at,
-                "arrive-by": drive.arrival_time,
+                "arrive-by": drive.arrival_time.isoformat(),
             },
             201,
             {"Location": f"/drives/{drive.id}"}

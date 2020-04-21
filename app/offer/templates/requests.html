@@ -11,14 +11,13 @@
     <h1 class="display-4">{{ title }}</h1>
     <hr>
 
-    {% if choice is defined and not requests %}
-        <h1> You don't have any pending requests </h1>
+    {% if not requests %}
+        {% if choice is defined %}
+            <h4>You don't have any pending requests</h4>
+        {% elif delete_req is defined %}
+            <h4>You don't have any future rides as passenger</h4>
+        {% endif %}
     {% endif %}
-
-    {% if delete_req is defined and not requests %}
-        <h1> You don't have any future rides as passenger </h1>
-    {% endif %}
-
 
     {% for request in requests %}
         {% set ride = request.ride -%}
