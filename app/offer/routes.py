@@ -92,14 +92,15 @@ def find():
 
     if details.refresh.data and details.validate_on_submit():
         age = details.age
-        consumption = details.cons
+        consumption = details.usage
         gender = details.gender
 
         rides = search_drives(departure=from_location, arrival=to_location, arrival_time=time, departure_distance=5000,
                               arrival_distance=5000,
                               arrival_delta=timedelta(minutes=30),
                               age_range=(age - 10, age + 10),
-                              consumption_range=(None, consumption), sex=gender)
+                              consumption_range=(None, consumption),
+                              sex=gender)
     else:
         rides = search_drives(departure=from_location,
                               departure_distance=5000,
