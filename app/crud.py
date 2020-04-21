@@ -123,7 +123,6 @@ def search_drives(limit=5,
                   sex: str = None,
                   age_range: Tuple[int] = None,
                   consumption_range: Tuple[float] = None) -> List[Ride]:
-
     query = Ride.query
 
     if departure:
@@ -274,6 +273,15 @@ def read_car_from_plate(plate: str) -> Car:
 def update_car(car: Car, form) -> Car:
     try:
         car.from_form(form)
+    except:
+        abort(400, 'Invalid car update')
+
+    for ride in car.rides:
+        if ride.passenger_places < car.passenger_places:
+            abort(409,
+                  'Cannot change the amount of passenger places in this car because some drives would have to be cancelled.')
+
+    try:
         db.session.commit()
     except:
         db.session.rollback()
