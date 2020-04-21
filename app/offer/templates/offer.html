@@ -48,8 +48,6 @@
         {{ wtf.form_field(form.confirm) }}
     </form>
 
-
-
 {% endblock %}
 
 {% block app_scripts %}
@@ -66,10 +64,14 @@
             maxZoom: 20
         }).setView([50.8, 4.6], 9);
 
+        let rideMinutes = 0;
+
         {% if fl is defined %}
-            temp_date = new Date('{{ dt }}');
+            temp_date = new Date('{{ at }}');
+            alert(temp_date)
         {% else %}
-            temp_date = new Date(document.getElementById("arrival_time").value);
+            secs = Date.parse(document.getElementById("arrival_time").value);
+            temp_date = new Date(secs - new Date().getTimezoneOffset() * 60 * 1000);
         {% endif %}
 
         const hour = (temp_date.getHours() < 10 ? "0" : "") + temp_date.getHours();
@@ -78,7 +80,7 @@
         document.getElementById("time").value = hour + ':' + min;
         document.getElementById("date").value = temp_date.toISOString().slice(0, 10);
 
-        document.getElementById("arrival_time").value = new Date('{{ dt }}').toISOString();
+        document.getElementById("arrival_time").value = new Date('{{ at }}').toISOString();
 
         // makes zoom transparent
         L.DomUtil.setOpacity(map.zoomControl.getContainer(), 0.5);
@@ -109,13 +111,13 @@
             document.getElementById("route").innerHtml = "calculating route";
         }).on('routeselected', function (result) {
             const dist = (result.route.summary.totalDistance / 1000).toFixed(1);
-            const time = (result.route.summary.totalTime / 60).toFixed(0);
+            rideMinutes = (result.route.summary.totalTime / 60).toFixed(0);
 
             // add minutes to the date object, so we multiply by 60 000 because javascript
-            let date = new Date('{{ dt }}');
-            date = new Date(date.getTime() - time * 60000);
+            let date = new Date('{{ at }}');
+            date = new Date(date.getTime() - rideMinutes * 60000);
 
-            document.getElementById("route").innerHTML = (time + "min (" + dist + "km)");
+            document.getElementById("route").innerHTML = (rideMinutes + "min (" + dist + "km)");
             document.getElementById("departure_time").value = date.toISOString();
         }).addTo(map);
 
@@ -154,8 +156,11 @@
             const from = control.getWaypoints()[0].latLng;
             const to = control.getWaypoints()[1].latLng;
 
-            const date = new Date(document.getElementById("date").value + 'T' + document.getElementById("time").value)
-            document.getElementById("arrival_time").value = date.toISOString();
+            const arrive = new Date(document.getElementById("date").value + 'T' + document.getElementById("time").value)
+            const depart = new Date(arrive.getTime() - rideMinutes * 60000);
+
+            document.getElementById("arrival_time").value = arrive.toISOString();
+            document.getElementById("departure_time").value = depart.toISOString();
 
             if (Math.abs(from.lat - document.getElementById("from_lat").value) > 0.00001 ||
                 Math.abs(from.lng - document.getElementById("from_lon").value) > 0.00001 ||

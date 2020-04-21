@@ -13,11 +13,11 @@ def index():
             return redirect(url_for('offer.offer',
                                     fl=request.form['from_location'],
                                     tl=request.form['to_location'],
-                                    dt=request.form['date'] + 'T' + request.form['time']))
+                                    at=request.form['arrival_time']))
         elif "find" in request.form:
             return redirect(url_for('offer.find',
                                     fl=request.form['from_location'],
                                     tl=request.form['to_location'],
-                                    dt=request.form['date'] + 'T' + request.form['time']))
+                                    at=request.form['arrival_time']))
 
     return render_template('index.html', title='Home', form=form, no_random=True)

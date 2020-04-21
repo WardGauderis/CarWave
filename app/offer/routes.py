@@ -76,13 +76,14 @@ def offer():
                 flash(e.description, 'danger')
 
     if ride_id is None:
-        date = request.args.get('dt')
-        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location, dt=date,
+        arrival_time = request.args.get('at')
+        return render_template('offer.html', title='Offer', form=form, fl=from_location, tl=to_location,
+                               at=arrival_time,
                                background=True)
     else:
         drive = read_drive_from_id(ride_id)
         form.from_database(drive)
-        return render_template('offer.html', title='Offer', form=form, dt=drive.arrival_time, background=True)
+        return render_template('offer.html', title='Offer', form=form, at=drive.arrival_time, background=True)
 
 
 @bp.route('/requests', methods=['POST', 'GET'])
@@ -99,7 +100,8 @@ def requests():
     for drive in read_drive_from_driver(current_user, True):
         pending += drive.pending_requests()
 
-    return render_template('rides.html', none_found='No future pending requests found',title='Your Requests', form=form, requests=pending, background=True)
+    return render_template('rides.html', none_found='No future pending requests found', title='Your Requests',
+                           form=form, requests=pending, background=True)
 
 
 @bp.route('/find', methods=['POST', 'GET'])
@@ -107,15 +109,16 @@ def find():
     form = RideDataForm(meta={'csrf': False})
     details = FilterForm()
 
-    if request.form.data and form.validate_on_submit():
+    if (form.button1 or form.button2) and form.validate_on_submit():
         res = crud_logic()
         if res is not None:
             return res
 
     from_address = request.args.get('fl')
     to_address = request.args.get('tl')
-    unaware_time = dateutil.parser.parse(request.args.get('dt'))
-    time = pytz.utc.localize(unaware_time)
+    utc_string = request.args.get('at')
+    utc_time = dateutil.parser.parse(utc_string)
+    print(utc_time)
 
     def address_to_location(address):
         url = "https://nominatim.openstreetmap.org/search/" + address
@@ -127,8 +130,8 @@ def find():
     from_location = address_to_location(from_address)
     to_location = address_to_location(to_address)
 
-    age_range = (None, None)
-    consumption_range = (None, None)
+    age_range = None
+    consumption_range = None
     sex = None
 
     if details.refresh.data and details.validate_on_submit():
@@ -141,20 +144,16 @@ def find():
 
     rides = search_drives(departure=from_location,
                           arrival=to_location,
-                          arrival_time=time,
+                          arrival_time=utc_time,
                           departure_distance=5000,
                           arrival_distance=5000,
-                          arrival_delta=timedelta(minutes=300),
+                          arrival_delta=timedelta(minutes=119),
                           age_range=age_range,
                           consumption_range=consumption_range,
                           sex=sex)
 
-    # return render_template('find.html', title='Find', details=details, select=select,
-    #                        rides=rides, background=True)
-
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
-                           form=form,
-                           rides=read_all_drives('future'), background=True)
+                           form=form, rides=rides, background=True)
 
 
 @bp.route('/rides/all', methods=['POST', 'GET'])
@@ -182,7 +181,8 @@ def passenger_rides():
             return res
 
     else:
-        return render_template('rides.html', title='Passenger Drives', none_found='No future drives with you as passenger found',
+        return render_template('rides.html', title='Passenger Drives',
+                               none_found='No future drives with you as passenger found',
                                requests=current_user.future_passenger_requests(),
                                form=form, background=True)
 
