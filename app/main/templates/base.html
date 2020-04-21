@@ -13,11 +13,13 @@
 
         body {
         {% if title == 'Available Drives' or title == 'Passenger Drives' or title == 'My Drives' or title == 'My Requests' or title == 'My Drives'%}
-            background-image: url('{{ url_for('main.static', filename='wave1.jpg') }}');
+            background-image: url('{{ url_for('main.static', filename='wave1.png') }}');
         {% elif title == 'My Cars' or title == 'Edit Profile' or title == 'Edit Car' or title == 'Login' or title == 'Register' or title == 'Reset Password' or title == 'Reset Password Request' %}
-            background-image: url('{{ url_for('main.static', filename='wave0.jpg') }}');
+            background-image: url('{{ url_for('main.static', filename='wave0.png') }}');
+        {% elif title == 'Error' %}
+            background-image: url('{{ url_for('main.static', filename='wave3.png') }}');
         {% else %}
-            background-image: url('{{ url_for('main.static', filename='wave2.jpg') }}');
+            background-image: url('{{ url_for('main.static', filename='wave2.png') }}');
         {% endif %}
             -webkit-background-size: cover;
             -moz-background-size: cover;
