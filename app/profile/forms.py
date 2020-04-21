@@ -30,6 +30,7 @@ class CreateCarForm(DictForm):
 
     def make_update_form(self):
         self.submit.label.text = 'Update Car'
+        self.license_plate.render_kw = {'readonly': True}
         self.update = True
 
     def make_create_form(self):

@@ -41,6 +41,8 @@
         {{ wtf.form_field(form.time, type="time", class="form-control") }}
         {{ wtf.form_field(form.date, type="date", class="form-control") }}
 
+        {{ wtf.form_errors(form, hiddens="only") }}
+
         {{ wtf.form_field(form.passenger_places) }}
         {{ wtf.form_field(form.car_string) }}
         {{ wtf.form_field(form.confirm) }}

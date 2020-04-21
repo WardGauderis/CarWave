@@ -20,4 +20,4 @@ def index():
                                     tl=request.form['to_location'],
                                     dt=request.form['date'] + 'T' + request.form['time']))
 
-    return render_template('index.html', title='Home', form=form)
+    return render_template('index.html', title='Home', form=form, no_random=True)

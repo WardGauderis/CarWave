@@ -17,10 +17,14 @@ def requests():
         passenger = read_user_from_id(form.user_id.data)
         req = read_passenger_request(passenger, drive)
 
-        if "reject" in request.form:
-            update_passenger_request(req, "reject")
-        elif "accept" in request.form:
-            update_passenger_request(req, "accept")
+        try:
+            if "reject" in request.form:
+                update_passenger_request(req, "reject")
+            elif "accept" in request.form:
+                update_passenger_request(req, "accept")
+            return redirect(url_for('offer.driver_rides'))
+        except Exception as e:
+            flash(e.description, 'danger')
 
     pending = []
     for drive in current_user.driver_rides:
@@ -47,11 +51,14 @@ def offer():
         if ride_id is None:
             create_drive(form, current_user)
             flash('Congratulations, you successfully offered a ride', 'success')
+            return redirect(url_for('offer.driver_rides'))
         else:
-            update_drive(read_drive_from_id(ride_id), form)
-            flash('Congratulations, you successfully changed your ride', 'success')
-        return redirect(url_for('offer.driver_rides'))
-    print(form.get_errors())
+            try:
+                update_drive(read_drive_from_id(ride_id), form)
+                flash('Congratulations, you successfully offered a ride', 'success')
+                return redirect(url_for('offer.driver_rides'))
+            except Exception as e:
+                flash(e.description, 'danger')
 
     if ride_id is None:
         date = request.args.get('dt')
@@ -70,10 +77,12 @@ def find():
 
     if select.request.data and select.validate_on_submit():
         drive = read_drive_from_id(select.ride_id.data)
-        create_passenger_request(current_user, drive)
-        flash('Congratulations, you successfully requested a ride', 'success')
-        return redirect(url_for('main.index'))
-    print(select.get_errors())
+        try:
+            create_passenger_request(current_user, drive)
+            flash('Congratulations, you successfully subscribed as passenger', 'success')
+            return redirect(url_for('main.index'))
+        except Exception as e:
+            flash(e.description, 'danger')
 
     from_address = request.args.get('fl')
     to_address = request.args.get('tl')
@@ -90,27 +99,33 @@ def find():
     from_location = address_to_location(from_address)
     to_location = address_to_location(to_address)
 
-    if details.refresh.data and details.validate_on_submit():
-        age = details.age
-        consumption = details.usage
-        gender = details.gender
+    age_range = (None, None)
+    consumption_range = (None, None)
+    sex = None
 
-        rides = search_drives(departure=from_location, arrival=to_location, arrival_time=time, departure_distance=5000,
-                              arrival_distance=5000,
-                              arrival_delta=timedelta(minutes=30),
-                              age_range=(age - 10, age + 10),
-                              consumption_range=(None, consumption),
-                              sex=gender)
-    else:
-        rides = search_drives(departure=from_location,
-                              departure_distance=5000,
-                              arrival=to_location,
-                              arrival_distance=5000,
-                              arrival_time=time,
-                              arrival_delta=timedelta(minutes=30))
+    if details.refresh.data and details.validate_on_submit():
+        if details.age.data:
+            age_range = (details.age.data - 10, details.age.data + 10)
+        if details.usage.data:
+            consumption_range = (None, details.usage.data)
+        if details.gender.data != 'Any':
+            sex = details.gender.data
+
+    rides = search_drives(departure=from_location,
+                          arrival=to_location,
+                          arrival_time=time,
+                          departure_distance=5000,
+                          arrival_distance=5000,
+                          arrival_delta=timedelta(minutes=300),
+                          age_range=age_range,
+                          consumption_range=consumption_range,
+                          sex=sex)
+
+    # return render_template('find.html', title='Find', details=details, select=select,
+    #                        rides=rides, background=True)
 
     return render_template('find.html', title='Find', details=details, select=select,
-                           rides=rides, background=True)
+                           rides=read_all_drives('future'), background=True)
 
 
 @bp.route('/rides/all')
@@ -127,7 +142,7 @@ def passenger_rides():
         passenger = read_passenger_request(current_user, drive)
         delete_passenger_request(passenger)
         return redirect(url_for('offer.passenger_rides'))
-
+    print(current_user.future_passenger_requests())
     return render_template('requests.html', title='Passenger Drives', requests=current_user.future_passenger_requests(),
                            delete_req=form, background=True)
 

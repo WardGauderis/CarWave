@@ -15,9 +15,14 @@ def car_edit(license_plate):
     car = read_car_from_plate(license_plate)
 
     if update.validate_on_submit():
-        if "submit" in request.form:
-            update_car(car, update)
-        elif "delete" in request.form:
+        try:
+            if "submit" in request.form:
+                update_car(car, update)
+                return redirect(url_for('profile.car_create'))
+        except Exception as e:
+            flash(e.description, 'danger')
+
+        if "delete" in request.form:
             delete_car(car)
         return redirect(url_for('profile.car_create'))
 
