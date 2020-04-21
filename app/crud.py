@@ -143,11 +143,15 @@ def search_drives(limit=5,
         )
 
     if departure_time:
+        if departure_time.tzinfo:
+            departure_time = departure_time.replace(tzinfo=None)
         query = query.filter(
             departure_time - departure_delta <= Ride.departure_time,
             Ride.departure_time <= departure_time + departure_delta
         )
     if arrival_time:
+        if arrival_time.tzinfo:
+            arrival_time = arrival_time.replace(tzinfo=None)
         query = query.filter(
             arrival_time - arrival_delta <= Ride.arrival_time,
             Ride.arrival_time <= arrival_time + arrival_delta
