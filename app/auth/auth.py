@@ -84,7 +84,7 @@ def reset_password_request():
             send_password_reset_email(user)
             flash('Check your email for the instructions to reset your password', 'info')
         else:
-            flash('No account found with that email', 'error')
+            flash('No account found with that email', 'danger')
         return redirect(url_for('auth.login'))
     return render_template('reset_password_request.html',
                            title='Reset Password', form=form, background=True)
