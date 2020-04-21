@@ -100,7 +100,7 @@ def requests():
         pending += drive.pending_requests()
     pending = pending[:10]
 
-    return render_template('rides.html', none_found='No future pending requests found', title='Your Requests',
+    return render_template('rides.html', none_found='No future pending requests found', title='My Requests',
                            form=form, requests=pending, background=True)
 
 
@@ -138,7 +138,7 @@ def find():
             age_range = (details.age.data - 10, details.age.data + 10)
         if details.usage.data:
             consumption_range = (None, details.usage.data)
-        if details.gender.data != 'Any':
+        if details.gender.data != 'any':
             sex = details.gender.data
 
     rides = search_drives(departure=from_location,
@@ -146,7 +146,7 @@ def find():
                           arrival_time=utc_time,
                           departure_distance=5000,
                           arrival_distance=5000,
-                          arrival_delta=timedelta(minutes=200),
+                          arrival_delta=timedelta(minutes=15),
                           age_range=age_range,
                           consumption_range=consumption_range,
                           sex=sex,
@@ -197,6 +197,6 @@ def driver_rides():
         if res is not None:
             return res
     else:
-        return render_template('rides.html', title='Your Drives', none_found='No Future drives organised by you found',
+        return render_template('rides.html', title='My Drives', none_found='No Future drives organised by you found',
                                rides=read_drive_from_driver(current_user, True), form=form,
                                background=True)

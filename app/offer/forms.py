@@ -103,7 +103,7 @@ class OfferForm(DictForm):
 
 class FilterForm(DictForm):
     gender = SelectField('Select gender', [Optional()],
-                         choices=[('Any', 'Any'), ('Male', 'Male'), ('Female', 'Female'), ('Non Binary', 'Non Binary')])
+                         choices=[('any', 'any'), ('male', 'male'), ('female', 'female'), ('non-binary', 'non-binary')])
     age = IntegerField('Age', [Optional(), NumberRange(min=18, max=100, message='age must be between 18 and 100')])
     usage = IntegerField('Maximal Fuel Consumption (l/100km)', [Optional(), NumberRange(min=0, max=100)])
     refresh = SubmitField('Refresh')
