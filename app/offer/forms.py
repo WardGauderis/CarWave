@@ -102,6 +102,13 @@ class FilterForm(DictForm):
     refresh = SubmitField('Refresh')
 
 
+class RideDataForm(DictForm):
+    ride_id = IntegerField('ride_id')
+    user_id = IntegerField('user_id')
+    button1 = SubmitField('')
+    button2 = SubmitField('')
+
+
 class RequestChoiceForm(DictForm):
     ride_id = IntegerField('ride_id', [DataRequired()])
     user_id = IntegerField('user_id', [DataRequired()])

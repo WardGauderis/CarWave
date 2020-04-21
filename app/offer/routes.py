@@ -7,30 +7,45 @@ from app.offer.forms import *
 from app.crud import *
 
 
-@bp.route('/requests', methods=['POST', 'GET'])
-@login_required
-def requests():
-    form = RequestChoiceForm()
-
-    if request.method == 'POST':
-        drive = read_drive_from_id(form.ride_id.data)
-        passenger = read_user_from_id(form.user_id.data)
-        req = read_passenger_request(passenger, drive)
-
-        try:
-            if "reject" in request.form:
-                update_passenger_request(req, "reject")
-            elif "accept" in request.form:
-                update_passenger_request(req, "accept")
+def crud_logic():
+    if 'button2' in request.form:
+        if request.form['button2'] == "Delete ride":
+            drive = read_drive_from_id(request.form['ride_id'])
+            delete_drive(drive)
             return redirect(url_for('offer.driver_rides'))
-        except Exception as e:
-            flash(e.description, 'danger')
 
-    pending = []
-    for drive in current_user.driver_rides:
-        pending += drive.pending_requests()
+        elif request.form['button2'] == "Delete request":
+            drive = read_drive_from_id(request.form['ride_id'])
+            passenger = read_passenger_request(current_user, drive)
+            delete_passenger_request(passenger)
+            return redirect(url_for('offer.requests'))
 
-    return render_template('requests.html', title='Your Requests', choice=form, requests=pending, background=True)
+        elif request.form['button2'] == "Reject request":
+            drive = read_drive_from_id(request.form['ride_id'])
+            passenger = read_user_from_id(request.form['user_id'])
+            update_passenger_request(read_passenger_request(passenger, drive), "reject")
+            return redirect(url_for('offer.requests'))
+
+    if 'button1' in request.form:
+        if request.form['button1'] == "Edit ride":
+            return redirect(url_for('offer.offer', rid=request.form['ride_id']))
+
+        elif request.form['button1'] == "Request ride":
+            drive = read_drive_from_id(request.form['ride_id'])
+            try:
+                create_passenger_request(current_user, drive)
+                flash('Congratulations, you successfully subscribed as passenger', 'success')
+                return redirect(url_for('main.index'))
+            except Exception as e:
+                flash(e.description, 'danger')
+
+        elif request.form['button1'] == "Accept request":
+            drive = read_drive_from_id(request.form['ride_id'])
+            passenger = read_user_from_id(request.form['user_id'])
+            update_passenger_request(read_passenger_request(passenger, drive), "accept")
+            return redirect(url_for('offer.driver_rides'))
+
+    return None
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -70,19 +85,33 @@ def offer():
         return render_template('offer.html', title='Offer', form=form, dt=drive.arrival_time, background=True)
 
 
+@bp.route('/requests', methods=['POST', 'GET'])
+@login_required
+def requests():
+    form = RideDataForm(meta={'csrf': False})
+
+    if form.validate_on_submit():
+        res = crud_logic()
+        if res is not None:
+            return res
+
+    pending = []
+    for drive in current_user.driver_rides:
+        pending += drive.pending_requests()
+
+    return render_template('requests.html', title='Your Requests', form=form, requests=pending, background=True)
+
+
+
 @bp.route('/find', methods=['POST', 'GET'])
 def find():
-    select = SelectForm(meta={'csrf': False})
+    form = RideDataForm(meta={'csrf': False})
     details = FilterForm()
 
-    if select.request.data and select.validate_on_submit():
-        drive = read_drive_from_id(select.ride_id.data)
-        try:
-            create_passenger_request(current_user, drive)
-            flash('Congratulations, you successfully subscribed as passenger', 'success')
-            return redirect(url_for('main.index'))
-        except Exception as e:
-            flash(e.description, 'danger')
+    if request.form.data and form.validate_on_submit():
+        res = crud_logic()
+        if res is not None:
+            return res
 
     from_address = request.args.get('fl')
     to_address = request.args.get('tl')
@@ -124,40 +153,46 @@ def find():
     # return render_template('find.html', title='Find', details=details, select=select,
     #                        rides=rides, background=True)
 
-    return render_template('find.html', title='Find', details=details, select=select,
+    return render_template('find.html', title='Find', details=details, form=form,
                            rides=read_all_drives('future'), background=True)
 
 
-@bp.route('/rides/all')
+@bp.route('/rides/all', methods=['POST', 'GET'])
 def all_rides():
-    return render_template('rides.html', title='Available Drives', rides=read_all_drives('future'), background=True)
+    form = RideDataForm(meta={'csrf': False})
+
+    if form.validate_on_submit():
+        res = crud_logic()
+        if res is not None:
+            return res
+
+    return render_template('rides.html', title='Available Drives', form=form, rides=read_all_drives('future'),
+                           background=True)
 
 
 @bp.route('/rides/passenger', methods=['POST', 'GET'])
 def passenger_rides():
-    form = DeleteRequestForm()
+    form = RideDataForm(meta={'csrf': False})
 
-    if request.method == 'POST':
-        drive = read_drive_from_id(form.ride_id.data)
-        passenger = read_passenger_request(current_user, drive)
-        delete_passenger_request(passenger)
-        return redirect(url_for('offer.passenger_rides'))
-    print(current_user.future_passenger_requests())
-    return render_template('requests.html', title='Passenger Drives', requests=current_user.future_passenger_requests(),
-                           delete_req=form, background=True)
+    if form.validate_on_submit():
+        res = crud_logic()
+        if res is not None:
+            return res
+
+    else:
+        return render_template('rides.html', title='Passenger Drives',
+                               requests=current_user.future_passenger_requests(),
+                               form=form, background=True)
 
 
 @bp.route('/rides/driver', methods=['POST', 'GET'])
 def driver_rides():
-    form = DeleteOfferForm()
+    form = RideDataForm(meta={'csrf': False})
 
-    if request.method == 'POST':
-        if "delete" in request.form:
-            drive = read_drive_from_id(form.ride_id.data)
-            delete_drive(drive)
-            return redirect(url_for('offer.driver_rides'))
-        elif "edit" in request.form:
-            return redirect(url_for('offer.offer', rid=form.ride_id.data))
-
-    return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), delete=form,
-                           background=True)
+    if form.validate_on_submit():
+        res = crud_logic()
+        if res is not None:
+            return res
+    else:
+        return render_template('rides.html', title='Your Drives', rides=read_drive_from_driver(current_user), form=form,
+                               background=True)
