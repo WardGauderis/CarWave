@@ -47,6 +47,9 @@
                     <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
                 {% endfor %}<br>
                 <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
+                {% if requests is defined %}
+                    <span class="text-left font-weight-bold">Request status: </span>{{ request.status }}<br>
+                {% endif %}
             </p>
 
             <form method="post" name="ride">
@@ -75,43 +78,6 @@
                     {#show nothing the list is either rides or requests#}
                 {% endif %}
             </form>
-            {# delete button for the rides which can be edited #}
-            {#            {% if delete is defined %}#}
-            {#                <form method="post" name="ride">#}
-            {#                    {{ delete.ride_id(type="hidden", value=ride.id) }}#}
-            {#                    {{ wtf.form_field(delete.edit) }}#}
-            {#                    {{ wtf.form_field(delete.delete,  button_map={'delete':'danger'}) }}#}
-            {#                </form>#}
-            {#            {% endif %}#}
-            {##}
-            {#            {% if delete_req is defined %}#}
-            {#                <form method="post" name="ride">#}
-            {#                    {{ delete_req.ride_id(type="hidden", value=ride.id) }}#}
-            {#                    {{ wtf.form_field(delete_req.delete) }}#}
-            {#                </form>#}
-            {#            {% endif %}#}
-            {##}
-            {#            {% if select is defined %}#}
-            {#                <form method="post" name="ride">#}
-            {#                    {{ select.ride_id(type="hidden", value=ride.id) }}#}
-            {#                    {{ wtf.form_field(select.request) }}#}
-            {#                </form>#}
-            {#            {% endif %}#}
-            {##}
-            {#            {% if choice is defined %}#}
-            {#                <form method="post" name="ride">#}
-            {#                    {{ choice.ride_id(type="hidden", value=ride.id) }}#}
-            {#                    {{ choice.user_id(type="hidden", value=passenger.id) }}#}
-            {#                    <div class="form-row" style="padding:10px">#}
-            {#                        <div class="ui-widget col-sm" style="margin:0">#}
-            {#                            {{ wtf.form_field(choice.accept, button_map={'accept':'success'}) }}#}
-            {#                        </div>#}
-            {#                        <div class="col-sm-auto">#}
-            {#                            {{ wtf.form_field(choice.reject, button_map={'reject':'danger'}) }}#}
-            {#                        </div>#}
-            {#                    </div>#}
-            {#                </form>#}
-            {#            {% endif %}#}
 
         </div>
         <div class="tab-pane fade" id="body-map-{{ ride.id }}">
@@ -123,10 +89,12 @@
                     <span class="text-left font-weight-bold">License Plate: </span>{{ ride.car.license_plate }}<br>
                     <span class="text-left font-weight-bold">Model: </span>{{ ride.car.model }}<br>
                     <span class="text-left font-weight-bold">Color: </span>{{ ride.car.colour }}<br>
-                    <span class="text-left font-weight-bold">Passenger places: </span>{{ ride.car.passenger_places }}<br>
+                    <span class="text-left font-weight-bold">Passenger places: </span>{{ ride.car.passenger_places }}
+                    <br>
                     <span class="text-left font-weight-bold">Build year: </span>{{ ride.car.build_year }}<br>
                     <span class="text-left font-weight-bold">Fuel type: </span>{{ ride.car.fuel }}<br>
-                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ ride.car.consumption }}<br>
+                    <span class="text-left font-weight-bold">Consumption (l/100km): </span>{{ ride.car.consumption }}
+                    <br>
                 {% else %}
                     <span class="text-left font-weight-bold">The driver has not yet registered a car for this drive</span>
                     <br>
@@ -160,16 +128,13 @@
         return res;
     }
 
-    function get_address(id, which) {
+    function get_address(from_id, to_id) {
         $.ajax({
-            url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + id + "&format=json",
+            url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + from_id + ',' + to_id + "&format=json",
             type: "GET",
             success: function (xhr) {
-                if (which === 'from') {
-                    document.getElementById("from1{{ ride.id }}").innerText = address_to_string(xhr[0].address);
-                } else {
-                    document.getElementById("to1{{ ride.id }}").innerText = address_to_string(xhr[0].address);
-                }
+                document.getElementById("from1{{ ride.id }}").innerText = address_to_string(xhr[0].address);
+                document.getElementById("to1{{ ride.id }}").innerText = address_to_string(xhr[1].address);
             },
             error: function (xhr) {
                 alert(xhr)
@@ -177,8 +142,7 @@
         });
     }
 
-    get_address('{{ ride.departure_id }}', 'from');
-    get_address('{{ ride.arrival_id }}', 'to');
+    get_address('{{ ride.departure_id }}', '{{ ride.arrival_id }}');
 
     let map{{ ride.id }} = L.map('map{{ ride.id }}', {
         minZoom: 2,

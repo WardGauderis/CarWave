@@ -87,7 +87,7 @@ def reset_password_request():
             flash('No account found with that email', 'danger')
         return redirect(url_for('auth.login'))
     return render_template('reset_password_request.html',
-                           title='Reset Password', form=form, background=True)
+                           title='Reset Password Request', form=form, background=True)
 
 
 @bp.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -103,4 +103,4 @@ def reset_password(token):
         db.session.commit()
         flash('Your password has been reset.', 'success')
         return redirect(url_for('auth.login'))
-    return render_template('reset_password.html', form=form, background=True)
+    return render_template('reset_password.html', title="Reset Password", form=form, background=True)

@@ -1,14 +1,6 @@
 {% extends 'base.html' %}
 {% block app_styles %}
     <style>
-        body {
-            background-image: url({{ url_for('error.static', filename='error.jpg') }});
-            background-attachment: fixed;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-
         .error-main {
             background-color: #fff;
             box-shadow: 0px 10px 10px -10px #464c56;

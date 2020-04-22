@@ -12,10 +12,21 @@
         }
 
         body {
-            background: url('{{ url_for('main.static', filename='wave2.jpg') }}') no-repeat center center fixed;
+        {% if title == 'Available Drives' or title == 'Passenger Drives' or title == 'My Drives' or title == 'My Requests' or title == 'My Drives'%}
+            background-image: url('{{ url_for('main.static', filename='wave1.png') }}');
+        {% elif title == 'My Cars' or title == current_user.username or title == 'Edit Profile' or title == 'Edit Car' or title == 'Login' or title == 'Register' or title == 'Reset Password' or title == 'Reset Password Request' %}
+            background-image: url('{{ url_for('main.static', filename='wave0.png') }}');
+        {% elif title == 'Error' %}
+            background-image: url('{{ url_for('main.static', filename='wave3.png') }}');
+        {% else %}
+            background-image: url('{{ url_for('main.static', filename='wave2.png') }}');
+        {% endif %}
             -webkit-background-size: cover;
             -moz-background-size: cover;
             background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
             -o-background-size: cover;
         }
 

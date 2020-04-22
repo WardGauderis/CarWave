@@ -68,4 +68,4 @@ def user_edit():
         return redirect(url_for('profile.user', user_id=current_user.id))
     elif request.method == 'GET':
         form.from_database(current_user)
-    return render_template('user-edit.html', title="Edit profile", form=form, background=True)
+    return render_template('user-edit.html', title="Edit Profile", form=form, background=True)

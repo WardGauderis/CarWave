@@ -30,4 +30,4 @@ def error_handler(error):
     if json_error():
         return api_error(error.code, error.description)
     else:
-        return render_template('error.html', error=error, message=error_message(error.code))
+        return render_template('error.html', error=error, message=error_message(error.code), title='Error')
