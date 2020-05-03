@@ -59,6 +59,9 @@ class User(UserMixin, db.Model):
         cascade="all, delete, delete-orphan",
     )
 
+    written_reviews = db.relationship('Review', back_populates='author', foreign_keys='Review.from_id')
+    received_reviews = db.relationship('Review', back_populates='subject', foreign_keys='Review.to_id')
+
     def avatar(self, size):
         if self.email:
             mail = self.email
@@ -111,6 +114,12 @@ class User(UserMixin, db.Model):
         except jwt.DecodeError as e:
             return e
         return User.query.get(id)
+
+    def get_tags(self, as_driver: bool):
+        return db.engine.execute(
+            "select tag.title from tag join review r on tag.review_id = r.id"
+            f"where r.to_id = {self.id} and r.as_driver = {as_driver}"
+            "group by tag.title order by count(tag.title) desc limit 10;")
 
 
 @login.user_loader
@@ -220,3 +229,27 @@ class Car(db.Model):
     def from_form(self, form):
         for key, value in form.generator():
             setattr(self, key, value)
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    from_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    to_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    as_driver = db.Column(db.Boolean, nullable=False)
+    review = db.Column(db.String(1024), nullable=False)
+    rating = db.Column(db.Integer, nullable=False, )
+    last_modified = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    __table_args__ = (db.UniqueConstraint('from_id', 'to_id', 'as_driver', name='one_review'),
+                      db.CheckConstraint('from_id != to_id', name='review_others'),
+                      db.CheckConstraint('rating <= 10 and rating >= 0'))
+
+    tags = db.relationship('Tag', back_populates='review')
+    author = db.relationship('User', back_populates='written_reviews', foreign_keys=[from_id])
+    subject = db.relationship('User', back_populates='received_reviews', foreign_keys=[to_id])
+
+
+class Tag(db.Model):
+    review_id = db.Column(db.Integer, db.ForeignKey('review.id', ondelete='CASCADE'), primary_key=True)
+    title = db.Column(db.String(64), primary_key=True)
+
+    review = db.relationship('Review', back_populates='tags')

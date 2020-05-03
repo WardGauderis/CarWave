@@ -46,6 +46,8 @@ def create_app(config=Config):
     app.register_blueprint(offer_bp)
     from app.profile import bp as profile_bp
     app.register_blueprint(profile_bp)
+    from app.review import bp as review_bp
+    app.register_blueprint(review_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)
