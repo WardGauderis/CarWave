@@ -1,0 +1,22 @@
+<div class="card m-2">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-auto">
+                <img src="{{ review.author.avatar(128) }}" width="75" class="rounded mb-2 img-thumbnail"><br>
+                <span class="small"><a
+                        href="{{ url_for('profile.user', user_id=review.author.id) }}">{{ review.author.username }}</a><br>
+                    {{ moment(review.last_modified).fromNow() }}</span>
+            </div>
+            <div class="col">
+                {{ review.rating }}<br>
+                <ul class="list-inline">
+                    {% for tag in review.tags %}
+                        <li class="list-inline-item badge badge-info">{{ tag.title }}</li>
+                    {% endfor %}<br>
+                </ul>
+                <hr>
+                {{ review.review }}
+            </div>
+        </div>
+    </div>
+</div>

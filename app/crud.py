@@ -16,7 +16,8 @@ def create_user(form) -> User:
         db.session.add(user)
         db.session.commit()
         return user
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         abort(400, 'Invalid user creation')
 

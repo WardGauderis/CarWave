@@ -2,15 +2,15 @@
 
 {% block app_styles %}
     <style>
-    .media-body {
-        word-break: break-word;
-    }
+        .media-body {
+            word-break: break-word;
+        }
     </style>
 {% endblock %}
 
 {% block app_content %}
-    <div class="media align-items-start profile-header">
-        <div class="profile mr-3">
+    <div class="media align-items-start">
+        <div class="mr-3">
             <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
             {% if user == current_user %}
                 <a href="{{ url_for('profile.user_edit', username=current_user.username) }}"
@@ -42,6 +42,14 @@
             </ul>
         </div>
     </div>
+    <hr>
+    {% if not user.received_reviews %}
+        <h4>{{ user.username }} has no reviews yet</h4>
+    {% endif %}
+    {% for review in user.received_reviews %}
+        {% include '_review.html' %}
+    {% endfor %}
+
 {% endblock %}
 
 {% block app_scripts %}
@@ -59,7 +67,6 @@
                     }
                 });
             }
-
             get_address('{{ user.address_id }}');
         {% endif %}
     </script>
