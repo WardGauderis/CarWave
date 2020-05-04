@@ -28,13 +28,13 @@
                     {% for i in range(1, review.rating, 2) %}
                         <li class="list-inline-item star">&#xf005</li>
                     {% endfor %}
-{#                    <li class="list-inline-item star">&#xf005</li>#}
-{#                    <li class="list-inline-item star">&#xf005</li>#}
-{##}
-{#                    <li class="list-inline-item star half">&#xf089</li>#}
-{#                    <li class="list-inline-item star">&#xf006</li>#}
-{##}
-{#                    <li class="list-inline-item star">&#xf006</li>#}
+                    {% if review.rating % 2 == 1 %}
+                        <li class="list-inline-item star half">&#xf089</li>
+                        <li class="list-inline-item star">&#xf006</li>
+                    {% endif %}
+                    {% for i in range(1, 10 - review.rating, 2) %}
+                        <li class="list-inline-item star">&#xf006</li>
+                    {% endfor %}
                 </ul>
                 <br>
                 <ul class="list-inline my-0" style="display: inline-block">
