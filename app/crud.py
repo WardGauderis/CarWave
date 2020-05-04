@@ -84,11 +84,14 @@ def create_drive(form, user: User) -> Ride:
         abort(400, 'Invalid drive creation')
 
 
-def read_drive_from_driver(driver: User, future: bool = False) -> list:
+def read_drive_from_driver(driver: User, future_or_past: str = '') -> list:
     try:
-        if future:
-            return driver.driver_rides.filter(Ride.arrival_time > datetime.utcnow()).all()
-        return driver.driver_rides
+        query = driver.driver_rides
+        if future_or_past == 'future':
+            query = query.filter(Ride.arrival_time > datetime.utcnow())
+        elif future_or_past == 'past':
+            query = query.filter(Ride.arrival_time <= datetime.utcnow())
+        return query.all()
     except Exception as e:
         print(e)
         abort(400, 'Invalid drive read from user')
