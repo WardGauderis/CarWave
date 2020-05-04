@@ -156,8 +156,9 @@ def find():
                            form=form, rides=rides, background=True)
 
 
-@bp.route('/rides/all', methods=['POST', 'GET'])
-def all_rides():
+@bp.route('/rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
+@bp.route('/rides/<string:time>', methods=['POST', 'GET'])
+def all_rides(time):
     form = RideDataForm(meta={'csrf': False})
 
     if form.validate_on_submit():
@@ -165,14 +166,20 @@ def all_rides():
         if res is not None:
             return res
 
-    return render_template('rides.html', title='Available Drives', none_found='No future rides found', form=form,
-                           rides=read_all_drives('future', limit=20),
-                           background=True)
+    title = time + " drives"
+    title.capitalize()
+
+    rides = read_all_drives(time)
+    max_pages = len(rides) // 10 + 1
+
+    return render_template('rides.html', title=title, none_found="no rides found", form=form,
+                           time=time, rides=rides, max_pages=max_pages, page=1, background=True)
 
 
-@bp.route('/rides/passenger', methods=['POST', 'GET'])
+@bp.route('/passenger_rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
+@bp.route('/passenger_rides/<string:time>', methods=['POST', 'GET'])
 @login_required
-def passenger_rides():
+def passenger_rides(time):
     form = RideDataForm(meta={'csrf': False})
 
     if form.validate_on_submit():
@@ -181,22 +188,32 @@ def passenger_rides():
             return res
 
     else:
-        return render_template('rides.html', title='Passenger Drives',
+        title = time + " passenger drives"
+        title.capitalize()
+
+        return render_template('rides.html', title=title,
                                none_found='No future drives with you as passenger found',
                                requests=current_user.future_passenger_requests(),
                                form=form, background=True)
 
 
-@bp.route('/rides/driver', methods=['POST', 'GET'])
+@bp.route('/driver_rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
+@bp.route('/driver_rides/<string:time>', methods=['POST', 'GET'])
 @login_required
-def driver_rides():
+def driver_rides(time):
     form = RideDataForm(meta={'csrf': False})
+
+    title = "my " + time + " drives"
+    if time == 'all':
+        title = "all my rides"
+
+    title.capitalize()
 
     if form.validate_on_submit():
         res = crud_logic()
         if res is not None:
             return res
     else:
-        return render_template('rides.html', title='My Drives', none_found='No Future drives organised by you found',
+        return render_template('rides.html', title=title, none_found='No drives organised by you found',
                                rides=read_drive_from_driver(current_user, True), form=form,
                                background=True)
