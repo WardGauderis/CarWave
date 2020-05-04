@@ -26,32 +26,57 @@
 
     <div class="tab-content card-body">
         <div class="tab-pane fade show active" id="body-overview-{{ ride.id }}">
-            <p>
-                <span class="text-left font-weight-bold">From: </span>
-                <span id="from1{{ ride.id }}">loading...</span><br>
-                <span class="text-left font-weight-bold">To: </span>
-                <span id="to1{{ ride.id }}">loading...</span><br>
-
-                <span class="text-left font-weight-bold">Departure Time: </span>
-                {% if ride.departure_time %}
-                    {{ moment(ride.departure_time).format('LLLL') }}
-                {% else %}
-                    Unknown
-                {% endif %}<br>
-                <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
-                <span class="text-left font-weight-bold">Driver: </span><a
-                    href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
-                <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
-                <span class="text-left font-weight-bold">Current passengers: </span>
-                {% for request in ride.accepted_requests().all() %}
-                    <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
-                {% endfor %}<br>
-                <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
-                {% if requests is defined %}
-                    <span class="text-left font-weight-bold">Request status: </span>{{ request.status }}<br>
-                {% endif %}
-            </p>
-
+            <div class="row">
+                <div class="col">
+                    <span class="text-left font-weight-bold">From: </span>
+                    <span id="from1{{ ride.id }}">loading...</span><br>
+                    <span class="text-left font-weight-bold">To: </span>
+                    <span id="to1{{ ride.id }}">loading...</span><br>
+                    <span class="text-left font-weight-bold">Departure Time: </span>
+                    {% if ride.departure_time %}
+                        {{ moment(ride.departure_time).format('LLLL') }}
+                    {% else %}
+                        Unknown
+                    {% endif %}<br>
+                    <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
+                </div>
+                <div class="col">
+                    <span class="text-left font-weight-bold">Driver: </span><a
+                        href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a>
+                    {% set rating = ride.driver.get_rating() %}<br>
+                    {% if rating %}
+                        <span class="font-weight-bold">Rating: </span>
+                        {% include '_rating.html' %}
+                    {% endif %}<br>
+                    {% set tags = ride.driver.get_tags(True) %}
+                    {% if tags %}
+                        <span class="font-weight-bold">Tags: </span>
+                        <ul class="list-inline my-0" style="display: inline-block">
+                            {% for tag in tags %}
+                                <li class="list-inline-item badge badge-primary">{{ tag.title }}</li>
+                            {% endfor %}<br>
+                        </ul><br>
+                    {% endif %}
+                    <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
+                    <span class="text-left font-weight-bold">Current passengers: </span>
+                    {% for request in ride.accepted_requests().all() %}
+                        <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
+                    {% endfor %}<br>
+                    <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
+                </div>
+            </div>
+            {% if requests is defined %}
+                <p>
+                    <span class="text-left font-weight-bold">Request status: </span>
+                    {% if request.status == 'accepted' %}
+                        <span class="badge badge-success">{{ request.status }}</span>
+                    {% elif request.status == 'rejected' %}
+                        <span class="badge badge-danger">{{ request.status }}</span>
+                    {% else %}
+                        <span class="badge badge-info">{{ request.status }}</span>
+                    {% endif %}
+                </p>
+            {% endif %}
             <form method="post" name="ride">
                 {% if rides is defined %}
                     {{ form.ride_id(type="hidden", value=ride.id) }}
@@ -78,7 +103,6 @@
                     {#show nothing the list is either rides or requests#}
                 {% endif %}
             </form>
-
         </div>
         <div class="tab-pane fade" id="body-map-{{ ride.id }}">
             <div id="map{{ ride.id }}" style="height: 500px;"></div>
