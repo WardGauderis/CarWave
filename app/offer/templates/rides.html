@@ -8,7 +8,30 @@
 {% endblock %}
 
 {% block app_content %}
-    <h1 class="display-4">{{ title }}</h1>
+    <div class="row">
+        <h1 class="display-4 col-sm-7">{{ title }}</h1>
+
+        {% if time is defined and time == 'future' or time == 'past' or time == 'all' %}
+            {% if time != 'future' %}
+                <button onclick="location.href = '{{ url_for('offer.all_rides', time='future') }}';" type="button"
+                        class="col-sm-2 btn btn-secondary btn-block" style="padding:10px"> future
+                </button>
+            {% endif %}
+            {% if time != 'past' %}
+                <button onclick="location.href = '{{ url_for('offer.all_rides', time='past') }}';" type="button"
+                        class="col-sm-2 btn btn-secondary btn-block" style="padding:10px"> past drives
+                </button>
+            {% endif %}
+            {% if time != 'all' %}
+                <button onclick="location.href = '{{ url_for('offer.all_rides', time='all') }}';" type="button"
+                        class="col-sm-2 btn btn-secondary btn-block" style="padding:10px"> all drives
+                </button>
+            {% endif %}
+        {% endif %}
+    </div>
+
+
+
     <hr>
 
     {% if details is defined %}
@@ -35,4 +58,24 @@
             {% include '_ride.html' %}
         {% endfor %}
     {% endif %}
+
+    {% if page is defined and max_pages is defined %}
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if page > 2 %}
+                    <li class="page-item"><a class="page-link" href="#">{{ page - 2 }}</a></li>
+                {% elif page > 1 %}
+                    <li class="page-item"><a class="page-link" href="#">{{ page - 1 }}</a></li>
+                {% endif %}
+                <li class="page-item"><a class="page-link" href="#">{{ page }}</a></li>
+                {% if max_pages - page > 1 %}
+                    <li class="page-item"><a class="page-link" href="#">{{ page + 1 }}</a></li>
+                {% elif max_pages - page > 2 %}
+                    <li class="page-item"><a class="page-link" href="#">{{ page + 2 }}</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+
 {% endblock %}
