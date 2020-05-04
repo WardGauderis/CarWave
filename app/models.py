@@ -122,12 +122,15 @@ class User(UserMixin, db.Model):
 
     def get_tags(self, as_driver: bool):
         return db.engine.execute(
-            'select tag.title from tag join review r on tag.review_id = r.id'
-            f'where r.to_id = {self.id} and r.as_driver = {as_driver}'
-            'group by tag.title order by count(tag.title) desc limit 10;')
+            'select tag.title from tag join review r on tag.review_id = r.id '
+            f'where r.to_id = {self.id} and r.as_driver = {as_driver} '
+            'group by tag.title order by count(tag.title) desc limit 10;').fetchall()
 
     def get_rating(self):
-        return db.engine.execute(f'select avg(review.rating) from review where review.to_id = {self.id}')
+        res = db.session.query(func.avg(Review.rating).label('average')).filter(Review.subject==self).one_or_none()
+        if res.average is None:
+            return res.average
+        return round(res.average)
 
 
 @login.user_loader

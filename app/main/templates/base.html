@@ -12,10 +12,30 @@
             display: block;
         }
 
+        .star {
+            font-family: "FontAwesome";
+            font-size: 1.2rem;
+            color: #ff6f00;
+            padding-right: 0.1rem;
+        }
+
+        .star.half {
+            position: absolute;
+        }
+
+        .star:not(:last-child) {
+            margin-right: 0;
+        }
+
+        .badge-info {
+            font-size: 0.9rem;
+            background-color: #007bff;
+        }
+
         body {
         {% if title == 'Available Drives' or title == 'Passenger Drives' or title == 'My Drives' or title == 'My Requests' or title == 'My Drives'%}
             background-image: url('{{ url_for('main.static', filename='wave1.png') }}');
-        {% elif title == 'My Cars' or title == current_user.username or title == 'Edit Profile' or title == 'Edit Car' or title == 'Login' or title == 'Register' or title == 'Reset Password' or title == 'Reset Password Request' %}
+        {% elif title == 'My Cars' or (user and title == user.username) or title == 'Edit Profile' or title == 'Edit Car' or title == 'Login' or title == 'Register' or title == 'Reset Password' or title == 'Reset Password Request' %}
             background-image: url('{{ url_for('main.static', filename='wave0.png') }}');
         {% elif title == 'Error' %}
             background-image: url('{{ url_for('main.static', filename='wave3.png') }}');

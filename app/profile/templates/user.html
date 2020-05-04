@@ -39,7 +39,35 @@
                 {% if user.address %}
                     <li class="list-inline-item"><span class="font-weight-bold">Address: </span>{{ user.address }}</li>
                 {% endif %}
+                {% set rating = user.get_rating() %}
+                {% if rating %}
+                    <li class="list-inline-item"><span class="font-weight-bold">Rating: </span>
+                        {% include '_rating.html' %}
+                    </li>
+                {% endif %}
+                {% set tags = user.get_tags(True) %}
+                {% if tags %}
+                    <li class="list-inline-item">
+                        <span class="font-weight-bold">Driver Tags: </span>
+                        <ul class="list-inline my-0" style="display: inline-block">
+                            {% for tag in tags %}
+                                <li class="list-inline-item badge badge-info">{{ tag.title }}</li>
+                            {% endfor %}<br>
+                        </ul>
+                    </li>
+                {% endif %}
+                {% set tags = user.get_tags(False) %}
+                {% if tags %}
+                    <li class="list-inline-item"><span class="font-weight-bold">User Tags: </span>
+                        <ul class="list-inline my-0" style="display: inline-block">
+                            {% for tag in tags %}
+                                <li class="list-inline-item badge badge-info">{{ tag.title }}</li>
+                            {% endfor %}<br>
+                        </ul>
+                    </li>
+                {% endif %}
             </ul>
+            <br>
         </div>
     </div>
     <hr>

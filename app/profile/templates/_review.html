@@ -8,38 +8,12 @@
                     {{ moment(review.last_modified).fromNow() }}</span>
             </div>
             <div class="col">
-                <style>
-                    .star {
-                        font-family: "FontAwesome";
-                        font-size: 1.2rem;
-                        color: #ffa500;
-                        padding-right: 0.1rem;
-                    }
-
-                    .star.half {
-                        position: absolute;
-                    }
-
-                    .star:not(:last-child) {
-                        margin-right: 0;
-                    }
-                </style>
-                <ul class="list-inline my-0" style="display: inline-block">
-                    {% for i in range(1, review.rating, 2) %}
-                        <li class="list-inline-item star">&#xf005</li>
-                    {% endfor %}
-                    {% if review.rating % 2 == 1 %}
-                        <li class="list-inline-item star half">&#xf089</li>
-                        <li class="list-inline-item star">&#xf006</li>
-                    {% endif %}
-                    {% for i in range(1, 10 - review.rating, 2) %}
-                        <li class="list-inline-item star">&#xf006</li>
-                    {% endfor %}
-                </ul>
+                {% set rating = review.rating %}
+                {% include'_rating.html' %}
                 <br>
                 <ul class="list-inline my-0" style="display: inline-block">
                     {% for tag in review.tags %}
-                        <li class="list-inline-item badge badge-info" style="font-size: 0.8rem">{{ tag.title }}</li>
+                        <li class="list-inline-item badge badge-info">{{ tag.title }}</li>
                     {% endfor %}<br>
                 </ul>
                 <hr>
