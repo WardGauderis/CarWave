@@ -100,7 +100,7 @@ def requests():
         pending += drive.pending_requests()
     pending = pending[:10]
 
-    return render_template('rides.html', none_found='No future pending requests found', title='My Requests',
+    return render_template('rides.html', none_found='No pending requests found', title='My Requests',
                            form=form, requests=pending, background=True)
 
 
@@ -193,7 +193,7 @@ def passenger_rides(time):
 
         return render_template('rides.html', title=title,
                                none_found='No future drives with you as passenger found',
-                               requests=current_user.future_passenger_requests(),
+                               requests=current_user.future_passenger_requests(), time=time,
                                form=form, background=True)
 
 
@@ -215,5 +215,5 @@ def driver_rides(time):
             return res
     else:
         return render_template('rides.html', title=title, none_found='No drives organised by you found',
-                               rides=read_drive_from_driver(current_user, True), form=form,
+                               rides=read_drive_from_driver(current_user, True), form=form, time=time,
                                background=True)
