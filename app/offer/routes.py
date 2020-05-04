@@ -6,6 +6,7 @@ from app.offer.forms import *
 from app.crud import *
 
 
+# TODO fix text if nothing found
 def crud_logic():
     if 'button2' in request.form:
         if request.form['button2'] == "Delete ride":
@@ -193,7 +194,7 @@ def passenger_rides(time):
 
         return render_template('rides.html', title=title,
                                none_found='No future drives with you as passenger found',
-                               requests=current_user.future_passenger_requests(), time=time,
+                               requests=current_user.future_or_past_passenger_requests(time), time=time,
                                form=form, background=True)
 
 
