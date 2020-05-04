@@ -38,9 +38,6 @@
                 {% else %}
                     Unknown
                 {% endif %}<br>
-                {% if requests is defined %}
-                    <span class="text-left font-weight-bold">Request status: </span>{{ request.status }}
-                {% endif %}
                 <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
                 <span class="text-left font-weight-bold">Driver: </span><a
                     href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a><br>
@@ -50,6 +47,9 @@
                     <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
                 {% endfor %}<br>
                 <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
+                {% if requests is defined %}
+                    <span class="text-left font-weight-bold">Request status: </span>{{ request.status }}<br>
+                {% endif %}
             </p>
 
             <form method="post" name="ride">
