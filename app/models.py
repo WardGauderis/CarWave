@@ -244,7 +244,7 @@ class Review(db.Model):
     last_modified = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
     __table_args__ = (db.UniqueConstraint('from_id', 'to_id', 'as_driver', name='one_review'),
                       db.CheckConstraint('from_id != to_id', name='review_others'),
-                      db.CheckConstraint('rating <= 10 and rating >= 0'))
+                      db.CheckConstraint('rating <= 10 and rating >= 0', name='rating_check'))
 
     tags = db.relationship('Tag', back_populates='review')
     author = db.relationship('User', back_populates='written_reviews', foreign_keys=[from_id])
