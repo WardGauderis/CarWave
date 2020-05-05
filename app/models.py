@@ -60,7 +60,7 @@ class User(UserMixin, db.Model):
     )
 
     written_reviews = db.relationship('Review', back_populates='author', foreign_keys='Review.from_id')
-    received_reviews = db.relationship('Review', back_populates='subject', foreign_keys='Review.to_id')
+    received_reviews = db.relationship('Review', back_populates='subject', foreign_keys='Review.to_id', lazy='dynamic')
 
     def avatar(self, size):
         if self.email:
@@ -147,6 +147,10 @@ class User(UserMixin, db.Model):
                                  f'and pr1.user_id = {self.id} and pr2.user_id = {user.id} '
                                  f'or r.driver_id = {self.id} and pr1.user_id = {user.id}) '
                                  'then 1 else 0 end;').fetchone()[0]
+
+    def reviews(self, driver: bool):
+        return self.received_reviews.filter(Review.as_driver == bool(driver)).order_by(Review.last_modified.desc()).limit(
+            10).all()
 
 
 @login.user_loader

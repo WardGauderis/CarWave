@@ -58,7 +58,7 @@
                 {% endif %}
                 {% set tags = user.get_tags(False) %}
                 {% if tags %}
-                    <li class="list-inline-item"><span class="font-weight-bold">User Tags: </span>
+                    <li class="list-inline-item"><span class="font-weight-bold">Passenger Tags: </span>
                         <ul class="list-inline my-0" style="display: inline-block">
                             {% for tag in tags %}
                                 <li class="list-inline-item badge badge-primary">{{ tag.title }}</li>
@@ -71,18 +71,29 @@
         </div>
     </div>
     <hr>
-    {% if current_user.is_authenticated and (current_user.may_review_driver(user) or current_user.may_review_passenger(user)) %}
-        ja
-    {% else %}
-        nee
-    {% endif %}
-    {% if not user.received_reviews %}
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap">
+        <h4 class="display-4" style="font-size: 2.5rem; margin-bottom: 0">Reviews</h4>
+        <ul class="pagination" style="margin-bottom: 0; align-items: end">
+            <li class="page-item {% if as_driver %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('profile.user', user_id=user.id, driver=1) }}">As Driver</a>
+            <li class="page-item {% if not as_driver %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('profile.user', user_id=user.id, driver=0) }}">As Passenger</a>
+            </li>
+        </ul>
+    </div>
+    {% set reviews = user.reviews(as_driver) %}
+    {% if not reviews %}
         <h4>{{ user.username }} has no reviews yet</h4>
     {% endif %}
-    {% for review in user.received_reviews %}
+    {% for review in reviews %}
         {% include '_review.html' %}
     {% endfor %}
-
+    {% if current_user.is_authenticated and ((as_driver and current_user.may_review_driver(user)) or (not as_driver and current_user.may_review_passenger(user))) %}
+        <hr>
+        <h4 class="display-4" style="font-size: 2.5rem; margin-bottom: 0">Review {{ user.username }} as
+            {% if as_driver %}driver{% else %}passenger{% endif %}</h4>
+        TODO FORM
+    {% endif %}
 {% endblock %}
 
 {% block app_scripts %}

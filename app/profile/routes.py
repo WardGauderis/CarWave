@@ -49,7 +49,8 @@ def user(user_id):
     temp_user = read_user_from_id(user_id)
     if temp_user is None:
         abort(404, 'User does not exist')
-    return render_template('user.html', title=temp_user.username, user=temp_user, background=True)
+    as_driver = request.args.get('driver', 1, type=int)
+    return render_template('user.html', title=temp_user.username, user=temp_user, background=True, as_driver=as_driver)
 
 
 @bp.route('/user/update', methods=['GET', 'POST'])
