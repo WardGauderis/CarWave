@@ -126,8 +126,9 @@ class User(UserMixin, db.Model):
             f'where r.to_id = {self.id} and r.as_driver = {as_driver} '
             'group by tag.title order by count(tag.title) desc limit 10;').fetchall()
 
-    def get_rating(self) -> int:
-        res = db.session.query(func.avg(Review.rating).label('average')).filter(Review.subject == self).one_or_none()
+    def get_rating(self, driver: bool) -> int:
+        res = db.session.query(func.avg(Review.rating).label('average')).filter(
+            Review.subject == self).filter(Review.as_driver == driver).one_or_none()
         if res.average is None:
             return res.average
         return round(res.average)
@@ -148,9 +149,9 @@ class User(UserMixin, db.Model):
                                  f'or r.driver_id = {self.id} and pr1.user_id = {user.id}) '
                                  'then 1 else 0 end;').fetchone()[0]
 
-    def reviews(self, driver: bool):
-        return self.received_reviews.filter(Review.as_driver == bool(driver)).order_by(Review.last_modified.desc()).limit(
-            10).all()
+    def reviews(self, driver: bool, page: int):
+        return self.received_reviews.filter(Review.as_driver == bool(driver)).order_by(
+            Review.last_modified.desc()).paginate(page, 3, False)
 
 
 @login.user_loader

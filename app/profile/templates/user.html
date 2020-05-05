@@ -39,9 +39,10 @@
                 {% if user.address %}
                     <li class="list-inline-item"><span class="font-weight-bold">Address: </span>{{ user.address }}</li>
                 {% endif %}
-                {% set rating = user.get_rating() %}
+
+                {% set rating = user.get_rating(True) %}
                 {% if rating %}
-                    <li class="list-inline-item"><span class="font-weight-bold">Rating: </span>
+                    <li class="list-inline-item"><span class="font-weight-bold">Driver rating: </span>
                         {% include '_rating.html' %}
                     </li>
                 {% endif %}
@@ -54,6 +55,13 @@
                                 <li class="list-inline-item badge badge-primary">{{ tag.title }}</li>
                             {% endfor %}<br>
                         </ul>
+                    </li>
+                {% endif %}
+
+                {% set rating = user.get_rating(False) %}
+                {% if rating %}
+                    <li class="list-inline-item"><span class="font-weight-bold">Passenger rating: </span>
+                        {% include '_rating.html' %}
                     </li>
                 {% endif %}
                 {% set tags = user.get_tags(False) %}
@@ -81,19 +89,24 @@
             </li>
         </ul>
     </div>
-    {% set reviews = user.reviews(as_driver) %}
-    {% if not reviews %}
+    {% set reviews = user.reviews(as_driver, page) %}
+    {% if not reviews.items %}
         <h4>{{ user.username }} has no reviews yet</h4>
+    {% else %}
+        {% for review in reviews.items %}
+            {% include '_review.html' %}
+        {% endfor %}
+        <ul class="pagination" style="justify-content: center">
+            <li class="page-item {% if not reviews.has_prev %}disabled{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('profile.user', user_id=user.id, driver=as_driver, page=reviews.prev_num) }}">Newer</a>
+            <li class="page-item {% if not reviews.has_next %}disabled{% endif %}">
+                <a class="page-link"
+                   href="{{ url_for('profile.user', user_id=user.id, driver=as_driver, page=reviews.next_num) }}">Older</a>
+            </li>
+        </ul>
     {% endif %}
-    {% for review in reviews %}
-        {% include '_review.html' %}
-    {% endfor %}
-    {% if current_user.is_authenticated and ((as_driver and current_user.may_review_driver(user)) or (not as_driver and current_user.may_review_passenger(user))) %}
-        <hr>
-        <h4 class="display-4" style="font-size: 2.5rem; margin-bottom: 0">Review {{ user.username }} as
-            {% if as_driver %}driver{% else %}passenger{% endif %}</h4>
-        TODO FORM
-    {% endif %}
+    {% include '_review_form.html' %}
 {% endblock %}
 
 {% block app_scripts %}

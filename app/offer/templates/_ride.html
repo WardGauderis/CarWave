@@ -43,7 +43,7 @@
                 <div class="col">
                     <span class="text-left font-weight-bold">Driver: </span><a
                         href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a>
-                    {% set rating = ride.driver.get_rating() %}<br>
+                    {% set rating = ride.driver.get_rating(True) %}<br>
                     {% if rating %}
                         <span class="font-weight-bold">Rating: </span>
                         {% include '_rating.html' %}

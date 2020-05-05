@@ -1,0 +1,6 @@
+{% if current_user.is_authenticated and ((as_driver and current_user.may_review_driver(user)) or (not as_driver and current_user.may_review_passenger(user))) %}
+    <hr>
+    <h4 class="display-4" style="font-size: 2.5rem; margin-bottom: 0">Review {{ user.username }} as
+        {% if as_driver %}driver{% else %}passenger{% endif %}</h4>
+
+{% endif %}

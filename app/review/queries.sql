@@ -51,3 +51,6 @@ select case
                        and pr1.user_id = 1 and pr2.user_id = 2
                       or r.driver_id = 1 and pr1.user_id = 2) then 1
            else 0 end;
+
+-- autocompletion
+select title from tag where lower(title) like '%hal%'
