@@ -29,17 +29,25 @@ on conflict on constraint one_review do update set review=excluded.review,
                                                    last_modified=excluded.last_modified;
 
 -- driver review
-select ride_id
-from rides
-         join passenger_requests pr on rides.id = pr.ride_id and pr.status = 'accepted'
-where rides.arrival_time < now()
-  and (pr.user_id = 1 and rides.driver_id = 2);
+select case
+           when exists(
+                   select ride_id
+                   from rides
+                            join passenger_requests pr on rides.id = pr.ride_id and pr.status = 'accepted'
+                   where rides.arrival_time < now() and 1!=2
+                     and (pr.user_id = 1 and rides.driver_id = 2)
+               ) then 1
+           else 0
+           end;
 
 --  passenger review
-select r.id
-from rides r
-         join passenger_requests pr1 on r.id = pr1.ride_id and pr1.status = 'accepted'
-         join passenger_requests pr2 on r.id = pr2.ride_id and pr2.status = 'accepted'
-where r.arrival_time < now()
-    and pr1.user_id = 1 and pr2.user_id = 2
-   or r.driver_id = 1 and pr1.user_id = 2
+select case
+           when exists(
+                   select r.id
+                   from rides r
+                            join passenger_requests pr1 on r.id = pr1.ride_id and pr1.status = 'accepted'
+                            join passenger_requests pr2 on r.id = pr2.ride_id and pr2.status = 'accepted'
+                   where r.arrival_time < now() and 1 != 2
+                       and pr1.user_id = 1 and pr2.user_id = 2
+                      or r.driver_id = 1 and pr1.user_id = 2) then 1
+           else 0 end;

@@ -120,17 +120,33 @@ class User(UserMixin, db.Model):
             return e
         return User.query.get(id)
 
-    def get_tags(self, as_driver: bool):
+    def get_tags(self, as_driver: bool) -> List[str]:
         return db.engine.execute(
             'select tag.title from tag join review r on tag.review_id = r.id '
             f'where r.to_id = {self.id} and r.as_driver = {as_driver} '
             'group by tag.title order by count(tag.title) desc limit 10;').fetchall()
 
-    def get_rating(self):
-        res = db.session.query(func.avg(Review.rating).label('average')).filter(Review.subject==self).one_or_none()
+    def get_rating(self) -> int:
+        res = db.session.query(func.avg(Review.rating).label('average')).filter(Review.subject == self).one_or_none()
         if res.average is None:
             return res.average
         return round(res.average)
+
+    def may_review_driver(self, user) -> bool:
+        return db.engine.execute('select case when exists(select ride_id from rides join passenger_requests pr on '
+                                 'rides.id = pr.ride_id and pr.status = \'accepted\' '
+                                 f'where rides.arrival_time > now() and {self.id} != {user.id} '
+                                 f'and (pr.user_id = {self.id} and rides.driver_id = {user.id})'
+                                 ') then 1 else 0 end;').fetchone()[0]
+
+    def may_review_passenger(self, user) -> bool:
+        return db.engine.execute('select case when exists (select r.id from rides r '
+                                 'join passenger_requests pr1 on r.id = pr1.ride_id and pr1.status = \'accepted\' '
+                                 'join passenger_requests pr2 on r.id = pr2.ride_id and pr2.status = \'accepted\' '
+                                 f'where r.arrival_time > now() and {self.id} != {user.id} '
+                                 f'and pr1.user_id = {self.id} and pr2.user_id = {user.id} '
+                                 f'or r.driver_id = {self.id} and pr1.user_id = {user.id}) '
+                                 'then 1 else 0 end;').fetchone()[0]
 
 
 @login.user_loader

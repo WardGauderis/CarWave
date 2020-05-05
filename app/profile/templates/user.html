@@ -71,6 +71,11 @@
         </div>
     </div>
     <hr>
+    {% if current_user.is_authenticated and (current_user.may_review_driver(user) or current_user.may_review_passenger(user)) %}
+        ja
+    {% else %}
+        nee
+    {% endif %}
     {% if not user.received_reviews %}
         <h4>{{ user.username }} has no reviews yet</h4>
     {% endif %}

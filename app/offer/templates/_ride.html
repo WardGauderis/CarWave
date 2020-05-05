@@ -47,16 +47,21 @@
                     {% if rating %}
                         <span class="font-weight-bold">Rating: </span>
                         {% include '_rating.html' %}
+                    {% else %}
+                        None
                     {% endif %}<br>
                     {% set tags = ride.driver.get_tags(True) %}
+                    <span class="font-weight-bold">Tags: </span>
                     {% if tags %}
-                        <span class="font-weight-bold">Tags: </span>
                         <ul class="list-inline my-0" style="display: inline-block">
                             {% for tag in tags %}
                                 <li class="list-inline-item badge badge-primary">{{ tag.title }}</li>
-                            {% endfor %}<br>
-                        </ul><br>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        None
                     {% endif %}
+                    <br>
                     <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
                     <span class="text-left font-weight-bold">Current passengers: </span>
                     {% for request in ride.accepted_requests().all() %}
