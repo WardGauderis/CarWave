@@ -53,4 +53,4 @@ select case
            else 0 end;
 
 -- autocompletion
-select title from tag where lower(title) like '%hal%'
+select title from tag where lower(title) like '%c%' group by tag.title order by count(tag.title) desc

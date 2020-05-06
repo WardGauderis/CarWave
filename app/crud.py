@@ -3,7 +3,7 @@ from typing import Tuple, List
 from sqlalchemy import func
 from sqlalchemy.exc import DatabaseError
 
-from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point
+from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Tag
 from flask import abort
 from jwt import decode, DecodeError
 from datetime import datetime, timedelta
@@ -307,3 +307,12 @@ def delete_car(car: Car):
         db.session.commit()
     except:
         abort(400, 'Invalid Car deletion')
+
+
+def read_tags(prefix: str) -> List[str]:
+    try:
+        return db.engine.execute(
+            f'select title from tag where lower(title) like \'%%{prefix}%%\' '
+            'group by tag.title order by count(tag.title) desc limit 100;').fetchall()
+    except:
+        return []

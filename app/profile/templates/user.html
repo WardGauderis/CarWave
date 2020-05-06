@@ -106,10 +106,37 @@
             </li>
         </ul>
     {% endif %}
-    {% include '_review_form.html' %}
+    {% if current_user.is_authenticated and ((as_driver and current_user.may_review_driver(user)) or (not as_driver and current_user.may_review_passenger(user))) %}
+        {% include '_review_form.html' %}
+    {% endif %}
 {% endblock %}
 
 {% block app_scripts %}
+    <script src="{{ url_for('review.static', filename='tagsinput.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.5/dist/latest/bootstrap-autocomplete.min.js"></script>
+    <script>
+        $('.basicAutoComplete').autoComplete({
+            resolverSettings: {
+                url: '{{ url_for('review.tags') }}'
+            },
+            requestThrottling: 0
+        });
+
+        function addTag() {
+            $('#taglist').tagsinput('add', document.getElementById('tagform').value);
+            document.getElementById('tagform').value = '';
+        }
+
+        input=document.getElementById('tagform')
+        input.addEventListener("keydown", function (event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                document.getElementById("tagbutton").click();
+            }
+        });
+    </script>
+
+
     <script type="text/javascript">
         {% if user.address_id %}
             function get_address(id) {
