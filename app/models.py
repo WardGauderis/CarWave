@@ -277,7 +277,7 @@ class Review(db.Model):
     rating = db.Column(db.Integer, nullable=False, )
     last_modified = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
 
-    tags = db.relationship('Tag', back_populates='review')
+    tags = db.relationship('Tag', back_populates='review', cascade="all, delete, delete-orphan")
     author = db.relationship('User', back_populates='written_reviews', foreign_keys=[from_id])
     subject = db.relationship('User', back_populates='received_reviews', foreign_keys=[to_id])
 

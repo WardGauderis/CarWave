@@ -3,7 +3,7 @@ from typing import Tuple, List
 from sqlalchemy import func
 from sqlalchemy.exc import DatabaseError
 
-from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Tag
+from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Review, Tag
 from flask import abort
 from jwt import decode, DecodeError
 from datetime import datetime, timedelta
@@ -317,3 +317,36 @@ def read_tags(prefix: str) -> List[str]:
             'group by tag.title order by count(tag.title) desc limit 100;').fetchall()
     except:
         return []
+
+
+def read_review(author: User, subject: User, as_driver: bool):
+    return subject.received_reviews.filter(Review.as_driver == as_driver).filter(Review.author == author).one_or_none()
+
+
+def create_or_update_review(review: Review, author: User, subject: User, as_driver: bool, rating: int,
+                            tags: List[str], body: str):
+    try:
+        if len(tags) > 10: raise
+        tags = list(filter(None, tags))
+        if not body: raise
+
+        if not review:
+            review = Review()
+        else:
+            for tag in review.tags:
+                db.session.delete(tag)
+            db.session.commit()
+
+        review.author = author
+        review.subject = subject
+        review.review = body
+        review.rating = rating
+        review.as_driver = as_driver
+        review.last_modified = datetime.utcnow()
+        review.tags = [Tag(title=tag, review=review) for tag in tags]
+        db.session.add(review)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        abort(400, 'Invalid review creation')

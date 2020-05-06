@@ -12,11 +12,11 @@
                 {% include'_rating.html' %}
                 <br>
                 {% if review.tags %}
-                <ul class="list-inline my-0" style="display: inline-block">
-                    {% for tag in review.tags %}
-                        <li class="list-inline-item badge badge-primary">{{ tag.title }}</li>
-                    {% endfor %}<br>
-                </ul>
+                    <ul class="list-inline my-0" style="display: inline-block">
+                        {% for tag in review.tags %}
+                            <li class="list-inline-item badge badge-primary">{{ tag.title }}</li>
+                        {% endfor %}<br>
+                    </ul>
                 {% endif %}
                 <hr>
                 <p style="font-style: italic">"{{ review.review }}"</p>
