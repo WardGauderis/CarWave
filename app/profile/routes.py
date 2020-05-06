@@ -49,9 +49,16 @@ def user(user_id):
     temp_user = read_user_from_id(user_id)
     if temp_user is None:
         abort(404, 'User does not exist')
+
     as_driver = request.args.get('driver', 1, type=int)
+    may_review = current_user.is_authenticated and ((as_driver and current_user.may_review_driver(temp_user)) or (
+            not as_driver and current_user.may_review_passenger(temp_user)))
+    existing_review = None
+    if may_review:
+        existing_review = read_review(current_user, temp_user, bool(as_driver))
     page = request.args.get('page', 1, type=int)
-    return render_template('user.html', title=temp_user.username, user=temp_user, background=True, as_driver=as_driver, page=page)
+    return render_template('user.html', title=temp_user.username, user=temp_user, background=True, as_driver=as_driver,
+                           page=page, may_review=may_review, existing_review=existing_review)
 
 
 @bp.route('/user/update', methods=['GET', 'POST'])

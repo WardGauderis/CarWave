@@ -6,6 +6,62 @@
             word-break: break-word;
         }
     </style>
+    <style>
+        /* Ratings widget */
+        .rate {
+            display: inline-block;
+            border: 0;
+        }
+
+        /* Hide radio */
+        .rate > input {
+            display: none;
+        }
+
+        /* Order correctly by floating highest to the right */
+        .rate > label {
+            float: right;
+        }
+
+        /* The star of the show */
+        .rate > label:before {
+            display: inline-block;
+            padding-right: 0.1rem;
+            font-size: 1.2rem;
+            margin: 0;
+            cursor: pointer;
+            font-family: FontAwesome;
+            content: "\f005 "; /* full star */
+        }
+
+        /* Zero stars rating */
+        .rate > label:last-child:before {
+            content: "\f006 "; /* empty star outline */
+        }
+
+        /* Half star trick */
+        .rate .half:before {
+            content: "\f089 "; /* half star no outline */
+            position: absolute;
+            padding-right: 0;
+        }
+
+        /* Click + hover color */
+        input:checked ~ label, /* color current and previous stars on checked */
+        fieldset label:hover, label:hover ~ label {
+            color: #ff6f00;
+        }
+
+        /* color previous stars on hover */
+
+        /* Hover highlights */
+        input:checked + label:hover, input:checked ~ label:hover, /* highlight current and previous stars */
+        input:checked ~ label:hover ~ label, /* highlight previous selected stars for new rating */
+        label:hover ~ input:checked ~ label /* highlight previous selected stars */
+        {
+            color: #ffd500;
+        }
+    </style>
 {% endblock %}
 
 {% block app_content %}
@@ -106,7 +162,7 @@
             </li>
         </ul>
     {% endif %}
-    {% if current_user.is_authenticated and ((as_driver and current_user.may_review_driver(user)) or (not as_driver and current_user.may_review_passenger(user))) %}
+    {% if may_review %}
         {% include '_review_form.html' %}
     {% endif %}
 {% endblock %}
@@ -127,7 +183,7 @@
             document.getElementById('tagform').value = '';
         }
 
-        input=document.getElementById('tagform')
+        input = document.getElementById('tagform')
         input.addEventListener("keydown", function (event) {
             if (event.keyCode === 13) {
                 event.preventDefault();

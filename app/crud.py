@@ -3,7 +3,7 @@ from typing import Tuple, List
 from sqlalchemy import func
 from sqlalchemy.exc import DatabaseError
 
-from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Tag
+from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Review
 from flask import abort
 from jwt import decode, DecodeError
 from datetime import datetime, timedelta
@@ -316,3 +316,7 @@ def read_tags(prefix: str) -> List[str]:
             'group by tag.title order by count(tag.title) desc limit 100;').fetchall()
     except:
         return []
+
+
+def read_review(author: User, subject: User, as_driver: bool):
+    return subject.received_reviews.filter(Review.as_driver == as_driver).filter(Review.author == author).one_or_none()
