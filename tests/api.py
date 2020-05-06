@@ -16,6 +16,7 @@ def request_and_response(r: requests.Request):
 
 
 BASE_URL = "http://127.0.0.1:5000/api"
+# BASE_URL = "http://team1.ppdb.me/api"
 
 prints = []
 
@@ -106,7 +107,8 @@ prints = []
 # prints.append(request_and_response(r7))
 
 r8 = requests.get(
-    f"{BASE_URL}/drives/search?arrive_by=2020-11-14T05:00:00.00&sex=female&min_consumption=1.5&max_consumption=2.3&min_age=26&max_age=44",
+    f"{BASE_URL}/drives/search?sex=female",
+    # f"{BASE_URL}/drives/search?arrive_by=2020-11-14T05:00:00.00&sex=female&min_consumption=1.5&max_consumption=2.3&min_age=26&max_age=44",
     headers={"Content-Type": "application/json"},
 )
 prints.append(request_and_response(r8))

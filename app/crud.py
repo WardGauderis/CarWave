@@ -118,7 +118,7 @@ def read_all_drives(future_or_past: str = '', limit: int = None) -> list:
         abort(400, 'Invalid drive read')
 
 
-def search_drives(limit=5,
+def search_drives(limit=None,
                   departure: List[float] = None,
                   departure_distance: int = None,
                   arrival: List[float] = None,
@@ -133,6 +133,9 @@ def search_drives(limit=5,
                   rating: Tuple[float] = None,
                   exclude_past_rides=False) -> List[Ride]:
     query = Ride.query
+
+    # Default limit
+    limit = 5 if limit is None else limit
 
     if departure:
         query = query.filter(
@@ -167,17 +170,20 @@ def search_drives(limit=5,
             raise ValueError("Invalid sex")
         query = query.join(Ride.driver).filter_by(sex=sex)
 
-    if age_range or rating:  # TODO: rating
+    if age_range and any(age_range):
         min_age, max_age = age_range
         query = query.join(Ride.driver)
         query = query.filter(min_age <= User.age) if min_age else query
         query = query.filter(User.age <= max_age) if max_age else query
 
-    if consumption_range:
-        query = query.join(Ride.car)
+    if consumption_range and any(consumption_range):
         min_consumption, max_consumption = consumption_range
+        query = query.join(Ride.car)
         query = query.filter(min_consumption <= Car.consumption) if min_consumption else query
         query = query.filter(Car.consumption <= max_consumption) if max_consumption else query
+
+    if rating and any(rating):
+        pass
 
     if exclude_past_rides:
         query = query.filter(datetime.utcnow() <= Ride.arrival_time)

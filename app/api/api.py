@@ -229,7 +229,6 @@ def search_drive():
     except:
         abort(400, "Invalid format")
 
-
     rides = search_drives(limit=limit,
                           arrival=start,
                           arrival_distance=start_distance,
@@ -242,8 +241,7 @@ def search_drive():
                           sex=sex,
                           age_range=(min_age, max_age),
                           consumption_range=(min_consumption, max_consumption),
-                          rating=(min_rating, max_rating),
-                          exclude_past_rides=False)
+                          rating=(min_rating, max_rating))
     return Response(
         json.dumps([
             {
