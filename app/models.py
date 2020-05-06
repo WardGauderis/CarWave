@@ -275,7 +275,7 @@ class Review(db.Model):
                       db.CheckConstraint('from_id != to_id', name='review_others'),
                       db.CheckConstraint('rating <= 10 and rating >= 0', name='rating_check'))
 
-    tags = db.relationship('Tag', back_populates='review')
+    tags = db.relationship('Tag', back_populates='review', cascade="all, delete, delete-orphan")
     author = db.relationship('User', back_populates='written_reviews', foreign_keys=[from_id])
     subject = db.relationship('User', back_populates='received_reviews', foreign_keys=[to_id])
 

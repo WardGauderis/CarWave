@@ -173,10 +173,13 @@
     <script>
         $('.basicAutoComplete').autoComplete({
             resolverSettings: {
-                url: '{{ url_for('review.tags') }}'
+                url: '{{ url_for('review.tags') }}',
             },
-            requestThrottling: 0
+            requestThrottling: 0,
+            minLength: 1
         });
+
+        $('#taglist').tagsinput({delimiter: ',', trimValue: true, maxTags: 10, maxChars: 64})
 
         function addTag() {
             $('#taglist').tagsinput('add', document.getElementById('tagform').value);

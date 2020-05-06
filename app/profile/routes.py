@@ -57,6 +57,19 @@ def user(user_id):
     if may_review:
         existing_review = read_review(current_user, temp_user, bool(as_driver))
     page = request.args.get('page', 1, type=int)
+    if request.method == 'POST':
+        try:
+            if not may_review: raise
+            rating = request.form.get('rating', -1, int)
+            if rating < 0:
+                return render_template('user.html', title=temp_user.username, user=temp_user, background=True,
+                                       as_driver=as_driver,
+                                       page=page, may_review=may_review, existing_review=existing_review, warning=True)
+            create_or_update_review(existing_review, current_user, temp_user, bool(as_driver), rating,
+                                    request.form.get('tags', '', str).split(','),
+                                    request.form.get('review', '', str))
+        except:
+            abort(400, 'Invalid review form data. Please use the form on the profile page to leave a review.')
     return render_template('user.html', title=temp_user.username, user=temp_user, background=True, as_driver=as_driver,
                            page=page, may_review=may_review, existing_review=existing_review)
 
