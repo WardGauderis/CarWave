@@ -21,92 +21,92 @@ prints = []
 
 
 
-r12 = requests.post(
-    f"{BASE_URL}/users/register",
-    headers={"Content-Type": "application/json"},
-    data=json.dumps(
-        {
-            "username": "MarkP",
-            "firstname": "Mark",
-            "lastname": "Peeters",
-            "password": "MarkIsCool420",
-        }
-    ),
-)
-
-prints.append(request_and_response(r12))
-
-# AUTH
-
-r21 = requests.post(
-    f"{BASE_URL}/users/auth",
-    headers={"Content-Type": "application/json"},
-    data=json.dumps({"username": "MarkP", "password": "MarkIsCool420"}),
-)
-
-prints.append(request_and_response(r21))
-
-r22 = requests.post(
-    f"{BASE_URL}/users/auth",
-    headers={"Content-Type": "application/json"},
-    data=json.dumps({"username": "tvjkgyphhtfw", "password": "Py88\"B:$"}),
-)
-
-prints.append(request_and_response(r22))
-
-r23 = requests.post(
-    f"{BASE_URL}/users/auth",
-    headers={"Content-Type": "application/json"},
-    data=json.dumps({"username": "qrtdavjtzhwu", "password": "F37ZLv,W"}),
-)
-
-prints.append(request_and_response(r23))
-
-# POST RIDE
-TOKEN = r21.json()["token"]
-BEARER_AUTH = f"Bearer {TOKEN}"
-
-r3 = requests.post(
-    f"{BASE_URL}/drives",
-    headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
-    data=json.dumps(
-        {
-            "from": [51.130215, 4.571509],
-            "to": [51.18417, 4.41931],
-            "passenger-places": 3,
-            "arrive-by": "2020-07-12T10:00:00.00",
-        }
-    ),
-)
-
-prints.append(request_and_response(r3))
-
-# GET SPECIFIC RIDE
-
-r4 = requests.get(f"{BASE_URL}/drives/1", headers={"Content-Type": "application/json"})
-prints.append(request_and_response(r4))
-
-# GET PASSENGERS ON A SPECIFIC RIDE
-
-r5 = requests.get(
-    f"{BASE_URL}/drives/1/passengers", headers={"Content-Type": "application/json"}
-)
-prints.append(request_and_response(r5))
-
-r6 = requests.get(
-    f"{BASE_URL}/drives/1/passenger-requests",
-    headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
-)
-prints.append(request_and_response(r6))
-
-r7 = requests.get(
-    f"{BASE_URL}/drives/search?limit=7",
-    headers={"Content-Type": "application/json"},
-)
-prints.append(request_and_response(r7))
+# r12 = requests.post(
+#     f"{BASE_URL}/users/register",
+#     headers={"Content-Type": "application/json"},
+#     data=json.dumps(
+#         {
+#             "username": "MarkP",
+#             "firstname": "Mark",
+#             "lastname": "Peeters",
+#             "password": "MarkIsCool420",
+#         }
+#     ),
+# )
+#
+# prints.append(request_and_response(r12))
+#
+# # AUTH
+#
+# r21 = requests.post(
+#     f"{BASE_URL}/users/auth",
+#     headers={"Content-Type": "application/json"},
+#     data=json.dumps({"username": "MarkP", "password": "MarkIsCool420"}),
+# )
+#
+# prints.append(request_and_response(r21))
+#
+# r22 = requests.post(
+#     f"{BASE_URL}/users/auth",
+#     headers={"Content-Type": "application/json"},
+#     data=json.dumps({"username": "tvjkgyphhtfw", "password": "Py88\"B:$"}),
+# )
+#
+# prints.append(request_and_response(r22))
+#
+# r23 = requests.post(
+#     f"{BASE_URL}/users/auth",
+#     headers={"Content-Type": "application/json"},
+#     data=json.dumps({"username": "qrtdavjtzhwu", "password": "F37ZLv,W"}),
+# )
+#
+# prints.append(request_and_response(r23))
+#
+# # POST RIDE
+# TOKEN = r21.json()["token"]
+# BEARER_AUTH = f"Bearer {TOKEN}"
+#
+# r3 = requests.post(
+#     f"{BASE_URL}/drives",
+#     headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
+#     data=json.dumps(
+#         {
+#             "from": [51.130215, 4.571509],
+#             "to": [51.18417, 4.41931],
+#             "passenger-places": 3,
+#             "arrive-by": "2020-07-12T10:00:00.00",
+#         }
+#     ),
+# )
+#
+# prints.append(request_and_response(r3))
+#
+# # GET SPECIFIC RIDE
+#
+# r4 = requests.get(f"{BASE_URL}/drives/1", headers={"Content-Type": "application/json"})
+# prints.append(request_and_response(r4))
+#
+# # GET PASSENGERS ON A SPECIFIC RIDE
+#
+# r5 = requests.get(
+#     f"{BASE_URL}/drives/1/passengers", headers={"Content-Type": "application/json"}
+# )
+# prints.append(request_and_response(r5))
+#
+# r6 = requests.get(
+#     f"{BASE_URL}/drives/1/passenger-requests",
+#     headers={"Content-Type": "application/json", "Authorization": BEARER_AUTH},
+# )
+# prints.append(request_and_response(r6))
+#
+# r7 = requests.get(
+#     f"{BASE_URL}/drives/search?limit=7",
+#     headers={"Content-Type": "application/json"},
+# )
+# prints.append(request_and_response(r7))
 
 r8 = requests.get(
-    f"{BASE_URL}/drives/search?sex=female&arrive-by=2020-10-12T09:00:00.00",
+    f"{BASE_URL}/drives/search?arrive_by=2020-11-14T05:00:00.00&sex=female&min_consumption=1.5&max_consumption=2.3&min_age=26&max_age=44",
     headers={"Content-Type": "application/json"},
 )
 prints.append(request_and_response(r8))

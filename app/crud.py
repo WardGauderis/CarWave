@@ -130,6 +130,7 @@ def search_drives(limit=5,
                   sex: str = None,
                   age_range: Tuple[int] = None,
                   consumption_range: Tuple[float] = None,
+                  rating: Tuple[float] = None,
                   exclude_past_rides=False) -> List[Ride]:
     query = Ride.query
 
@@ -166,7 +167,7 @@ def search_drives(limit=5,
             raise ValueError("Invalid sex")
         query = query.join(Ride.driver).filter_by(sex=sex)
 
-    if age_range:
+    if age_range or rating:  # TODO: rating
         min_age, max_age = age_range
         query = query.join(Ride.driver)
         query = query.filter(min_age <= User.age) if min_age else query

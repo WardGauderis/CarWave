@@ -19,6 +19,7 @@ def to_point(coords):
 
 class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
+    __tableargs__ = (db.CheckConstraint('ride_id != user_id', name='cannot_ride_along_with_yourself'))
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE"), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
@@ -68,7 +69,7 @@ class User(UserMixin, db.Model):
         else:
             mail = self.username
         digest = md5(mail.lower().encode("utf-8")).hexdigest()
-        return "https://www.gravatar.com/avatar/{}?d=identicon&s={}".format(digest, size)
+        return f"https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}"
 
     def from_form(self, form):
         for key, value in form.generator():
@@ -264,6 +265,10 @@ class Car(db.Model):
 
 
 class Review(db.Model):
+    __table_args__ = (db.UniqueConstraint('from_id', 'to_id', 'as_driver', name='one_review'),
+                      db.CheckConstraint('from_id != to_id', name='review_others'),
+                      db.CheckConstraint('rating <= 10 and rating >= 0', name='rating_check'))
+
     id = db.Column(db.Integer, primary_key=True)
     from_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     to_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
@@ -271,9 +276,6 @@ class Review(db.Model):
     review = db.Column(db.String(1024), nullable=False)
     rating = db.Column(db.Integer, nullable=False, )
     last_modified = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
-    __table_args__ = (db.UniqueConstraint('from_id', 'to_id', 'as_driver', name='one_review'),
-                      db.CheckConstraint('from_id != to_id', name='review_others'),
-                      db.CheckConstraint('rating <= 10 and rating >= 0', name='rating_check'))
 
     tags = db.relationship('Tag', back_populates='review')
     author = db.relationship('User', back_populates='written_reviews', foreign_keys=[from_id])

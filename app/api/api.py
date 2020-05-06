@@ -182,35 +182,52 @@ def accept_passenger_request(drive_id, user_id):
 @bp.route("/drives/search", methods=["GET"])
 def search_drive():
     MIN_RIDES = 1
-    MAX_RIDES = 25
-    try:
-        limit = request.args.get("limit")
-        start = request.args.get("from")
-        start_distance = request.args.get("from-distance")
-        stop = request.args.get("to")
-        stop_distance = request.args.get("to-distance")
-        arrive_by = request.args.get("arrive-by")
-        arrival_delta = request.args.get("arrival-delta")
-        depart_by = request.args.get("depart-by")
-        depart_delta = request.args.get("depart-delta")
-        sex = request.args.get("sex")
-    except KeyError:
-        abort(400, "Invalid format")
+    MAX_RIDES = 50
 
-    if limit:
-        limit = max(MIN_RIDES, min(int(limit), MAX_RIDES))
-    if start:
-        start = map(float, start.split(","))
-        start_distance = int(start_distance) if start_distance else 5000
-    if stop:
-        stop = map(float, stop.split(","))
-        stop_distance = int(stop_distance) if stop_distance else 5000
-    if depart_by:
-        depart_by = datetime.strptime(depart_by, "%Y-%m-%dT%H:%M:%S.%f")
-        depart_delta = timedelta(minutes=int(depart_delta)) if depart_delta else timedelta(minutes=30)
-    if arrive_by:
-        arrive_by = datetime.strptime(arrive_by, "%Y-%m-%dT%H:%M:%S.%f")
-        arrival_delta = timedelta(minutes=int(arrival_delta)) if arrival_delta else timedelta(minutes=30)
+    # Arguments
+    limit = request.args.get("limit")
+    start = request.args.get("from")
+    start_distance = request.args.get("from_distance")
+    stop = request.args.get("to")
+    stop_distance = request.args.get("to_distance")
+    arrive_by = request.args.get("arrive_by")
+    arrival_delta = request.args.get("arrival_delta")
+    depart_by = request.args.get("depart_by")
+    depart_delta = request.args.get("depart_delta")
+    sex = request.args.get("sex")
+    min_consumption = request.args.get("min_consumption")
+    max_consumption = request.args.get("max_consumption")
+    min_age = request.args.get("min_age")
+    max_age = request.args.get("max_age")
+    min_rating = None
+    max_rating = None
+
+    # TODO: explicitly type check arguments
+    try:
+        if limit:
+            limit = max(MIN_RIDES, min(int(limit), MAX_RIDES))
+        if start:
+            start = map(float, start.split(","))
+            start_distance = int(start_distance) if start_distance else 5000
+        if stop:
+            stop = map(float, stop.split(","))
+            stop_distance = int(stop_distance) if stop_distance else 5000
+        if depart_by:
+            depart_by = datetime.strptime(depart_by, "%Y-%m-%dT%H:%M:%S.%f")
+            depart_delta = timedelta(minutes=int(depart_delta)) if depart_delta else timedelta(minutes=30)
+        if arrive_by:
+            arrive_by = datetime.strptime(arrive_by, "%Y-%m-%dT%H:%M:%S.%f")
+            arrival_delta = timedelta(minutes=int(arrival_delta)) if arrival_delta else timedelta(minutes=30)
+        if min_consumption:
+            min_consumption = float(min_consumption)
+        if max_consumption:
+            max_consumption = float(max_consumption)
+        if min_age:
+            min_age = int(min_age)
+        if max_age:
+            max_age = int(max_age)
+    except:
+        abort(400, "Invalid format")
 
 
     rides = search_drives(limit=limit,
@@ -223,8 +240,10 @@ def search_drive():
                           departure_delta=depart_delta,
                           arrival_delta=arrival_delta,
                           sex=sex,
-                          age_range=None,
-                          consumption_range=None)
+                          age_range=(min_age, max_age),
+                          consumption_range=(min_consumption, max_consumption),
+                          rating=(min_rating, max_rating),
+                          exclude_past_rides=False)
     return Response(
         json.dumps([
             {
