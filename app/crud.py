@@ -3,7 +3,7 @@ from typing import Tuple, List
 from sqlalchemy import func
 from sqlalchemy.exc import DatabaseError
 
-from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point
+from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Message
 from flask import abort
 from jwt import decode, DecodeError
 from datetime import datetime, timedelta
@@ -195,7 +195,6 @@ def update_drive(drive: Ride, form):
     try:
         db.session.commit()
     except Exception as e:
-        print(e)
         db.session.rollback()
         abort(400, 'Invalid drive update')
 
@@ -205,7 +204,6 @@ def delete_drive(drive: Ride):
         db.session.delete(drive)
         db.session.commit()
     except DatabaseError as e:
-        print(e)
         abort(400, 'Invalid drive deletion')
 
 
@@ -307,3 +305,28 @@ def delete_car(car: Car):
         db.session.commit()
     except:
         abort(400, 'Invalid Car deletion')
+
+
+# please change this code if this is not good
+def read_messages_for_user_pair(user1: User, user2: User) -> List[Message]:
+    query = Message.query
+    query.filter(
+        Message.sender_id == user1.id or Message.sender_id == user2.id or
+        Message.recipient_id == user1.id or Message.recipient_id == user2.id)
+
+    return query.limit(10).all()
+
+
+def create_message(sender: User, recipient: User, body: str) -> Message:
+    try:
+        message = Message()
+        message.sender_id = sender.id
+        message.recipient_id = recipient.id
+        message.timestamp = datetime.utcnow()
+        message.body = body
+        db.session.add(message)
+        db.session.commit()
+        return message
+    except:
+        db.session.rollback()
+        abort(400, 'Invalid message creation')
