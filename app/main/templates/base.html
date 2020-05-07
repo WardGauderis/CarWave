@@ -8,6 +8,8 @@
     <link rel="shortcut icon" href="{{ url_for('main.static', filename='favicon.ico') }}">
     {{ super() }}
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('review.static', filename='tagsinput.css') }}">
+
     <style>
         .invalid-feedback {
             display: block;
@@ -29,7 +31,8 @@
         }
 
         .badge {
-            padding: 0.3rem;
+            padding: 0.5rem !important;
+            margin-bottom: 0.5rem;
         }
 
         body {

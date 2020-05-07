@@ -1,6 +1,34 @@
-{% if current_user.is_authenticated and ((as_driver and current_user.may_review_driver(user)) or (not as_driver and current_user.may_review_passenger(user))) %}
-    <hr>
-    <h4 class="display-4" style="font-size: 2.5rem; margin-bottom: 0">Review {{ user.username }} as
-        {% if as_driver %}driver{% else %}passenger{% endif %}</h4>
+<hr>
+<h4 class="display-4" style="font-size: 2.5rem; margin-bottom: 0">Review {{ user.username }} as
+    {% if as_driver %}driver{% else %}passenger{% endif %}</h4>
 
-{% endif %}
+<form method="post">
+    <div class="form-group my-3">
+        <label for="rating">Rating:</label>
+        <fieldset id="rating" class="rate ml-3" style="vertical-align: bottom">
+            {% for i in range(10, -1, -1) %}
+                <input {% if existing_review and existing_review.rating == i %}checked="checked"{% endif %}
+                       type="radio" id="rating{{ i }}" name="rating" value="{{ i }}"/>
+                <label {% if i % 2 == 1 %}class="half"{% endif %} for="rating{{ i }}"
+                       title="{{ (i / 2)|int }} {% if i % 2 == 1 %}1/2{% endif %} stars"></label>
+            {% endfor %}
+        </fieldset>
+        {% if warning %}<div class="invalid-feedback">Rating is required.</div>{% endif %}
+    </div>
+    <div class="form-group">
+        <label for="tags">Tags:</label>
+        <div style="display: flex; flex-wrap: wrap;">
+            <input maxlength="64" type=text id="tagform" class="form-control mb-1 basicAutoComplete"
+                   style="display: inline-block;flex: 1" autocomplete="off">
+            <span class="btn btn-primary mb-1" style="vertical-align: baseline;" id="tagbutton"
+                  onclick="addTag()">Add Tag</span>
+        </div>
+        <input name="tags" class="form-control" id="taglist" type="text" data-role="tagsinput" {% if existing_review %}value="{% for existing_tag in existing_review.tags %}{{ existing_tag.title }},{% endfor %}"{% endif %}>
+    </div>
+    <div class="form-group">
+        <label for="review">Review:</label>
+        <textarea required maxlength="1024" name="review" class="form-control" id="review" rows="3">{% if existing_review %}{{ existing_review.review }}{% endif %}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">{% if existing_review %}Update Review{% else %}
+        Review{% endif %}</button>
+</form>

@@ -170,7 +170,7 @@ def all_rides(time):
     title = time + " drives"
     title.capitalize()
 
-    rides = read_all_drives(time)
+    rides = read_all_drives(time, limit=20)
     max_pages = len(rides) // 10 + 1
 
     return render_template('rides.html', title=title, none_found="no rides found", form=form,
