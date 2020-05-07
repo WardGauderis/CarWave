@@ -1,6 +1,6 @@
 from typing import Tuple, List
 
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 from sqlalchemy.exc import DatabaseError
 from app.models import User, db, current_app, Ride, PassengerRequest, Car, to_point, Message, Review, Tag
 from flask import abort
@@ -129,6 +129,7 @@ def search_drives(limit=5,
                   sex: str = None,
                   age_range: Tuple[int] = None,
                   consumption_range: Tuple[float] = None,
+                  rating: Tuple[float] = None,
                   exclude_past_rides=False) -> List[Ride]:
     query = Ride.query
 
@@ -350,12 +351,12 @@ def create_or_update_review(review: Review, author: User, subject: User, as_driv
         abort(400, 'Invalid review creation')
 
 
-# please change this code if this is not good
+# TODO: review
 def read_messages_from_user_pair(user1: User, user2: User) -> List[Message]:
-    query = Message.query
-    query.filter(
-        (Message.sender_id == user1.id and Message.recipient_id == user2.id) or
-        (Message.sender_id == user2.id and Message.recipient_id == user1.id))
+    query = Message.query.filter(or_(
+        and_(Message.sender_id == user1.id, Message.recipient_id == user2.id),
+        and_(Message.sender_id == user2.id, Message.recipient_id == user1.id)
+    ))
 
     return query.limit(10).all()
 
@@ -375,7 +376,8 @@ def create_message(sender: User, recipient: User, body: str) -> Message:
         abort(400, 'Invalid message creation')
 
 
-#TODO: does not work yet
+#TODO: should work now
 def read_messaged_users(sender: User):
-    query = User.query
-    return query.limit(10).all()
+    users_messaged = db.session.query(Message.recipient_id).filter(Message.sender_id == sender.id).distinct().all()
+    users_messaged = User.query.filter(User.id.in_(users_messaged)).limit(10).all()
+    return users_messaged

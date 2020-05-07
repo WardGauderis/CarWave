@@ -1,4 +1,4 @@
-from flask import render_template, redirect, render_template, url_for, request, flash
+from flask import render_template, request
 
 from app.crud import create_message, read_messages_from_user_pair, read_user_from_id, read_messaged_users
 from app.messages import bp

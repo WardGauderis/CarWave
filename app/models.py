@@ -64,10 +64,7 @@ class User(UserMixin, db.Model):
     received_reviews = db.relationship('Review', back_populates='subject', foreign_keys='Review.to_id', lazy='dynamic')
 
     def avatar(self, size):
-        if self.email:
-            mail = self.email
-        else:
-            mail = self.username
+        mail = self.email if self.email else self.username
         digest = md5(mail.lower().encode("utf-8")).hexdigest()
         return f"https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}"
 
