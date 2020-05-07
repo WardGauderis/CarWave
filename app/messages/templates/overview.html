@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    {% for user in recipients %}
+        <div class="row" style="margin:0.2rem">
+            <div class="card card-body">
+                <h5 class="card-text">{{ user.username }}</h5>
+                <h5 class="card-text">{{ user.firstname }} {{ user.lastname }}</h5>
+
+                <a href="{{ url_for('messages.send_message', recipient_id=user.id) }}"
+                   class="btn btn-primary btn-block">View conversation</a>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

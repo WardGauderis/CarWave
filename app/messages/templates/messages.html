@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <div class="pre-scrollable" style="max-height: 65vh">
+        {% for message in messages %}
+            <div class="row" style="margin:0.2rem">
+                {% if current_user.id == message.sender_id %}
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-8 card card-body text-white bg-secondary"
+                         style="padding:0.5rem;border-radius:.8rem">
+                        <h5 class="card-text">{{ message.body }}</h5>
+                        <small>{{ moment(message.timestamp).format('LLLL') }}</small>
+                    </div>
+                {% else %}
+                    <div class="col-sm-8 card card-body" style="padding:0.5rem;border-radius:.8rem">
+                        <h5 class="card-text">{{ message.body }}</h5>
+                        <small class="text-muted">{{ moment(message.timestamp).format('LLLL') }}</small>
+                    </div>
+                    <div class="col-sm-4">
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {# TODO: this doesn't work for some reason #}
+    <form method="post" onsubmit="this.submit(); this.reset(); return false;">
+        {{ wtf.form_field(form.message) }}
+        {{ wtf.form_field(form.submit) }}
+    </form>
+
+{% endblock %}

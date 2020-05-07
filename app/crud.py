@@ -351,11 +351,11 @@ def create_or_update_review(review: Review, author: User, subject: User, as_driv
 
 
 # please change this code if this is not good
-def read_messages_for_user_pair(user1: User, user2: User) -> List[Message]:
+def read_messages_from_user_pair(user1: User, user2: User) -> List[Message]:
     query = Message.query
     query.filter(
-        Message.sender_id == user1.id or Message.sender_id == user2.id or
-        Message.recipient_id == user1.id or Message.recipient_id == user2.id)
+        (Message.sender_id == user1.id and Message.recipient_id == user2.id) or
+        (Message.sender_id == user2.id and Message.recipient_id == user1.id))
 
     return query.limit(10).all()
 
@@ -373,3 +373,9 @@ def create_message(sender: User, recipient: User, body: str) -> Message:
     except:
         db.session.rollback()
         abort(400, 'Invalid message creation')
+
+
+#TODO: does not work yet
+def read_messaged_users(sender: User):
+    query = User.query
+    return query.limit(10).all()

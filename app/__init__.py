@@ -48,6 +48,8 @@ def create_app(config=Config):
     app.register_blueprint(profile_bp)
     from app.review import bp as review_bp
     app.register_blueprint(review_bp)
+    from app.messages import bp as messages_bp
+    app.register_blueprint(messages_bp)
 
     bootstrap.init_app(app)
     db.init_app(app)
