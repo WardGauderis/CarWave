@@ -2,7 +2,7 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <div class="pre-scrollable" style="max-height: 65vh">
+    <div id="scroll" class="pre-scrollable" style="max-height: 60vh">
         {% for message in messages %}
             <div class="row" style="margin:0.2rem">
                 {% if current_user.id == message.sender_id %}
@@ -24,10 +24,23 @@
         {% endfor %}
     </div>
 
-    {# TODO: this doesn't work for some reason #}
-    <form method="post" onsubmit="this.submit(); this.reset(); return false;">
-        {{ wtf.form_field(form.message) }}
+    {# TODO: reset fields #}
+    <form method="post">
+        {{ wtf.form_field(form.message, id='message') }}
         {{ wtf.form_field(form.submit) }}
     </form>
+
+{% endblock %}
+
+{% block app_scripts %}
+    <script type="text/javascript">
+    function f()
+    {
+        let element = document.getElementById("scroll");
+        element.scrollTop = element.scrollHeight;
+    }
+    {# don't touch, this is radioactive javascript code #}
+    window.setTimeout(f, 100);
+    </script>
 
 {% endblock %}

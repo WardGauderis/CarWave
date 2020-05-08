@@ -13,18 +13,18 @@
 
         {% if time is defined and time == 'future' or time == 'past' or time == 'all' %}
             {% if time != 'future' %}
-                <button onclick="location.href = '{{ url_for('offer.all_rides', time='future') }}';" type="button"
-                        class="col-sm-2 btn btn-secondary btn-block" style="padding:10px"> future
+                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='future') }}';" type="button"
+                        class="col-2 btn btn-secondary" style="border-radius:100px"> future drives
                 </button>
             {% endif %}
             {% if time != 'past' %}
-                <button onclick="location.href = '{{ url_for('offer.all_rides', time='past') }}';" type="button"
-                        class="col-sm-2 btn btn-secondary btn-block" style="padding:10px"> past drives
+                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='past') }}';" type="button"
+                        class="col-2 btn btn-secondary" style="border-radius:100px"> past drives
                 </button>
             {% endif %}
             {% if time != 'all' %}
-                <button onclick="location.href = '{{ url_for('offer.all_rides', time='all') }}';" type="button"
-                        class="col-sm-2 btn btn-secondary btn-block" style="padding:10px"> all drives
+                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='all') }}';" type="button"
+                        class="col-2 btn btn-secondary" style="border-radius:100px"> all drives
                 </button>
             {% endif %}
         {% endif %}
@@ -62,16 +62,11 @@
     {% if page is defined and max_pages is defined %}
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
-                {% if page > 2 %}
-                    <li class="page-item"><a class="page-link" href="#">{{ page - 2 }}</a></li>
-                {% elif page > 1 %}
-                    <li class="page-item"><a class="page-link" href="#">{{ page - 1 }}</a></li>
+                {% if page > 1 %}
+                    <li class="page-item"><a class="page-link" href="#">previous</a></li>
                 {% endif %}
-                <li class="page-item"><a class="page-link" href="#">{{ page }}</a></li>
                 {% if max_pages - page > 1 %}
-                    <li class="page-item"><a class="page-link" href="#">{{ page + 1 }}</a></li>
-                {% elif max_pages - page > 2 %}
-                    <li class="page-item"><a class="page-link" href="#">{{ page + 2 }}</a></li>
+                    <li class="page-item"><a class="page-link" href="#">{{ next }}</a></li>
                 {% endif %}
             </ul>
         </nav>

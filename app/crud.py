@@ -358,7 +358,7 @@ def read_messages_from_user_pair(user1: User, user2: User) -> List[Message]:
         and_(Message.sender_id == user2.id, Message.recipient_id == user1.id)
     ))
 
-    return query.limit(10).all()
+    return query.limit(50).all()
 
 
 def create_message(sender: User, recipient: User, body: str) -> Message:
@@ -376,7 +376,6 @@ def create_message(sender: User, recipient: User, body: str) -> Message:
         abort(400, 'Invalid message creation')
 
 
-#TODO: should work now
 def read_messaged_users(sender: User):
     users_messaged = db.session.query(Message.recipient_id).filter(Message.sender_id == sender.id).distinct().all()
     users_messaged = User.query.filter(User.id.in_(users_messaged)).limit(10).all()

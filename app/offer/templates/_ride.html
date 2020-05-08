@@ -39,11 +39,25 @@
                         Unknown
                     {% endif %}<br>
                     <span class="text-left font-weight-bold">Arrival Time: </span>{{ moment(ride.arrival_time).format('LLLL') }}<br>
+
+                    {% if requests is defined %}
+                        <p>
+                            <span class="text-left font-weight-bold">Request status: </span>
+                            {% if request.status == 'accepted' %}
+                                <span class="badge badge-success">{{ request.status }}</span>
+                            {% elif request.status == 'rejected' %}
+                                <span class="badge badge-danger">{{ request.status }}</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ request.status }}</span>
+                            {% endif %}
+                        </p>
+                    {% endif %}
                 </div>
                 <div class="col">
                     <span class="text-left font-weight-bold">Driver: </span><a
                         href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a>
                     {% set rating = ride.driver.get_rating(True) %}<br>
+                    <span class="font-weight-bold">Rating: </span>
                     {% if rating %}
                         <span class="font-weight-bold">Rating: </span>
                         {% include '_rating.html' %}
@@ -70,44 +84,39 @@
                     <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
                 </div>
             </div>
-            {% if requests is defined %}
-                <p>
-                    <span class="text-left font-weight-bold">Request status: </span>
-                    {% if request.status == 'accepted' %}
-                        <span class="badge badge-success">{{ request.status }}</span>
-                    {% elif request.status == 'rejected' %}
-                        <span class="badge badge-danger">{{ request.status }}</span>
+            <div class="row">
+                <form method="post" name="ride" class="col-6">
+                    {% if rides is defined %}
+                        {{ form.ride_id(type="hidden", value=ride.id) }}
+                        {% if not current_user.is_authenticated %}
+                            {#show nothing if user is not authenticated#}
+                        {% elif ride.driver_id == current_user.id %}
+                            {{ form.button1(value='Edit ride', class="col-5 btn btn-primary text-white form-control") }}
+                            {{ form.button2(value='Delete ride', class="col-5 btn btn-danger text-white form-control") }}
+                        {% else %}
+                            {{ form.button1(value='Request ride', class="col-5 btn btn-primary text-white form-control") }}
+                        {% endif %}
+                    {% elif requests is defined %}
+                        {{ form.ride_id(type="hidden", value=request.ride_id) }}
+                        {{ form.user_id(type="hidden", value=request.user_id) }}
+                        {% if request.user_id == current_user.id %}
+                            {{ form.button2(value="Delete request", class="col-5 btn btn-danger text-white form-control") }}
+                        {% elif request.ride.driver_id == current_user.id %}
+                            {{ form.button1(value="Accept request", class="col-5 btn btn-primary text-white form-control") }}
+                            {{ form.button2(value="Reject request", class="col-5 btn btn-danger text-white form-control") }}
+                        {% else %}
+                            {# show nothing if ride is neither from passenger nor from driver #}
+                        {% endif %}
                     {% else %}
-                        <span class="badge badge-info">{{ request.status }}</span>
+                        {# show nothing the list is either rides or requests #}
                     {% endif %}
-                </p>
-            {% endif %}
-            <form method="post" name="ride">
-                {% if rides is defined %}
-                    {{ form.ride_id(type="hidden", value=ride.id) }}
-                    {% if not current_user.is_authenticated %}
-                        {#show nothing if user is not authenticated#}
-                    {% elif ride.driver_id == current_user.id %}
-                        {{ wtf.form_field(form.button1, value="Edit ride") }}
-                        {{ wtf.form_field(form.button2, value="Delete ride", button_map={'button2':'danger'}) }}
-                    {% else %}
-                        {{ wtf.form_field(form.button1, value="Request ride") }}
-                    {% endif %}
-                {% elif requests is defined %}
-                    {{ form.ride_id(type="hidden", value=request.ride_id) }}
-                    {{ form.user_id(type="hidden", value=request.user_id) }}
-                    {% if request.user_id == current_user.id %}
-                        {{ wtf.form_field(form.button2, value="Delete request", button_map={'button2':'danger'}) }}
-                    {% elif request.ride.driver_id == current_user.id %}
-                        {{ wtf.form_field(form.button1, value="Accept request") }}
-                        {{ wtf.form_field(form.button2, value="Reject request", button_map={'button2':'danger'}) }}
-                    {% else %}
-                        {#show nothing if ride is neither from passenger nor from driver#}
-                    {% endif %}
-                {% else %}
-                    {#show nothing the list is either rides or requests#}
+                </form>
+                <div class="col-1"></div>
+                {% if current_user != ride.driver %}
+                    <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
+                       class="btn btn-primary col-4">Send message</a>
                 {% endif %}
-            </form>
+            </div>
         </div>
         <div class="tab-pane fade" id="body-map-{{ ride.id }}">
             <div id="map{{ ride.id }}" style="height: 500px;"></div>

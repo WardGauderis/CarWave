@@ -171,10 +171,9 @@ def all_rides(time):
     title.capitalize()
 
     rides = read_all_drives(time, limit=20)
-    max_pages = len(rides) // 10 + 1
 
     return render_template('rides.html', title=title, none_found="no rides found", form=form,
-                           time=time, rides=rides, max_pages=max_pages, page=1, background=True)
+                           time=time, rides=rides, page=1, background=True)
 
 
 @bp.route('/passenger_rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
@@ -193,7 +192,7 @@ def passenger_rides(time):
         title.capitalize()
 
         return render_template('rides.html', title=title,
-                               none_found='No future drives with you as passenger found',
+                               none_found='No drives with you as passenger found',
                                requests=current_user.future_or_past_passenger_requests(time), time=time,
                                form=form, background=True)
 
