@@ -10,6 +10,7 @@ from flask_login import UserMixin
 from geoalchemy2 import Geometry
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import db, login
 
 
@@ -120,32 +121,30 @@ class User(UserMixin, db.Model):
 
     def get_tags(self, as_driver: bool) -> List[str]:
         return db.engine.execute(
-            'select tag.title from tag join review r on tag.review_id = r.id '
-            f'where r.to_id = {self.id} and r.as_driver = {as_driver} '
-            'group by tag.title order by count(tag.title) desc limit 10;').fetchall()
+            "SELECT tag.title FROM tag JOIN review r ON tag.review_id = r.id "
+            f"WHERE r.to_id = {self.id} AND r.as_driver = {as_driver} "
+            "GROUP BY tag.title ORDER BY count(tag.title) DESC LIMIT 10;").fetchall()
 
     def get_rating(self, driver: bool) -> int:
         res = db.session.query(func.avg(Review.rating).label('average')).filter(
             Review.subject == self).filter(Review.as_driver == driver).one_or_none()
-        if res.average is None:
-            return res.average
-        return round(res.average)
+        return round(res.average) if res.average else None
 
     def may_review_driver(self, user) -> bool:
-        return db.engine.execute('select case when exists(select ride_id from rides join passenger_requests pr on '
-                                 'rides.id = pr.ride_id and pr.status = \'accepted\' '
-                                 f'where rides.arrival_time > now() and {self.id} != {user.id} '
-                                 f'and (pr.user_id = {self.id} and rides.driver_id = {user.id})'
-                                 ') then 1 else 0 end;').fetchone()[0]
+        return db.engine.execute('SELECT CASE WHEN EXISTS (SELECT ride_id FROM rides JOIN passenger_requests pr ON '
+                                 'rides.id = pr.ride_id AND pr.status = \'accepted\' '
+                                 f'WHERE rides.arrival_time > now() AND {self.id} != {user.id} '
+                                 f'AND (pr.user_id = {self.id} AND rides.driver_id = {user.id})'
+                                 ') THEN 1 ELSE 0 END;').fetchone()[0]
 
     def may_review_passenger(self, user) -> bool:
-        return db.engine.execute('select case when exists (select r.id from rides r '
-                                 'join passenger_requests pr1 on r.id = pr1.ride_id and pr1.status = \'accepted\' '
-                                 'join passenger_requests pr2 on r.id = pr2.ride_id and pr2.status = \'accepted\' '
-                                 f'where r.arrival_time > now() and {self.id} != {user.id} '
-                                 f'and pr1.user_id = {self.id} and pr2.user_id = {user.id} '
-                                 f'or r.driver_id = {self.id} and pr1.user_id = {user.id}) '
-                                 'then 1 else 0 end;').fetchone()[0]
+        return db.engine.execute('SELECT CASE WHEN EXISTS (SELECT r.id FROM rides r '
+                                 'JOIN passenger_requests pr1 ON r.id = pr1.ride_id AND pr1.status = \'accepted\' '
+                                 'JOIN passenger_requests pr2 ON r.id = pr2.ride_id AND pr2.status = \'accepted\' '
+                                 f'WHERE r.arrival_time > now() AND {self.id} != {user.id} '
+                                 f'AND pr1.user_id = {self.id} AND pr2.user_id = {user.id} '
+                                 f'OR r.driver_id = {self.id} AND pr1.user_id = {user.id}) '
+                                 'THEN 1 ELSE 0 END;').fetchone()[0]
 
     def reviews(self, driver: bool, page: int):
         return self.received_reviews.filter(Review.as_driver == bool(driver)).order_by(
@@ -279,7 +278,7 @@ class Review(db.Model):
     to_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     as_driver = db.Column(db.Boolean, nullable=False)
     review = db.Column(db.String(1024), nullable=False)
-    rating = db.Column(db.Integer, nullable=False, )
+    rating = db.Column(db.Integer, nullable=False)
     last_modified = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
 
     tags = db.relationship('Tag', back_populates='review', cascade="all, delete, delete-orphan")
@@ -288,6 +287,9 @@ class Review(db.Model):
 
 
 class Tag(db.Model):
+    """
+    multivalued attribute of Review
+    """
     review_id = db.Column(db.Integer, db.ForeignKey('review.id', ondelete='CASCADE'), primary_key=True)
     title = db.Column(db.String(64), primary_key=True)
 

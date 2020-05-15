@@ -1,20 +1,26 @@
 import json
 from datetime import datetime, timedelta
 
-from flask import Response, abort, request, g
+import pytz
+from flask import Response, abort, g, request
 
 from app.api import bp
 from app.auth.auth import token_auth
-from app.models import Ride, PassengerRequest
-from app.crud import create_user, read_user_from_login, read_drive_from_id, create_drive, create_passenger_request, \
-    update_passenger_request, search_drives
-from app.auth.forms import UserForm, LoginForm
+from app.auth.forms import LoginForm, UserForm
+from app.crud import (create_drive, create_passenger_request, create_user,
+                      read_drive_from_id, read_user_from_login, search_drives,
+                      update_passenger_request)
+from app.models import PassengerRequest, Ride
 from app.offer.forms import OfferForm
-import pytz
 
 
 def belgian_iso_string(time):
-    return pytz.timezone('Europe/Brussels').normalize(pytz.utc.localize(time)).replace(tzinfo=None).isoformat()
+    return (
+        pytz.timezone("Europe/Brussels")
+        .normalize(pytz.utc.localize(time))
+        .replace(tzinfo=None)
+        .isoformat()
+    )
 
 
 @bp.route("/users/register", methods=["POST"])
@@ -59,7 +65,7 @@ def register_drive():
                 "arrive-by": belgian_iso_string(drive.arrival_time),
             },
             201,
-            {"Location": f"/drives/{drive.id}"}
+            {"Location": f"/drives/{drive.id}"},
         )
     abort(409, form.get_errors())
 
@@ -75,9 +81,7 @@ def get_drive(drive_id: int):
         {
             "id": ride.id,
             "driver-id": ride.driver_id,
-            "passenger-ids": [
-                request.user_id for request in ride.accepted_requests()
-            ],
+            "passenger-ids": [request.user_id for request in ride.accepted_requests()],
             "passenger-places": ride.passenger_places,
             "from": ride.depart_from,
             "to": ride.arrive_at,
@@ -96,9 +100,13 @@ def get_passengers(drive_id):
 
     return Response(
         json.dumps(
-            [{"id": request.user_id, "username": request.passenger.username} for request in ride.accepted_requests()]),
+            [
+                {"id": request.user_id, "username": request.passenger.username}
+                for request in ride.accepted_requests()
+            ]
+        ),
         status=200,
-        mimetype="application/json"
+        mimetype="application/json",
     )
 
 
@@ -113,17 +121,19 @@ def passenger_requests(drive_id):
     if request.method == "GET":
         if ride.driver == user:
             return Response(
-                json.dumps([
-                    {
-                        "id": p_request.user_id,
-                        "username": p_request.passenger.username,
-                        "status": p_request.status,
-                        "time-created": belgian_iso_string(p_request.created_at),
-                    }
-                    for p_request in ride.requests
-                ]),
+                json.dumps(
+                    [
+                        {
+                            "id": p_request.user_id,
+                            "username": p_request.passenger.username,
+                            "status": p_request.status,
+                            "time-created": belgian_iso_string(p_request.created_at),
+                        }
+                        for p_request in ride.requests
+                    ]
+                ),
                 status=200,
-                mimetype="application/json"
+                mimetype="application/json",
             )
         else:
             abort(401, "Invalid authorization")
@@ -137,7 +147,9 @@ def passenger_requests(drive_id):
                 "time-created": belgian_iso_string(p_request.created_at),
             },
             201,
-            {"Location": f"/drives/{p_request.ride_id}/passenger-requests/{p_request.user_id}"},
+            {
+                "Location": f"/drives/{p_request.ride_id}/passenger-requests/{p_request.user_id}"
+            },
         )
 
 
@@ -199,8 +211,9 @@ def search_drive():
     max_consumption = request.args.get("max_consumption")
     min_age = request.args.get("min_age")
     max_age = request.args.get("max_age")
-    min_rating = None
-    max_rating = None
+    min_rating = request.args.get("min_rating")
+    max_rating = request.args.get("max_rating")
+    tags = request.args.get("tags")
 
     # TODO: explicitly type check arguments
     try:
@@ -214,10 +227,18 @@ def search_drive():
             stop_distance = int(stop_distance) if stop_distance else 5000
         if depart_by:
             depart_by = datetime.strptime(depart_by, "%Y-%m-%dT%H:%M:%S.%f")
-            depart_delta = timedelta(minutes=int(depart_delta)) if depart_delta else timedelta(minutes=30)
+            depart_delta = (
+                timedelta(minutes=int(depart_delta))
+                if depart_delta
+                else timedelta(minutes=30)
+            )
         if arrive_by:
             arrive_by = datetime.strptime(arrive_by, "%Y-%m-%dT%H:%M:%S.%f")
-            arrival_delta = timedelta(minutes=int(arrival_delta)) if arrival_delta else timedelta(minutes=30)
+            arrival_delta = (
+                timedelta(minutes=int(arrival_delta))
+                if arrival_delta
+                else timedelta(minutes=30)
+            )
         if min_consumption:
             min_consumption = float(min_consumption)
         if max_consumption:
@@ -226,33 +247,49 @@ def search_drive():
             min_age = int(min_age)
         if max_age:
             max_age = int(max_age)
+        if min_rating:
+            min_rating = float(min_rating)
+        if max_rating:
+            max_rating = float(max_rating)
+        if tags:
+            tags = set(tags.split(","))
     except:
         abort(400, "Invalid format")
 
-    rides = search_drives(limit=limit,
-                          arrival=start,
-                          arrival_distance=start_distance,
-                          arrival_time=arrive_by,
-                          departure=stop,
-                          departure_distance=stop_distance,
-                          departure_time=depart_by,
-                          departure_delta=depart_delta,
-                          arrival_delta=arrival_delta,
-                          sex=sex,
-                          age_range=(min_age, max_age),
-                          consumption_range=(min_consumption, max_consumption),
-                          rating=(min_rating, max_rating))
+    rides = search_drives(
+        limit=limit,
+        arrival=start,
+        arrival_distance=start_distance,
+        arrival_time=arrive_by,
+        departure=stop,
+        departure_distance=stop_distance,
+        departure_time=depart_by,
+        departure_delta=depart_delta,
+        arrival_delta=arrival_delta,
+        sex=sex,
+        age_range=(min_age, max_age),
+        consumption_range=(min_consumption, max_consumption),
+        driver_rating=(min_rating, max_rating),
+        tags=tags,
+    )
     return Response(
-        json.dumps([
-            {
-                "id": ride.id,
-                "driver-id": ride.driver_id,
-                "passenger-ids": [req.user_id for req in ride.accepted_requests()],
-                "from": ride.depart_from,
-                "to": ride.arrive_at,
-                "arrive-by": ride.arrival_time.isoformat(),
-            } for ride in rides
-        ]),
+        json.dumps(
+            [
+                {
+                    "id": ride.id,
+                    "driver-id": ride.driver_id,
+                    "passenger-ids": [req.user_id for req in ride.accepted_requests()],
+                    "from": ride.depart_from,
+                    "to": ride.arrive_at,
+                    "arrive-by": belgian_iso_string(
+                        datetime.strptime(
+                            ride.arrival_time.isoformat(), "%Y-%m-%dT%H:%M:%S"
+                        )
+                    ),
+                }
+                for ride in rides
+            ]
+        ),
         status=200,
-        mimetype="application/json"
+        mimetype="application/json",
     )

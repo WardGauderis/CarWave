@@ -54,7 +54,7 @@
             <h4>{{ none_found }}</h4>
         {% endif %}
         {% for request in requests %}
-            {% set ride = request.ride -%}
+            {% set ride = request.ride %}
             {% include '_ride.html' %}
         {% endfor %}
     {% endif %}

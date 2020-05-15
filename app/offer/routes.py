@@ -141,6 +141,7 @@ def find():
             consumption_range = (None, details.usage.data)
         if details.gender.data != 'any':
             sex = details.gender.data
+        # TODO: rating
 
     rides = search_drives(departure=from_location,
                           arrival=to_location,
@@ -151,6 +152,7 @@ def find():
                           age_range=age_range,
                           consumption_range=consumption_range,
                           sex=sex,
+                          driver_rating=None,
                           exclude_past_rides=True)
 
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,

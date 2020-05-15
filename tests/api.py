@@ -37,15 +37,15 @@ prints = []
 #
 # prints.append(request_and_response(r12))
 #
-# # AUTH
-#
-# r21 = requests.post(
-#     f"{BASE_URL}/users/auth",
-#     headers={"Content-Type": "application/json"},
-#     data=json.dumps({"username": "MarkP", "password": "MarkIsCool420"}),
-# )
-#
-# prints.append(request_and_response(r21))
+# AUTH
+
+r21 = requests.post(
+    f"{BASE_URL}/users/auth",
+    headers={"Content-Type": "application/json"},
+    data=json.dumps({"username": "wardgauderis", "password": "testuser123"}),
+)
+
+prints.append(request_and_response(r21))
 #
 # r22 = requests.post(
 #     f"{BASE_URL}/users/auth",
@@ -63,7 +63,7 @@ prints = []
 #
 # prints.append(request_and_response(r23))
 #
-# # POST RIDE
+# POST RIDE
 # TOKEN = r21.json()["token"]
 # BEARER_AUTH = f"Bearer {TOKEN}"
 #
@@ -75,11 +75,11 @@ prints = []
 #             "from": [51.130215, 4.571509],
 #             "to": [51.18417, 4.41931],
 #             "passenger-places": 3,
-#             "arrive-by": "2020-07-12T10:00:00.00",
+#             "arrive-by": "2020-05-14T10:00:00.00",
 #         }
 #     ),
 # )
-#
+
 # prints.append(request_and_response(r3))
 #
 # # GET SPECIFIC RIDE
@@ -107,7 +107,7 @@ prints = []
 # prints.append(request_and_response(r7))
 
 r8 = requests.get(
-    f"{BASE_URL}/drives/search?sex=female",
+    f"{BASE_URL}/drives/search?min_rating=3.5&max_rating=5.6&tags=eh&arrive_by=2020-05-19T21:30:00.00&sex=male",
     # f"{BASE_URL}/drives/search?arrive_by=2020-11-14T05:00:00.00&sex=female&min_consumption=1.5&max_consumption=2.3&min_age=26&max_age=44",
     headers={"Content-Type": "application/json"},
 )
