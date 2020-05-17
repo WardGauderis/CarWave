@@ -148,6 +148,8 @@ def search_drives(
 
     # Default limit
     limit = 5 if limit is None else limit
+    departure_delta = timedelta(minutes=30) if departure_delta is None else departure_delta
+    arrival_delta = timedelta(minutes=30) if arrival_delta is None else arrival_delta
 
     if departure:
         query = query.filter(
@@ -242,7 +244,7 @@ def search_drives(
             user_tags[user_id].add(tag)
         valid_users = []
         for user_id, user_tags in user_tags.items():
-            if tags <= user_tags:  # is subset check
+            if tags <= user_tags:  # subset check
                 valid_users.append(user_id)
         query = query.filter(Ride.driver_id.in_(valid_users))
 

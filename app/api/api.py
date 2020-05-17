@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timedelta
 
+import dateutil
 import pytz
 from flask import Response, abort, g, request
 
@@ -220,20 +221,22 @@ def search_drive():
         if limit:
             limit = max(MIN_RIDES, min(int(limit), MAX_RIDES))
         if start:
-            start = map(float, start.split(","))
+            start = [*map(str.strip, start.split(","))]
             start_distance = int(start_distance) if start_distance else 5000
         if stop:
-            stop = map(float, stop.split(","))
+            stop = [*map(str.strip, stop.split(","))]
             stop_distance = int(stop_distance) if stop_distance else 5000
         if depart_by:
-            depart_by = datetime.strptime(depart_by, "%Y-%m-%dT%H:%M:%S.%f")
+            depart_by = dateutil.parser.isoparse(depart_by).replace(tzinfo=None)
+            depart_by = pytz.utc.normalize(pytz.timezone('Europe/Brussels').localize(depart_by)).replace(tzinfo=None)
             depart_delta = (
                 timedelta(minutes=int(depart_delta))
                 if depart_delta
                 else timedelta(minutes=30)
             )
         if arrive_by:
-            arrive_by = datetime.strptime(arrive_by, "%Y-%m-%dT%H:%M:%S.%f")
+            arrive_by = dateutil.parser.isoparse(arrive_by).replace(tzinfo=None)
+            arrive_by = pytz.utc.normalize(pytz.timezone('Europe/Brussels').localize(arrive_by)).replace(tzinfo=None)
             arrival_delta = (
                 timedelta(minutes=int(arrival_delta))
                 if arrival_delta
@@ -252,20 +255,21 @@ def search_drive():
         if max_rating:
             max_rating = float(max_rating)
         if tags:
-            tags = set(tags.split(","))
-    except:
+            tags = set(map(str.strip, tags.split(",")))
+    except Exception as e:
+        print(e)
         abort(400, "Invalid format")
 
     rides = search_drives(
         limit=limit,
-        arrival=start,
-        arrival_distance=start_distance,
+        arrival=stop,
+        arrival_distance=stop_distance,
         arrival_time=arrive_by,
-        departure=stop,
-        departure_distance=stop_distance,
+        arrival_delta=arrival_delta,
+        departure=start,
+        departure_distance=start_distance,
         departure_time=depart_by,
         departure_delta=depart_delta,
-        arrival_delta=arrival_delta,
         sex=sex,
         age_range=(min_age, max_age),
         consumption_range=(min_consumption, max_consumption),

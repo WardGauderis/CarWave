@@ -15,6 +15,8 @@ from app import db, login
 
 
 def to_point(coords):
+    if len(coords) != 2 and not all([isinstance(coord, str) for coord in coords]):
+        raise ValueError("Coords must be a tuple or list with exactly two strings")
     return f"SRID=4326;POINT({' '.join(coords)})"
 
 
