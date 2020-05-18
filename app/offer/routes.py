@@ -99,7 +99,7 @@ def requests():
             return res
 
     pending = []
-    for drive in read_drive_from_driver(current_user, True):
+    for drive in read_drive_from_driver(current_user, "future", 1):
         pending += drive.pending_requests()
     pending = pending[:10]
 
@@ -157,6 +157,7 @@ def find():
                           driver_rating=None,
                           exclude_past_rides=True)
 
+    # TODO: pagination, see below for details
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
                            form=form, rides=rides, background=True)
 
@@ -174,10 +175,14 @@ def all_rides(time):
     title = time + " drives"
     title.capitalize()
 
-    rides = read_all_drives(time, limit=20)
+    page = request.args.get('page', 1, type=int)
+    rides = read_all_drives(time, page)
+
+    prev_url = url_for("offer.all_rides", page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.all_rides", page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title=title, none_found="no rides found", form=form,
-                           time=time, rides=rides, page=1, background=True)
+                           time=time, rides=rides.items, prev_url=prev_url, next_url=next_url, background=True)
 
 
 @bp.route('/passenger_rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
@@ -191,14 +196,19 @@ def passenger_rides(time):
         if res is not None:
             return res
 
-    else:
-        title = time + " passenger drives"
-        title.capitalize()
+    title = time + " passenger drives"
+    title.capitalize()
 
-        return render_template('rides.html', title=title,
-                               none_found='No drives with you as passenger found',
-                               requests=current_user.future_or_past_passenger_requests(time), time=time,
-                               form=form, background=True)
+    page = request.args.get('page', 1, type=int)
+    rides = current_user.future_or_past_passenger_requests(time, page)
+
+    prev_url = url_for("offer.all_rides", page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.all_rides", page=rides.next_num) if rides.has_next else None
+
+    return render_template('rides.html', title=title,
+                           none_found='No drives with you as passenger found',
+                           requests=rides.items, time=time, prev_url=prev_url, next_url=next_url,
+                           form=form, background=True)
 
 
 @bp.route('/driver_rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
@@ -217,7 +227,13 @@ def driver_rides(time):
         res = crud_logic()
         if res is not None:
             return res
-    else:
-        return render_template('rides.html', title=title, none_found='No drives organised by you found',
-                               rides=read_drive_from_driver(current_user, True), form=form, time=time,
-                               background=True)
+
+    page = request.args.get('page', 1, type=int)
+    rides = read_drive_from_driver(current_user, time, page)
+
+    prev_url = url_for("offer.all_rides", page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.all_rides", page=rides.next_num) if rides.has_next else None
+
+    return render_template('rides.html', title=title, none_found='No drives organised by you found',
+                           rides=rides.items, form=form, time=time, prev_url=prev_url, next_url=next_url,
+                           background=True)

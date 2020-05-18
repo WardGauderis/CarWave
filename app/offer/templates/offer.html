@@ -75,9 +75,11 @@
 
         const hour = (temp_date.getHours() < 10 ? "0" : "") + temp_date.getHours();
         const min = (temp_date.getMinutes() < 10 ? "0" : "") + temp_date.getMinutes();
+        const day = (temp_date.getDate() < 10 ? "0" : "") + temp_date.getDate();
+        const month = ((temp_date.getMonth()+1) < 10 ? "0" : "") + (temp_date.getMonth()+1);
 
         document.getElementById("time").value = hour + ':' + min;
-        document.getElementById("date").value = temp_date.toISOString().slice(0, 10);
+        document.getElementById("date").value = temp_date.getFullYear() + '-' + month + '-' + day
 
         document.getElementById("arrival_time").value = new Date('{{ at }}').toISOString();
 
@@ -146,7 +148,7 @@
                     else alert("yeeet")
                 },
                 error: function (xhr) {
-                    alert(xhr)
+                    console.log(xhr)
                 }
             });
         }

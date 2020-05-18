@@ -83,13 +83,13 @@ class User(UserMixin, db.Model):
     def accepted_passenger_requests(self):
         return self.requests.filter_by(status="accepted")
 
-    def future_or_past_passenger_requests(self, future_or_past: str = '') -> List[PassengerRequest]:
+    def future_or_past_passenger_requests(self, future_or_past: str, page: int):
         query = self.requests.join(Ride)
         if future_or_past == 'future':
             query = query.filter(Ride.arrival_time > datetime.utcnow())
         elif future_or_past == 'past':
             query = query.filter(Ride.arrival_time <= datetime.utcnow())
-        return query.all()
+        return query.paginate(page, 20, False)
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)

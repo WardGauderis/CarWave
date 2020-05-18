@@ -13,7 +13,8 @@
 
         {% if time is defined and time == 'future' or time == 'past' or time == 'all' %}
             {% if time != 'future' %}
-                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='future') }}';" type="button"
+                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='future') }}';"
+                        type="button"
                         class="col-2 btn btn-secondary" style="border-radius:100px"> future drives
                 </button>
             {% endif %}
@@ -59,18 +60,16 @@
         {% endfor %}
     {% endif %}
 
-    {% if page is defined and max_pages is defined %}
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
-                {% if page > 1 %}
-                    <li class="page-item"><a class="page-link" href="#">previous</a></li>
-                {% endif %}
-                {% if max_pages - page > 1 %}
-                    <li class="page-item"><a class="page-link" href="#">{{ next }}</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if prev_url %}
+                <li class="page-item"><a class="page-link" href="{{ prev_url }}">previous</a></li>
+            {% endif %}
+            {% if next_url %}
+                <li class="page-item"><a class="page-link" href="{{ next_url }}">next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
 
 
 {% endblock %}
