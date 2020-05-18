@@ -4,6 +4,7 @@ import requests as req
 from app.offer import bp
 from app.offer.forms import *
 from app.crud import *
+from app.offer.email import *
 
 
 # TODO fix text if nothing found
@@ -34,6 +35,7 @@ def crud_logic():
             drive = read_drive_from_id(request.form['ride_id'])
             try:
                 create_passenger_request(current_user, drive)
+                send_passenger_request_email(current_user, drive)
                 flash('Congratulations, you successfully subscribed as passenger', 'success')
                 return redirect(url_for('main.index'))
             except Exception as e:

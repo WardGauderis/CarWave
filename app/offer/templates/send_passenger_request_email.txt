@@ -1,0 +1,11 @@
+Dear CarWave User,
+
+You have recieved a new passenger request for the following drive:
+
+Passenger: {{ user.username }}
+
+If you have not requested a password reset simply ignore this message.
+
+Sincerely,
+
+The CarWave Team
