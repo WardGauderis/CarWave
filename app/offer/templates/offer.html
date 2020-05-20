@@ -145,7 +145,6 @@
 
                     if (which === 'from') document.getElementById("departure_id").value = res;
                     else if (which === 'to') document.getElementById("arrival_id").value = res;
-                    else alert("yeeet")
                 },
                 error: function (xhr) {
                     console.log(xhr)
@@ -188,9 +187,9 @@
                     success: function (xhr) {
                         if (xhr.features.length === 0) {
                             if (which === 'from') {
-                                alert("could not find departure address location: {{ fl }}")
+                                alert("could not find departure address location: {{ fl }}, please refresh or try again later")
                             } else if (which === 'to') {
-                                alert("could not find arrival address location: {{ tl }}")
+                                alert("could not find arrival address location: {{ tl }}, please refresh or try again later")
                             }
                         }
 
@@ -218,7 +217,8 @@
                         }
                     },
                     error: function (xhr) {
-                        alert(xhr)
+                        console.log(xhr)
+                        alert("there was an error finding the specified locations, please refresh or try again later")
                     }
                 });
             };
