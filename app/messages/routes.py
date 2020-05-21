@@ -19,9 +19,13 @@ def send_message(recipient_id):
         create_message(current_user, recipient, form.message.data)
         return redirect(url_for('messages.send_message', recipient_id=recipient_id))
 
-    messages = read_messages_from_user_pair(current_user, recipient)
+    amount = request.args.get('amount', 20, type=int)
+    messages = read_messages_from_user_pair(current_user, recipient, amount)
+    load_more = (len(messages) == amount)
+    loaded_new = (amount != 20)
 
-    return render_template('messages.html', title='Send Message', form=form, messages=messages, background=True)
+    return render_template('messages.html', title='Send Message', form=form, messages=messages, background=True,
+                           load_more=load_more, loaded_new=loaded_new, recipient_id=recipient_id)
 
 
 @bp.route('/messages/view', methods=['GET', 'POST'])

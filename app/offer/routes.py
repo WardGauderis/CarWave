@@ -162,6 +162,13 @@ def find():
                            form=form, rides=rides, background=True)
 
 
+@bp.route('/ride/<ride_id>', methods=['POST', 'GET'])
+def ride(ride_id):
+    # TODO: als ge /ride/10000 ingeeft abort hij niet maar crashed hij...
+    drive = read_drive_from_id(ride_id)
+    return render_template('ride.html', ride=drive, background=True)
+
+
 @bp.route('/rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
 @bp.route('/rides/<string:time>', methods=['POST', 'GET'])
 def all_rides(time):

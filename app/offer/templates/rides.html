@@ -8,31 +8,22 @@
 {% endblock %}
 
 {% block app_content %}
-    <div class="row">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap">
         <h1 class="display-4 col-sm-7">{{ title }}</h1>
 
         {% if time is defined and time == 'future' or time == 'past' or time == 'all' %}
-            {% if time != 'future' %}
-                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='future') }}';"
-                        type="button"
-                        class="col-2 btn btn-secondary" style="border-radius:100px"> future drives
-                </button>
-            {% endif %}
-            {% if time != 'past' %}
-                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='past') }}';" type="button"
-                        class="col-2 btn btn-secondary" style="border-radius:100px"> past drives
-                </button>
-            {% endif %}
-            {% if time != 'all' %}
-                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, time='all') }}';" type="button"
-                        class="col-2 btn btn-secondary" style="border-radius:100px"> all drives
-                </button>
-            {% endif %}
+            <ul class="pagination" style="margin-bottom: 0; align-items: end">
+                <li class="page-item {% if time == 'future' %} active {% endif %}">
+                    <a class="page-link" href="{{ url_for(request.url_rule.endpoint, time='future') }}">Future</a>
+
+                <li class="page-item {% if time == 'past' %} active {% endif %}">
+                    <a class="page-link" href="{{ url_for(request.url_rule.endpoint, time='past') }}">Past</a>
+
+                <li class="page-item {% if not (time == 'future' or time == 'past') %} active {% endif %}">
+                    <a class="page-link" href="{{ url_for(request.url_rule.endpoint, time='all') }}">All</a>
+            </ul>
         {% endif %}
     </div>
-
-
-
     <hr>
 
     {% if details is defined %}

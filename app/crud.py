@@ -443,16 +443,16 @@ def create_or_update_review(
         abort(400, "Invalid review creation")
 
 
-# TODO: review
-def read_messages_from_user_pair(user1: User, user2: User) -> List[Message]:
+def read_messages_from_user_pair(user1: User, user2: User, amount: int) -> List[Message]:
     query = Message.query.filter(
         or_(
             and_(Message.sender_id == user1.id, Message.recipient_id == user2.id),
             and_(Message.sender_id == user2.id, Message.recipient_id == user1.id),
         )
     )
+    query.order_by(Message.timestamp)
 
-    return query.limit(50).all()
+    return query.limit(amount).all()
 
 
 def create_message(sender: User, recipient: User, body: str) -> Message:

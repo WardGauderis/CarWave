@@ -3,28 +3,37 @@
 
 {% block app_content %}
     <div id="scroll" class="pre-scrollable" style="max-height: 60vh">
-        {% for message in messages %}
-            <div class="row" style="margin:0.2rem">
-                {% if current_user.id == message.sender_id %}
-                    <div class="col-sm-4"></div>
-                    <div class="col-sm-8 card card-body text-white bg-secondary"
-                         style="padding:0.5rem;border-radius:.8rem">
-                        <h5 class="card-text">{{ message.body }}</h5>
-                        <small>{{ moment(message.timestamp).format('LLLL') }}</small>
-                    </div>
-                {% else %}
-                    <div class="col-sm-8 card card-body" style="padding:0.5rem;border-radius:.8rem">
-                        <h5 class="card-text">{{ message.body }}</h5>
-                        <small class="text-muted">{{ moment(message.timestamp).format('LLLL') }}</small>
-                    </div>
-                    <div class="col-sm-4">
-                    </div>
-                {% endif %}
+
+        {% if load_more %}
+            <div class="text-center">
+                <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, recipient_id=recipient_id, amount=messages|length + 20) }}';"
+                        type="button"
+                        class="col-2 btn btn-primary"> load more
+                </button>
             </div>
-        {% endfor %}
+        {% endif %}
+
+    {% for message in messages %}
+        <div class="row" style="margin:0.2rem">
+            {% if current_user.id == message.sender_id %}
+                <div class="col-sm-4"></div>
+                <div class="col-sm-8 card card-body text-white bg-secondary"
+                     style="padding:0.5rem;border-radius:.8rem">
+                    <h5 class="card-text">{{ message.body }}</h5>
+                    <small>{{ moment(message.timestamp).format('LLLL') }}</small>
+                </div>
+            {% else %}
+                <div class="col-sm-8 card card-body" style="padding:0.5rem;border-radius:.8rem">
+                    <h5 class="card-text">{{ message.body }}</h5>
+                    <small class="text-muted">{{ moment(message.timestamp).format('LLLL') }}</small>
+                </div>
+                <div class="col-sm-4">
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
     </div>
 
-    {# TODO: reset fields #}
     <form method="post">
         {{ wtf.form_field(form.message, id='message') }}
         {{ wtf.form_field(form.submit) }}
@@ -34,13 +43,15 @@
 
 {% block app_scripts %}
     <script type="text/javascript">
-    function f()
-    {
-        let element = document.getElementById("scroll");
-        element.scrollTop = element.scrollHeight;
-    }
-    {# don't touch, this is radioactive javascript code #}
-    window.setTimeout(f, 100);
+        function f() {
+            let element = document.getElementById("scroll");
+            element.scrollTop = element.scrollHeight;
+        }
+
+        {% if not loaded_new %}
+            {# don't touch, this is radioactive javascript code #}
+            window.setTimeout(f, 100);
+        {% endif %}
     </script>
 
 {% endblock %}
