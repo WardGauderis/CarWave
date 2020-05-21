@@ -128,6 +128,7 @@ def read_all_drives(future_or_past: str, page: int):
 
 def search_drives(
     limit=5,
+    offset=None,
     departure: List[float] = None,
     departure_distance: int = None,
     arrival: List[float] = None,
@@ -252,7 +253,7 @@ def search_drives(
     if exclude_past_rides:
         query = query.filter(datetime.utcnow() <= Ride.arrival_time)
 
-    return query.limit(limit).all()
+    return query.offset(offset).limit(limit).all()
 
 
 def update_drive(drive: Ride, form):
