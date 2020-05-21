@@ -127,27 +127,29 @@ def read_all_drives(future_or_past: str, page: int):
 
 
 def search_drives(
-        limit=5,
-        departure: List[float] = None,
-        departure_distance: int = None,
-        arrival: List[float] = None,
-        arrival_distance: int = None,
-        departure_time: datetime = None,
-        departure_delta: timedelta = None,
-        arrival_time: datetime = None,
-        arrival_delta: timedelta = None,
-        sex: str = None,
-        age_range: Tuple[int] = None,
-        consumption_range: Tuple[float] = None,
-        driver_rating: Tuple[float] = None,
-        tags: Set[str] = None,
-        exclude_past_rides=False,
+    limit=5,
+    departure: List[float] = None,
+    departure_distance: int = None,
+    arrival: List[float] = None,
+    arrival_distance: int = None,
+    departure_time: datetime = None,
+    departure_delta: timedelta = None,
+    arrival_time: datetime = None,
+    arrival_delta: timedelta = None,
+    sex: str = None,
+    age_range: Tuple[int] = None,
+    consumption_range: Tuple[float] = None,
+    driver_rating: Tuple[float] = None,
+    tags: Set[str] = None,
+    exclude_past_rides=False,
 ) -> List[Ride]:
     query = Ride.query
 
     # Default limit
     limit = 5 if limit is None else limit
-    departure_delta = timedelta(minutes=30) if departure_delta is None else departure_delta
+    departure_delta = (
+        timedelta(minutes=30) if departure_delta is None else departure_delta
+    )
     arrival_delta = timedelta(minutes=30) if arrival_delta is None else arrival_delta
 
     if departure:
@@ -212,8 +214,8 @@ def search_drives(
         # of a ride against those users
         valid_users = (
             db.session.query(User.id)
-                .filter(Review.as_driver, Review.to_id == User.id)
-                .group_by(User.id)
+            .filter(Review.as_driver, Review.to_id == User.id)
+            .group_by(User.id)
         )
         valid_users = (
             valid_users.having(min_rating <= func.avg(Review.rating))
@@ -233,8 +235,8 @@ def search_drives(
             raise ValueError("Tags must be strings")
         subquery = (
             db.session.query(User.id, Tag.title)
-                .filter(Review.to_id == User.id, Tag.review_id == Review.id)
-                .all()
+            .filter(Review.to_id == User.id, Tag.review_id == Review.id)
+            .all()
         )
         user_tags = {}
         for user_id, tag in subquery:
@@ -305,7 +307,7 @@ def read_passenger_request(passenger: User, drive: Ride) -> PassengerRequest:
 
 
 def update_passenger_request(
-        request: PassengerRequest, action: str
+    request: PassengerRequest, action: str
 ) -> PassengerRequest:
     if request.status != "pending":
         abort(400, "This request is not pending")
@@ -400,19 +402,19 @@ def read_tags(prefix: str) -> List[str]:
 def read_review(author: User, subject: User, as_driver: bool):
     return (
         subject.received_reviews.filter(Review.as_driver == as_driver)
-            .filter(Review.author == author)
-            .one_or_none()
+        .filter(Review.author == author)
+        .one_or_none()
     )
 
 
 def create_or_update_review(
-        review: Review,
-        author: User,
-        subject: User,
-        as_driver: bool,
-        rating: int,
-        tags: List[str],
-        body: str,
+    review: Review,
+    author: User,
+    subject: User,
+    as_driver: bool,
+    rating: int,
+    tags: List[str],
+    body: str,
 ):
     try:
         if len(tags) > 10:
@@ -450,8 +452,7 @@ def read_messages_from_user_pair(user1: User, user2: User, amount: int) -> List[
             and_(Message.sender_id == user2.id, Message.recipient_id == user1.id),
         )
     )
-    query.order_by(Message.timestamp)
-
+    query = query.order_by(Message.timestamp.desc())
     return query.limit(amount).all()
 
 
