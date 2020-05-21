@@ -164,8 +164,11 @@ def find():
 
 @bp.route('/ride/<ride_id>', methods=['POST', 'GET'])
 def ride(ride_id):
-    # TODO: als ge /ride/10000 ingeeft abort hij niet maar crashed hij...
     drive = read_drive_from_id(ride_id)
+
+    if drive is None:
+        abort(400, "This ride does not exist")
+
     return render_template('ride.html', ride=drive, background=True)
 
 
