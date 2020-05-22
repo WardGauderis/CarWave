@@ -62,5 +62,52 @@
         </ul>
     </nav>
 
+{% endblock %}
 
+{% block app_scripts %}
+    <script type="text/javascript">
+        function address_to_string(address) {
+            let res = '';
+            if (address.road != null) res += address.road + ', ';
+
+            if (address.town != null) res += address.town + ', ';
+            else if (address.city != null) res += address.city + ', ';
+
+            if (address.county != null) res += address.county + ', ';
+            if (address.country != null) res += address.country;
+            return res;
+        }
+
+        function get_address(ids) {
+            let url = "https://nominatim.openstreetmap.org/lookup?osm_ids=";
+            for (let i = 0; i < ids.length; i++) {
+                url += ids[i].from_id + ',';
+                url += ids[i].to_id + ',';
+            }
+            url = url.substring(0, url.length - 1);
+            url += "&format=json";
+            console.log(url);
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function (xhr) {
+                    for (let i = 0; i < ids.length; i++) {
+                        document.getElementById("from1" + ids[i].ride_id).innerText = address_to_string(xhr[2 * i].address);
+                        document.getElementById("to1" + ids[i].ride_id).innerText = address_to_string(xhr[2 * i + 1].address);
+                    }
+                },
+                error: function (xhr) {
+                    console.log(xhr)
+                }
+            });
+        }
+
+        let ids = [
+            {% for ride in rides %}
+                {from_id: '{{ ride.departure_id }}', to_id: '{{ ride.arrival_id }}', ride_id: '{{ ride.id }}'},
+            {% endfor %}
+        ];
+        get_address(ids);
+    </script>
 {% endblock %}

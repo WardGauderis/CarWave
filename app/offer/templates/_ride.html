@@ -91,8 +91,8 @@
                         {% if not current_user.is_authenticated %}
                             {#show nothing if user is not authenticated#}
                         {% elif ride.driver_id == current_user.id %}
-                            {{ form.button1(value='Edit ride', class="col-5-sm btn btn-primary text-white form-control") }}
-                            {{ form.button2(value='Delete ride', class="col-5-sm btn btn-danger text-white form-control") }}
+                            {{ form.button1(value='Edit ride', class="col-5 btn btn-primary text-white form-control") }}
+                            {{ form.button2(value='Delete ride', class="col-5 btn btn-danger text-white form-control") }}
                         {% else %}
                             {{ form.button1(value='Request ride', class="btn-block btn btn-primary text-white form-control") }}
                         {% endif %}
@@ -102,8 +102,8 @@
                         {% if request.user_id == current_user.id %}
                             {{ form.button2(value="Delete request", class="btn-block btn btn-danger text-white form-control") }}
                         {% elif request.ride.driver_id == current_user.id %}
-                            {{ form.button1(value="Accept request", class="col-5-sm btn btn-primary text-white form-control") }}
-                            {{ form.button2(value="Reject request", class="col-5-sm btn btn-danger text-white form-control") }}
+                            {{ form.button1(value="Accept request", class="col-5 btn btn-primary text-white form-control") }}
+                            {{ form.button2(value="Reject request", class="col-5 btn btn-danger text-white form-control") }}
                         {% else %}
                             {# show nothing if ride is neither from passenger nor from driver #}
                         {% endif %}
@@ -152,35 +152,6 @@
 <script src="{{ url_for('.static', filename='leaflet-routing-machine.js') }}"></script>
 
 <script type="text/javascript">
-
-    function address_to_string(address) {
-        console.log(address);
-        let res = '';
-        if (address.road != null) res += address.road + ', ';
-
-        if (address.town != null) res += address.town + ', ';
-        else if (address.city != null) res += address.city + ', ';
-
-        if (address.county != null) res += address.county + ', ';
-        if (address.country != null) res += address.country;
-        return res;
-    }
-
-    function get_address(from_id, to_id) {
-        $.ajax({
-            url: "https://nominatim.openstreetmap.org/lookup?osm_ids=" + from_id + ',' + to_id + "&format=json",
-            type: "GET",
-            success: function (xhr) {
-                document.getElementById("from1{{ ride.id }}").innerText = address_to_string(xhr[0].address);
-                document.getElementById("to1{{ ride.id }}").innerText = address_to_string(xhr[1].address);
-            },
-            error: function (xhr) {
-                console.log(xhr)
-            }
-        });
-    }
-
-    get_address('{{ ride.departure_id }}', '{{ ride.arrival_id }}');
 
     let map{{ ride.id }} = L.map('map{{ ride.id }}', {
         minZoom: 2,
