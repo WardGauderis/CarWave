@@ -1,6 +1,6 @@
 Dear CarWave User,
 
-You have recieved a new passenger request for the following drive:
+You have received a new passenger request for the following drive:
 
 Passenger: {{ user.username }}
 
