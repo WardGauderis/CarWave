@@ -182,7 +182,6 @@ def ride(ride_id):
 @bp.route('/rides', defaults={'time': 'all'}, methods=['POST', 'GET'])
 @bp.route('/rides/<string:time>', methods=['POST', 'GET'])
 def all_rides(time):
-    #TODO check string time
     form = RideDataForm(meta={'csrf': False})
 
     if form.validate_on_submit():
