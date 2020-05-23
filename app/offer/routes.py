@@ -148,7 +148,7 @@ def find():
             sex = details.gender.data
         # TODO: rating
 
-    rides = search_drives(page_index=1,
+    rides = search_drives(page_index=request.args.get('page', 1, type=int),
                           departure=from_location,
                           arrival=to_location,
                           arrival_time=utc_time,
@@ -161,12 +161,15 @@ def find():
                           driver_rating=None,
                           exclude_past_rides=True)
 
-    # TODO: pagination, see below for details
-    # TODO(Thomas): Ik heb pagination toegevoegd d.m.v. page_index, page_size parameters.
-    #  Ik heb hieronder even page.items gebruikt om een lijst voor de huidige page terug
-    #  te krijgen anders krijg je een `Pagination object is not iterable` error message.
+    # TODO: remove ->List[Ride] for IDE warnings
+    prev_url = url_for("offer.find", fl=from_address, tl=to_address, at=utc_string,
+                       page=rides.prev_num) if rides.has_prev else None
+
+    next_url = url_for("offer.find", fl=from_address, tl=to_address, at=utc_string,
+                       page=rides.next_num) if rides.has_next else None
+
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
-                           form=form, rides=rides.items, background=True)
+                           form=form, rides=rides.items, prev_url=prev_url, next_url=next_url, background=True)
 
 
 @bp.route('/ride/<ride_id>', methods=['POST', 'GET'])
@@ -219,8 +222,8 @@ def passenger_rides(time):
     page = request.args.get('page', 1, type=int)
     rides = current_user.future_or_past_passenger_requests(time, page)
 
-    prev_url = url_for("offer.all_rides", page=rides.prev_num) if rides.has_prev else None
-    next_url = url_for("offer.all_rides", page=rides.next_num) if rides.has_next else None
+    prev_url = url_for("offer.passenger_rides", page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.passenger_rides", page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title=title,
                            none_found='No drives with you as passenger found',
@@ -248,8 +251,8 @@ def driver_rides(time):
     page = request.args.get('page', 1, type=int)
     rides = read_drive_from_driver(current_user, time, page)
 
-    prev_url = url_for("offer.all_rides", page=rides.prev_num) if rides.has_prev else None
-    next_url = url_for("offer.all_rides", page=rides.next_num) if rides.has_next else None
+    prev_url = url_for("offer.driver_rides", page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.driver_rides", page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title=title, none_found='No drives organised by you found',
                            rides=rides.items, form=form, time=time, prev_url=prev_url, next_url=next_url,
