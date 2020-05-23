@@ -21,7 +21,7 @@ with app.app_context():
         # arrival_time=datetime(year=2020, month=4, day=29, hour=14, minute=1, second=42, tzinfo=tzutc()),
         # arrival_delta=timedelta(minutes=5),
         # exclude_past_rides=True,
-        offset=1
+        page_size=10
     )
     # user_id = 3
     # users_messaged = db.session.query(Message.recipient_id).filter(Message.sender_id == user_id).distinct().all()

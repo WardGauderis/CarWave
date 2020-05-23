@@ -99,8 +99,11 @@ def requests():
             return res
 
     pending = []
-    for drive in read_drive_from_driver(current_user, "future", 1):
-        pending += drive.pending_requests()
+    page = read_drive_from_driver(current_user, "future", 1)
+    while page.items:
+        for drive in page.items:
+            pending += drive.pending_requests()
+        page = page.next()
     pending = pending[:10]
 
     return render_template('rides.html', none_found='No pending requests found', title='My Requests',
@@ -145,7 +148,8 @@ def find():
             sex = details.gender.data
         # TODO: rating
 
-    rides = search_drives(departure=from_location,
+    rides = search_drives(page_index=1,
+                          departure=from_location,
                           arrival=to_location,
                           arrival_time=utc_time,
                           departure_distance=5000,
@@ -158,8 +162,11 @@ def find():
                           exclude_past_rides=True)
 
     # TODO: pagination, see below for details
+    # TODO(Thomas): Ik heb pagination toegevoegd d.m.v. page_index, page_size parameters.
+    #  Ik heb hieronder even page.items gebruikt om een lijst voor de huidige page terug
+    #  te krijgen anders krijg je een `Pagination object is not iterable` error message.
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
-                           form=form, rides=rides, background=True)
+                           form=form, rides=rides.items, background=True)
 
 
 @bp.route('/ride/<ride_id>', methods=['POST', 'GET'])
