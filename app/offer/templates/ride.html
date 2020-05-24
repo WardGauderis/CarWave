@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{#do not delete this!!!!1#}
+{% block app_styles %}
+    <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet-routing-machine.css') }}"/>
+{% endblock %}
+
+{% block app_content %}
+    {% include '_ride.html' %}
+{% endblock %}
