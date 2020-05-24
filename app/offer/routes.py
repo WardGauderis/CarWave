@@ -23,6 +23,7 @@ def crud_logic():
 
         elif request.form['button2'] == "Reject request":
             drive = read_drive_from_id(request.form['ride_id'])
+            # send_passenger_request_reject_email(current_user, drive)
             passenger = read_user_from_id(request.form['user_id'])
             update_passenger_request(read_passenger_request(passenger, drive), "reject")
             return redirect(url_for('offer.requests'))
@@ -35,7 +36,7 @@ def crud_logic():
             drive = read_drive_from_id(request.form['ride_id'])
             try:
                 create_passenger_request(current_user, drive)
-                send_passenger_request_email(current_user, drive)
+                # send_passenger_request_email(current_user, drive)
                 flash('Congratulations, you successfully subscribed as passenger', 'success')
                 return redirect(url_for('main.index'))
             except Exception as e:
@@ -43,6 +44,7 @@ def crud_logic():
 
         elif request.form['button1'] == "Accept request":
             drive = read_drive_from_id(request.form['ride_id'])
+            # send_passenger_request_accept_email(current_user, drive)
             passenger = read_user_from_id(request.form['user_id'])
             update_passenger_request(read_passenger_request(passenger, drive), "accept")
             return redirect(url_for('offer.driver_rides'))
