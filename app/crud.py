@@ -453,7 +453,7 @@ def read_messages_from_user_pair(user1: User, user2: User, amount: int) -> List[
             and_(Message.sender_id == user1.id, Message.recipient_id == user2.id),
             and_(Message.sender_id == user2.id, Message.recipient_id == user1.id),
         )
-    ).order_by(Message.timestamp)
+    ).order_by(Message.timestamp.desc())
     return query.limit(amount).all()
 
 

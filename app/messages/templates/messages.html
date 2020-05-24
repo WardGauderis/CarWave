@@ -8,7 +8,7 @@
             <div class="text-center">
                 <button onclick="location.href = '{{ url_for(request.url_rule.endpoint, recipient_id=recipient_id, amount=messages|length + 20) }}';"
                         type="button"
-                        class="col-2 btn btn-primary"> load more
+                        class="col-6 btn btn-primary"> load more
                 </button>
             </div>
         {% endif %}

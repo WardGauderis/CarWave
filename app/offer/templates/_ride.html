@@ -95,12 +95,16 @@
                             {{ form.button2(value='Delete ride', class="btn-block btn btn-danger text-white form-control") }}
                         {% else %}
                             {{ form.button1(value='Request ride', class="btn-block btn btn-primary text-white form-control") }}
+                            <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
+                               class="btn-block btn btn-secondary form-control">Message</a>
                         {% endif %}
                     {% elif requests is defined %}
                         {{ form.ride_id(type="hidden", value=request.ride_id) }}
                         {{ form.user_id(type="hidden", value=request.user_id) }}
                         {% if request.user_id == current_user.id %}
                             {{ form.button2(value="Delete request", class="btn-block btn btn-danger text-white form-control") }}
+                            <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
+                               class="btn-block btn btn-secondary form-control">Message</a>
                         {% elif request.ride.driver_id == current_user.id %}
                             {{ form.button1(value="Accept request", class="btn-block btn btn-primary text-white form-control") }}
                             {{ form.button2(value="Reject request", class="btn-block btn btn-danger text-white form-control") }}
@@ -113,8 +117,7 @@
                 </form>
                 <div class="col-sm">
                     {% if current_user != ride.driver %}
-                        <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
-                           class="btn-block btn btn-primary form-control">Message</a>
+
                     {% endif %}
                 </div>
             </div>

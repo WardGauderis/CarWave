@@ -24,7 +24,7 @@ def send_message(recipient_id):
     load_more = (len(messages) == amount)
     loaded_new = (amount != 20)
 
-    return render_template('messages.html', title='Send Message', form=form, messages=messages, background=True,
+    return render_template('messages.html', title='Send Message', form=form, messages=messages[::-1], background=True,
                            load_more=load_more, loaded_new=loaded_new, recipient_id=recipient_id)
 
 
