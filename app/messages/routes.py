@@ -9,13 +9,13 @@ from app.messages.forms import MessageForm
 @login_required
 def send_message(recipient_id):
     recipient = read_user_from_id(recipient_id)
-    form = MessageForm()
+    form = MessageForm(meta={'csrf': False})
 
     if recipient is None:
         flash("trying to message a non existing user")
         return redirect(url_for('main.index'))
 
-    if request.method == 'POST':
+    if form.validate_on_submit():
         create_message(current_user, recipient, form.message.data)
         return redirect(url_for('messages.send_message', recipient_id=recipient_id))
 

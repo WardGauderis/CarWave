@@ -8,17 +8,18 @@
 
     {% for user in recipients %}
         <div class="row" style="margin:0.2rem">
-        <div class="card card-body">
-            <div class="row">
-                <div class="mr-3">
-                    <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
-                </div>
-                <div class="col">
-                    <h5 class="card-text">{{ user.username }}</h5>
-                    <h5 class="card-text">{{ user.firstname }} {{ user.lastname }}</h5>
-                    <hr>
-                    <a href="{{ url_for('messages.send_message', recipient_id=user.id) }}"
-                       class="btn btn-primary btn-block">View conversation</a>
+            <div class="card card-body">
+                <div class="row">
+                    <div class="mr-3">
+                        <img src="{{ user.avatar(256) }}" width="130" class="rounded mb-2 img-thumbnail">
+                    </div>
+                    <div class="col">
+                        <h5 class="card-text">{{ user.username }}</h5>
+                        <h5 class="card-text">{{ user.firstname }} {{ user.lastname }}</h5>
+                        <hr>
+                        <a href="{{ url_for('messages.send_message', recipient_id=user.id) }}"
+                           class="btn btn-primary btn-block">View conversation</a>
+                    </div>
                 </div>
             </div>
         </div>

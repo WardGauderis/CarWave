@@ -263,6 +263,9 @@ class Car(db.Model):
 
 
 class Message(db.Model):
+    # big brain python
+    __table_args__ = (db.CheckConstraint('sender_id != recipient_id', name='message_others'), )
+
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
