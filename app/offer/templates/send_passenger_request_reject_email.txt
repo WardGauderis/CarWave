@@ -1,7 +1,7 @@
-Dear {{ recipient }}
+Dear {{ user.username }}
 
-You have received a new passenger request for the following drive:
-Passenger:  {{ user.username }}
+Your request as passenger for the following drive has been rejected.
+Driver:  {{ driver }}
 Departure adress: {{ from_adress }}
 Arrival adress: {{ to_adress }}
 Departure time: {{ dep_time }}
