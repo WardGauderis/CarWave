@@ -133,18 +133,18 @@ def find():
     utc_string = request.args.get('at')
     utc_time = dateutil.parser.parse(utc_string)
 
-    # def address_to_location(address):
-    #     try:
-    #         url = "https://nominatim.openstreetmap.org/search/" + address
-    #         params = {"format": "json"}
-    #         r = req.get(url=url, params=params)
-    #         data = r.json()
-    #         return [data[0]['lat'], data[0]['lon']]
-    #     except:
-    #         abort(503, "nominatim server error")
-    #
-    # from_location = address_to_location(from_address)
-    # to_location = address_to_location(to_address)
+    def address_to_location(address):
+        try:
+            url = "https://nominatim.openstreetmap.org/search/" + address
+            params = {"format": "json"}
+            r = req.get(url=url, params=params)
+            data = r.json()
+            return [data[0]['lat'], data[0]['lon']]
+        except:
+            abort(503, "nominatim server error")
+
+    from_location = address_to_location(from_address)
+    to_location = address_to_location(to_address)
 
     age_range = None
     consumption_range = None
