@@ -7,7 +7,6 @@ from app.crud import *
 from app.offer.email import *
 
 
-# TODO fix text if nothing found
 def crud_logic():
     if 'button2' in request.form:
         if request.form['button2'] == "Delete ride":
@@ -50,6 +49,13 @@ def crud_logic():
             return redirect(url_for('offer.driver_rides'))
 
     return None
+
+
+def validate_time(time):
+    if time == 'past' or time == 'future':
+        return time
+    else:
+        return 'all'
 
 
 @bp.route('/offer', methods=['POST', 'GET'])
@@ -127,19 +133,24 @@ def find():
     utc_string = request.args.get('at')
     utc_time = dateutil.parser.parse(utc_string)
 
-    def address_to_location(address):
-        url = "https://nominatim.openstreetmap.org/search/" + address
-        params = {"format": "json"}
-        r = req.get(url=url, params=params)
-        data = r.json()
-        return [data[0]['lat'], data[0]['lon']]
-
-    from_location = address_to_location(from_address)
-    to_location = address_to_location(to_address)
+    # def address_to_location(address):
+    #     try:
+    #         url = "https://nominatim.openstreetmap.org/search/" + address
+    #         params = {"format": "json"}
+    #         r = req.get(url=url, params=params)
+    #         data = r.json()
+    #         return [data[0]['lat'], data[0]['lon']]
+    #     except:
+    #         abort(503, "nominatim server error")
+    #
+    # from_location = address_to_location(from_address)
+    # to_location = address_to_location(to_address)
 
     age_range = None
     consumption_range = None
     sex = None
+    rating_range = None
+    tags = None
 
     if details.refresh.data and details.validate_on_submit():
         if details.age.data:
@@ -148,20 +159,31 @@ def find():
             consumption_range = (None, details.usage.data)
         if details.gender.data != 'any':
             sex = details.gender.data
-        # TODO: rating
+
+    try:
+        rating = request.form.get('rating', -1, int)
+        # FIXME: if wrong
+        if rating < 0:
+            rating_range = [0, 11]
+        else:
+            rating_range = [rating, 11]
+        tags = list(filter(None, request.form.get('tags', '', str).split(',')))
+    except:
+        abort(400, 'Invalid filter form data. Please use the form on the search page.')
 
     rides = search_drives(page_index=request.args.get('page', 1, type=int),
-                          departure=from_location,
-                          arrival=to_location,
+                          # departure=from_location,
+                          # arrival=to_location,
                           arrival_time=utc_time,
                           departure_distance=5000,
                           arrival_distance=5000,
-                          arrival_delta=timedelta(minutes=15),
+                          arrival_delta=timedelta(minutes=120),
                           age_range=age_range,
                           consumption_range=consumption_range,
                           sex=sex,
-                          driver_rating=None,
-                          exclude_past_rides=True)
+                          driver_rating=rating_range,
+                          exclude_past_rides=True,
+                          tags=tags)
 
     # TODO: remove ->List[Ride] for IDE warnings
     prev_url = url_for("offer.find", fl=from_address, tl=to_address, at=utc_string,
@@ -194,6 +216,8 @@ def all_rides(time):
         if res is not None:
             return res
 
+    time = validate_time(time)
+
     title = time + " drives"
     title.capitalize()
 
@@ -218,6 +242,8 @@ def passenger_rides(time):
         if res is not None:
             return res
 
+    time = validate_time(time)
+
     title = time + " passenger drives"
     title.capitalize()
 
@@ -238,6 +264,8 @@ def passenger_rides(time):
 @login_required
 def driver_rides(time):
     form = RideDataForm(meta={'csrf': False})
+
+    time = validate_time(time)
 
     title = "my " + time + " drives"
     if time == 'all':

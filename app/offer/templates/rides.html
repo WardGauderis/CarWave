@@ -5,6 +5,63 @@
 {% block app_styles %}
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('.static', filename='leaflet-routing-machine.css') }}"/>
+
+    <style>
+        /* Ratings widget */
+        .rate {
+            display: inline-block;
+            border: 0;
+        }
+
+        /* Hide radio */
+        .rate > input {
+            display: none;
+        }
+
+        /* Order correctly by floating highest to the right */
+        .rate > label {
+            float: right;
+        }
+
+        /* The star of the show */
+        .rate > label:before {
+            display: inline-block;
+            padding-right: 0.1rem;
+            font-size: 1.2rem;
+            margin: 0;
+            cursor: pointer;
+            font-family: FontAwesome;
+            content: "\f005 "; /* full star */
+        }
+
+        /* Zero stars rating */
+        .rate > label:last-child:before {
+            content: "\f006 "; /* empty star outline */
+        }
+
+        /* Half star trick */
+        .rate .half:before {
+            content: "\f089 "; /* half star no outline */
+            position: absolute;
+            padding-right: 0;
+        }
+
+        /* Click + hover color */
+        input:checked ~ label, /* color current and previous stars on checked */
+        fieldset label:hover, label:hover ~ label {
+            color: #ff6f00;
+        }
+
+        /* color previous stars on hover */
+
+        /* Hover highlights */
+        input:checked + label:hover, input:checked ~ label:hover, /* highlight current and previous stars */
+        input:checked ~ label:hover ~ label, /* highlight previous selected stars for new rating */
+        label:hover ~ input:checked ~ label /* highlight previous selected stars */
+        {
+            color: #ffd500;
+        }
+    </style>
 {% endblock %}
 
 {% block app_content %}
@@ -27,11 +84,47 @@
     <hr>
 
     {% if details is defined %}
-        <div class="card m-3">
+        <div class="card my-2">
             <div class=" card-body">
-                {{ wtf.quick_form(details) }}
+                <form method="post">
+                    {{ wtf.form_field(details.gender) }}
+                    {{ wtf.form_field(details.age) }}
+                    {{ wtf.form_field(details.usage) }}
+
+                    <div class="form-group my-3">
+                        <label for="rating">Rating:</label>
+                        <fieldset id="rating" class="rate ml-3" style="vertical-align: bottom">
+                            {% for i in range(10, -1, -1) %}
+                                <input {% if existing_review and existing_review.rating == i %}checked="checked"{% endif %}
+                                       type="radio" id="rating{{ i }}" name="rating" value="{{ i }}"/>
+                                <label {% if i % 2 == 1 %}class="half"{% endif %} for="rating{{ i }}"
+                                       title="{{ (i / 2)|int }} {% if i % 2 == 1 %}1/2{% endif %} stars"></label>
+                            {% endfor %}
+                        </fieldset>
+                        {% if warning %}
+                            <div class="invalid-feedback">Rating is required.</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tags">Tags:</label>
+                        <div style="display: flex; flex-wrap: wrap;">
+                            <input maxlength="64" type=text id="tagform" class="form-control mb-1 basicAutoComplete"
+                                   style="display: inline-block;flex: 1" autocomplete="off">
+                            <span class="btn btn-primary mb-1" style="vertical-align: baseline;" id="tagbutton"
+                                  onclick="addTag()">Add Tag</span>
+                        </div>
+                        <input name="tags" class="form-control" id="taglist" type="text" data-role="tagsinput"
+                               {% if existing_review %}value="
+                                       {% for existing_tag in existing_review.tags %}{{ existing_tag.title }},{% endfor %}"{% endif %}>
+                    </div>
+
+                    {{ wtf.form_field(details.refresh) }}
+                </form>
             </div>
         </div>
+
+
     {% endif %}
 
     {% if rides is defined %}
@@ -65,6 +158,33 @@
 {% endblock %}
 
 {% block app_scripts %}
+    <script src="{{ url_for('review.static', filename='tagsinput.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.5/dist/latest/bootstrap-autocomplete.min.js"></script>
+    <script>
+        $('.basicAutoComplete').autoComplete({
+            resolverSettings: {
+                url: '{{ url_for('review.tags') }}',
+            },
+            requestThrottling: 0,
+            minLength: 1
+        });
+
+        $('#taglist').tagsinput({delimiter: ',', trimValue: true, maxTags: 10, maxChars: 64})
+
+        function addTag() {
+            $('#taglist').tagsinput('add', document.getElementById('tagform').value);
+            document.getElementById('tagform').value = '';
+        }
+
+        input = document.getElementById('tagform')
+        input.addEventListener("keydown", function (event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                document.getElementById("tagbutton").click();
+            }
+        });
+    </script>
+
     <script type="text/javascript">
         function address_to_string(address) {
             let res = '';
@@ -108,7 +228,11 @@
                 {from_id: '{{ ride.departure_id }}', to_id: '{{ ride.arrival_id }}', ride_id: '{{ ride.id }}'},
             {% endfor %}
             {% for request in requests %}
-                {from_id: '{{ request.ride.departure_id }}', to_id: '{{ request.ride.arrival_id }}', ride_id: '{{ request.ride.id }}'},
+                {
+                    from_id: '{{ request.ride.departure_id }}',
+                    to_id: '{{ request.ride.arrival_id }}',
+                    ride_id: '{{ request.ride.id }}'
+                },
             {% endfor %}
         ];
         get_address(ids);

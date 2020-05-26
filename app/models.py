@@ -89,7 +89,7 @@ class User(UserMixin, db.Model):
             query = query.filter(Ride.arrival_time > datetime.utcnow())
         elif future_or_past == 'past':
             query = query.filter(Ride.arrival_time <= datetime.utcnow())
-        return query.paginate(page, 20, False)
+        return query.paginate(page, 10, False)
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
