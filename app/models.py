@@ -135,7 +135,7 @@ class User(UserMixin, db.Model):
     def may_review_driver(self, user) -> bool:
         return db.engine.execute('SELECT CASE WHEN EXISTS (SELECT ride_id FROM rides JOIN passenger_requests pr ON '
                                  'rides.id = pr.ride_id AND pr.status = \'accepted\' '
-                                 f'WHERE rides.arrival_time > now() AND {self.id} != {user.id} '
+                                 f'WHERE rides.arrival_time < now() AND {self.id} != {user.id} '
                                  f'AND (pr.user_id = {self.id} AND rides.driver_id = {user.id})'
                                  ') THEN 1 ELSE 0 END;').fetchone()[0]
 
@@ -143,9 +143,9 @@ class User(UserMixin, db.Model):
         return db.engine.execute('SELECT CASE WHEN EXISTS (SELECT r.id FROM rides r '
                                  'JOIN passenger_requests pr1 ON r.id = pr1.ride_id AND pr1.status = \'accepted\' '
                                  'JOIN passenger_requests pr2 ON r.id = pr2.ride_id AND pr2.status = \'accepted\' '
-                                 f'WHERE r.arrival_time > now() AND {self.id} != {user.id} '
-                                 f'AND pr1.user_id = {self.id} AND pr2.user_id = {user.id} '
-                                 f'OR r.driver_id = {self.id} AND pr1.user_id = {user.id}) '
+                                 f'WHERE r.arrival_time < now() AND {self.id} != {user.id} '
+                                 f'AND (pr1.user_id = {self.id} AND pr2.user_id = {user.id} '
+                                 f'OR r.driver_id = {self.id} AND pr1.user_id = {user.id})) '
                                  'THEN 1 ELSE 0 END;').fetchone()[0]
 
     def reviews(self, driver: bool, page: int):
@@ -264,7 +264,7 @@ class Car(db.Model):
 
 class Message(db.Model):
     # big brain python
-    __table_args__ = (db.CheckConstraint('sender_id != recipient_id', name='message_others'), )
+    __table_args__ = (db.CheckConstraint('sender_id != recipient_id', name='message_others'),)
 
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'))
