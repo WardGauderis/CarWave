@@ -172,8 +172,8 @@ def find():
         abort(400, 'Invalid filter form data. Please use the form on the search page.')
 
     rides = search_drives(page_index=request.args.get('page', 1, type=int),
-                          # departure=from_location,
-                          # arrival=to_location,
+                          departure=from_location,
+                          arrival=to_location,
                           arrival_time=utc_time,
                           departure_distance=5000,
                           arrival_distance=5000,
