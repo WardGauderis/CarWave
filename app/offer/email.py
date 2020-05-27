@@ -8,11 +8,11 @@ import requests as req
 
 def address_to_location(address):
     try:
-        url = "https://nominatim.openstreetmap.org/search/" + address
+        url = "https://nominatim.openstreetmap.org/lookup?osm_ids=" + address
         params = {"format": "json"}
         r = req.get(url=url, params=params)
         data = r.json()
-        return data[0].address.road
+        return data[0]['display_name']
     except:
         return "Nomatin server error"
 
