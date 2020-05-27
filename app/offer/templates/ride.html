@@ -51,12 +51,7 @@
         }
 
         let ids = [
-            {% for ride in rides %}
-                {from_id: '{{ ride.departure_id }}', to_id: '{{ ride.arrival_id }}', ride_id: '{{ ride.id }}'},
-            {% endfor %}
-            {% for request in requests %}
-                {from_id: '{{ request.ride.departure_id }}', to_id: '{{ request.ride.arrival_id }}', ride_id: '{{ request.ride.id }}'},
-            {% endfor %}
+            {from_id: '{{ ride.departure_id }}', to_id: '{{ ride.arrival_id }}', ride_id: '{{ ride.id }}'},
         ];
         get_address(ids);
     </script>

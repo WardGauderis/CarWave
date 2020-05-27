@@ -100,7 +100,7 @@ def read_drive_from_driver(driver: User, future_or_past: str, page: int):
             query = query.filter(Ride.arrival_time > datetime.utcnow())
         elif future_or_past == "past":
             query = query.filter(Ride.arrival_time <= datetime.utcnow())
-        return query.paginate(page, 20, False)
+        return query.paginate(page, 10, False)
 
     except Exception as e:
         print(e)
@@ -121,7 +121,7 @@ def read_all_drives(future_or_past: str, page: int):
             query = query.filter(Ride.arrival_time > datetime.utcnow())
         elif future_or_past == "past":
             query = query.filter(Ride.arrival_time <= datetime.utcnow())
-        return query.paginate(page, 20, False)
+        return query.paginate(page, 10, False)
     except:
         abort(400, "Invalid drive read")
 
@@ -129,7 +129,7 @@ def read_all_drives(future_or_past: str, page: int):
 def search_drives(
     limit: int = 5,
     page_index: int = None,
-    page_size: int = 20,
+    page_size: int = 10,
     departure: List[float] = None,
     departure_distance: int = None,
     arrival: List[float] = None,

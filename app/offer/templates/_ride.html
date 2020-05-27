@@ -29,9 +29,9 @@
             <div class="row">
                 <div class="col">
                     <span class="text-left font-weight-bold">From: </span>
-                    <span id="from1{{ ride.id }}">loading...</span><br>
+                    <span id="from1{{ ride.id }}">{{ ride.depart_from }}</span><br>
                     <span class="text-left font-weight-bold">To: </span>
-                    <span id="to1{{ ride.id }}">loading...</span><br>
+                    <span id="to1{{ ride.id }}">{{ ride.arrive_at }}</span><br>
                     <span class="text-left font-weight-bold">Departure Time: </span>
                     {% if ride.departure_time %}
                         {{ moment(ride.departure_time).format('LLLL') }}
