@@ -3,7 +3,7 @@ from app.crud import create_message, read_messages_from_user_pair, read_user_fro
 from app.messages import bp
 from flask_login import current_user, login_required
 from app.messages.forms import MessageForm
-
+from app.messages.email import send_new_message_email
 
 @bp.route('/messages/send/<recipient_id>', methods=['GET', 'POST'])
 @login_required
@@ -17,6 +17,7 @@ def send_message(recipient_id):
 
     if form.validate_on_submit():
         create_message(current_user, recipient, form.message.data)
+        send_new_message_email(current_user, recipient)
         return redirect(url_for('messages.send_message', recipient_id=recipient_id))
 
     amount = request.args.get('amount', 20, type=int)
