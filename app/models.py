@@ -125,7 +125,7 @@ class User(UserMixin, db.Model):
         return db.engine.execute(
             "SELECT tag.title FROM tag JOIN review r ON tag.review_id = r.id "
             f"WHERE r.to_id = {self.id} AND r.as_driver = {as_driver} "
-            "GROUP BY tag.title ORDER BY count(tag.title) DESC LIMIT 10;").fetchall()
+            "GROUP BY tag.title ORDER BY count(tag.title) DESC LIMIT 5;").fetchall()
 
     def get_rating(self, driver: bool) -> int:
         res = db.session.query(func.avg(Review.rating).label('average')).filter(
