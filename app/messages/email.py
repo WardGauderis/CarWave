@@ -12,10 +12,11 @@ def send_email(subject, recipients, text_body, html_body):
 
 
 def send_new_message_email(sender, recipient):
-    send_email('[Carwave] You have recieved a new message!',
-               recipients=[recipient.email],
-               text_body=render_template('new_message_email.txt',
-                                         sender=sender, recipient=recipient),
-               html_body=render_template('new_message_email.html',
-                                         sender=sender, recipient=recipient))
+    pass
+    # send_email('[Carwave] You have recieved a new message!',
+    #            recipients=[recipient.email],
+    #            text_body=render_template('new_message_email.txt',
+    #                                      sender=sender, recipient=recipient),
+    #            html_body=render_template('new_message_email.html',
+    #                                      sender=sender, recipient=recipient))
 

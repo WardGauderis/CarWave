@@ -17,10 +17,11 @@ def address_to_location(address):
         return "Nomatin server error"
 
 def send_email(subject, recipients, text_body, html_body):
-    msg = Message(subject, recipients=recipients)
-    msg.body = text_body
-    msg.html = html_body
-    mail.send(msg)
+    pass
+    # msg = Message(subject, recipients=recipients)
+    # msg.body = text_body
+    # msg.html = html_body
+    # mail.send(msg)
 
 
 def send_passenger_request_email(user, drive: Ride):
