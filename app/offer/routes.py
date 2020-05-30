@@ -213,12 +213,19 @@ def find():
 
 @bp.route('/ride/<int:ride_id>', methods=['POST', 'GET'])
 def ride(ride_id):
+    form = RideDataForm(meta={'csrf': False})
+
+    if form.validate_on_submit():
+        res = crud_logic()
+        if res is not None:
+            return res
+
     drive = read_drive_from_id(ride_id)
 
     if drive is None:
         abort(400, "This ride does not exist")
 
-    return render_template('ride.html', ride=drive, background=True)
+    return render_template('ride.html', ride=drive, form=form, background=True)
 
 
 @bp.route('/rides', defaults={'time': 'all'}, methods=['POST', 'GET'])

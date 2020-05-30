@@ -92,7 +92,7 @@
             </div>
             <div class="row">
                 <form method="post" name="ride" class="col-sm">
-                    {% if rides is defined %}
+                    {% if ride is defined %}
                         {{ form.ride_id(type="hidden", value=ride.id) }}
                         {% if not current_user.is_authenticated %}
                             {#show nothing if user is not authenticated#}
