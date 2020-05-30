@@ -197,65 +197,42 @@ def search_drive():
     MIN_RIDES = 1
     MAX_RIDES = 50
 
-    # Arguments
-    limit = request.args.get("limit")
-    start = request.args.get("from")
-    start_distance = request.args.get("from_distance")
-    stop = request.args.get("to")
-    stop_distance = request.args.get("to_distance")
-    arrive_by = request.args.get("arrive_by")
-    arrival_delta = request.args.get("arrival_delta")
-    depart_by = request.args.get("depart_by")
-    depart_delta = request.args.get("depart_delta")
-    sex = request.args.get("sex")
-    min_consumption = request.args.get("min_consumption")
-    max_consumption = request.args.get("max_consumption")
-    min_age = request.args.get("min_age")
-    max_age = request.args.get("max_age")
-    min_rating = request.args.get("min_rating")
-    max_rating = request.args.get("max_rating")
-    tags = request.args.get("tags")
-
-    # TODO: explicitly type check arguments
     try:
+        limit = request.args.get("limit", type=int)
+        start = request.args.get("from")
+        start_distance = request.args.get("from_distance", type=int, default=5000)
+        stop = request.args.get("to")
+        stop_distance = request.args.get("to_distance", type=int, default=5000)
+        arrive_by = request.args.get("arrive_by")
+        arrival_delta = request.args.get("arrival_delta", type=int, default=30)
+        depart_by = request.args.get("depart_by")
+        depart_delta = request.args.get("depart_delta", type=int, default=30)
+        sex = request.args.get("sex")
+        min_consumption = request.args.get("min_consumption", type=float)
+        max_consumption = request.args.get("max_consumption", type=float)
+        min_age = request.args.get("min_age", type=int)
+        max_age = request.args.get("max_age", type=int)
+        min_rating = request.args.get("min_rating", type=float)
+        max_rating = request.args.get("max_rating", type=float)
+        tags = request.args.get("tags")
+
         if limit:
-            limit = max(MIN_RIDES, min(int(limit), MAX_RIDES))
+            limit = max(MIN_RIDES, min(limit, MAX_RIDES))
         if start:
             start = [*map(str.strip, start.split(","))]
-            start_distance = int(start_distance) if start_distance else 5000
         if stop:
             stop = [*map(str.strip, stop.split(","))]
-            stop_distance = int(stop_distance) if stop_distance else 5000
         if depart_by:
             depart_by = dateutil.parser.isoparse(depart_by).replace(tzinfo=None)
             depart_by = pytz.utc.normalize(pytz.timezone('Europe/Brussels').localize(depart_by)).replace(tzinfo=None)
-            depart_delta = (
-                timedelta(minutes=int(depart_delta))
-                if depart_delta
-                else timedelta(minutes=30)
-            )
+            depart_delta = timedelta(minutes=depart_delta)
         if arrive_by:
             arrive_by = dateutil.parser.isoparse(arrive_by).replace(tzinfo=None)
             arrive_by = pytz.utc.normalize(pytz.timezone('Europe/Brussels').localize(arrive_by)).replace(tzinfo=None)
-            arrival_delta = (
-                timedelta(minutes=int(arrival_delta))
-                if arrival_delta
-                else timedelta(minutes=30)
-            )
-        if min_consumption:
-            min_consumption = float(min_consumption)
-        if max_consumption:
-            max_consumption = float(max_consumption)
-        if min_age:
-            min_age = int(min_age)
-        if max_age:
-            max_age = int(max_age)
-        if min_rating:
-            min_rating = float(min_rating)
-        if max_rating:
-            max_rating = float(max_rating)
+            arrival_delta = timedelta(minutes=arrival_delta)
         if tags:
             tags = set(map(str.strip, tags.split(",")))
+
     except Exception as e:
         print(e)
         abort(400, "Invalid format")

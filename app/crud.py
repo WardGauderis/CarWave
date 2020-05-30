@@ -144,7 +144,7 @@ def search_drives(
     driver_rating: Tuple[float] = None,
     tags: Set[str] = None,
     exclude_past_rides=False,
-) -> List[Ride]:
+):
     query = Ride.query
 
     # Default limit
@@ -221,12 +221,12 @@ def search_drives(
         )
         valid_users = (
             valid_users.having(min_rating <= func.avg(Review.rating))
-            if min_rating
+            if min_rating is not None
             else valid_users
         )
         valid_users = (
             valid_users.having(func.avg(Review.rating) <= max_rating)
-            if max_rating
+            if max_rating is not None
             else valid_users
         )
         valid_users = valid_users.subquery()

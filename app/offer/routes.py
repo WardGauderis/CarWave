@@ -1,3 +1,5 @@
+import json
+
 from flask import render_template, request, url_for, redirect, flash
 from flask_login import current_user, login_required
 import requests as req
@@ -161,15 +163,28 @@ def find():
             sex = details.gender.data
 
     try:
-        rating = request.form.get('rating', -1, int)
-        # FIXME: if wrong
-        if rating < 0:
-            rating_range = [0, 11]
-        else:
-            rating_range = [rating, 11]
+        min_rating = request.form.get('rating', -1, int)
+        rating_range = [min_rating, 10] if 0 <= min_rating < 10 else None
         tags = list(filter(None, request.form.get('tags', '', str).split(',')))
+        tags = set(tags) if tags else None
     except:
         abort(400, 'Invalid filter form data. Please use the form on the search page.')
+
+    try:
+        # Currently disregards optional features
+        external_rides = req.get(
+            f"http://team4.ppdb.me/api/drives/search?limit=10&arrive_by={utc_string[:22]}&to={','.join(to_location)}&from={','.join(from_location)}",
+            headers= {"Content-Type": "application/json"},
+        )
+        external_rides: List[dict] = json.loads(external_rides.text)[0]
+        for ride in external_rides:
+            ride["arrival_time"] = dateutil.parser.parse(ride.pop("arrive-by"))
+            ride["driver"] = f"http://team4.ppdb.me/profile/{ride.pop('driver-id')}"
+            ride["num_passengers"] = len(ride.pop("passenger-ids"))
+            ride["url"] = f"http://team4.ppdb.me/ride_specification/{ride['id']}"
+    except Exception as e:
+        print(e)
+        external_rides = None
 
     rides = search_drives(page_index=request.args.get('page', 1, type=int),
                           departure=from_location,
@@ -185,7 +200,6 @@ def find():
                           exclude_past_rides=True,
                           tags=tags)
 
-    # TODO: remove ->List[Ride] for IDE warnings
     prev_url = url_for("offer.find", fl=from_address, tl=to_address, at=utc_string,
                        page=rides.prev_num) if rides.has_prev else None
 
@@ -193,10 +207,11 @@ def find():
                        page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title='Find', none_found='No suitable future rides found', details=details,
-                           form=form, rides=rides.items, prev_url=prev_url, next_url=next_url, background=True)
+                           form=form, rides=rides.items, external_rides=external_rides, prev_url=prev_url,
+                           next_url=next_url, background=True)
 
 
-@bp.route('/ride/<ride_id>', methods=['POST', 'GET'])
+@bp.route('/ride/<int:ride_id>', methods=['POST', 'GET'])
 def ride(ride_id):
     drive = read_drive_from_id(ride_id)
 

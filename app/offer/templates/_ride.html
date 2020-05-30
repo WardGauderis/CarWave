@@ -59,7 +59,6 @@
                     {% set rating = ride.driver.get_rating(True) %}<br>
                     <span class="font-weight-bold">Rating: </span>
                     {% if rating %}
-                        <span class="font-weight-bold">Rating: </span>
                         {% include '_rating.html' %}
                     {% else %}
                         None
@@ -78,9 +77,16 @@
                     <br>
                     <span class="text-left font-weight-bold">Passenger Places Available: </span>{{ ride.passenger_places_left() }}/{{ ride.passenger_places }}<br>
                     <span class="text-left font-weight-bold">Current passengers: </span>
-                    {% for request in ride.accepted_requests().all() %}
-                        <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
-                    {% endfor %}<br>
+                    {% set passengers = ride.accepted_requests().all() %}
+                    {% if passengers %}
+                        {% for request in passengers %}
+                            <a href="{{ url_for('profile.user', user_id=request.passenger.id) }}">{{ request.passenger.username }}</a>
+                        {% endfor %}
+                    {% else %}
+                        None
+                    {% endif %}
+                    <br>
+
                     <span class="text-left font-weight-bold">ID: </span>{{ ride.id }}<br>
                 </div>
             </div>
