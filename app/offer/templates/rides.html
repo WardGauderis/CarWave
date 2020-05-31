@@ -210,7 +210,7 @@
             return res;
         }
 
-        function get_address(ids) {
+        function get_address_from_id(ids) {
             let url = "https://nominatim.openstreetmap.org/lookup?osm_ids=";
             for (let i = 0; i < ids.length; i++) {
                 url += ids[i].from_id + ',';
@@ -218,7 +218,6 @@
             }
             url = url.substring(0, url.length - 1);
             url += "&format=json";
-            console.log(url);
 
             $.ajax({
                 url: url,
@@ -230,6 +229,25 @@
                     }
                 },
                 error: function (xhr) {
+                    console.log(xhr)
+                }
+            });
+        }
+
+        function get_address_from_location(location, element)
+        {
+            // reverse lat & lon here
+            let url = "https://nominatim.openstreetmap.org/reverse?lon=" + location[0] + "&lat=" + location[1] + "&format=json";
+            console.log(url)
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function (xhr)
+                {
+                    document.getElementById(element).innerText = address_to_string(xhr.address);
+                },
+                error: function (xhr)
+                {
                     console.log(xhr)
                 }
             });
@@ -250,14 +268,12 @@
                     ride_id: '{{ request.ride.id }}'
                 },
             {% endfor %}
-            {% for external_ride in external_rides %}
-                {
-                    from_id: '{{ external_ride.departure_id }}',
-                    to_id: '{{ external_ride.arrival_id }}',
-                    ride_id: '{{ external_ride.id }}'
-                },
-            {%  endfor %}
         ];
-        get_address(ids);
+        get_address_from_id(ids);
+
+        {% for external_ride in external_rides %}
+            get_address_from_location({{ external_ride.from }}, "from2"+{{ external_ride.id }});
+            get_address_from_location({{ external_ride.to }}, "to2"+{{ external_ride.id }});
+        {% endfor %}
     </script>
 {% endblock %}
