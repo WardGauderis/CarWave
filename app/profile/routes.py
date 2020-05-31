@@ -51,7 +51,8 @@ def user(user_id):
         abort(404, 'User does not exist')
 
     as_driver = request.args.get('driver', 1, type=int)
-    may_review = True
+    may_review = current_user.is_authenticated and ((as_driver and current_user.may_review_driver(temp_user)) or (
+            not as_driver and current_user.may_review_passenger(temp_user)))
     existing_review = None
     if may_review:
         existing_review = read_review(current_user, temp_user, bool(as_driver))
