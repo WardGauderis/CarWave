@@ -12,11 +12,11 @@ def send_email(subject, recipients, text_body, html_body):
 
 
 def send_new_review_email(sender, recipient):
-    pass
-    # send_email('[Carwave] You have recieved a new review!',
-    #            recipients=[recipient.email],
-    #            text_body=render_template('new_review_email.txt',
-    #                                      sender=sender, recipient=recipient),
-    #            html_body=render_template('new_review_email.html',
-    #                                      sender=sender, recipient=recipient))
+    if recipient.email is not None or recipient.email== '': return
+    send_email('[Carwave] You have recieved a new review!',
+               recipients=[recipient.email],
+               text_body=render_template('new_review_email.txt',
+                                         sender=sender, recipient=recipient),
+               html_body=render_template('new_review_email.html',
+                                         sender=sender, recipient=recipient))
 
