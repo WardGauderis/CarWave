@@ -176,7 +176,7 @@ def find():
             f"http://team4.ppdb.me/api/drives/search?limit=10&arrive_by={utc_string[:22]}&to={','.join(to_location)}&from={','.join(from_location)}",
             headers= {"Content-Type": "application/json"},
         )
-        external_rides: List[dict] = json.loads(external_rides.text)[0]
+        external_rides: List[dict] = json.loads(external_rides.text)
         for ride in external_rides:
             ride["arrival_time"] = dateutil.parser.parse(ride.pop("arrive-by"))
             ride["driver"] = f"http://team4.ppdb.me/profile/{ride.pop('driver-id')}"
@@ -185,6 +185,7 @@ def find():
     except Exception as e:
         print(e)
         external_rides = None
+
 
     rides = search_drives(page_index=request.args.get('page', 1, type=int),
                           departure=from_location,

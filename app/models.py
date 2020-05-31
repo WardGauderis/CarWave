@@ -22,7 +22,6 @@ def to_point(coords):
 
 class PassengerRequest(db.Model):
     __tablename__ = "passenger_requests"
-    __tableargs__ = (db.CheckConstraint('ride_id != user_id', name='cannot_ride_along_with_yourself'))
 
     ride_id = db.Column(db.Integer, db.ForeignKey("rides.id", ondelete="CASCADE"), primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
@@ -160,6 +159,7 @@ def load_user(id):
 
 class Ride(db.Model):
     __tablename__ = "rides"
+    __tableargs__ = (db.CheckConstraint('(departure_time IS NULL) OR (departure_time < arrival_time)', name='time_checks'),)
 
     id = db.Column(db.Integer, primary_key=True)
 
