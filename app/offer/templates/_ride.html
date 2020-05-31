@@ -51,15 +51,15 @@
                     {% endif %}
                     <br>
 
-                    {% if requests is defined %}
+                    {% if ride_request is defined %}
                         <p>
                             <span class="text-left font-weight-bold">Request status: </span>
-                            {% if request.status == 'accepted' %}
-                                <span class="badge badge-success">{{ request.status }}</span>
-                            {% elif request.status == 'rejected' %}
-                                <span class="badge badge-danger">{{ request.status }}</span>
+                            {% if ride_request.status == 'accepted' %}
+                                <span class="badge badge-success">{{ ride_request.status }}</span>
+                            {% elif ride_request.status == 'rejected' %}
+                                <span class="badge badge-danger">{{ ride_request.status }}</span>
                             {% else %}
-                                <span class="badge badge-info">{{ request.status }}</span>
+                                <span class="badge badge-info">{{ ride_request.status }}</span>
                             {% endif %}
                         </p>
                     {% endif %}
@@ -91,7 +91,20 @@
             </div>
             <div class="row">
                 <form method="post" name="ride" class="col-sm">
-                    {% if ride is defined %}
+                    {% if ride_request is defined %}
+                        {{ form.ride_id(type="hidden", value=ride_request.ride_id) }}
+                        {{ form.user_id(type="hidden", value=ride_request.user_id) }}
+                        {% if ride_request.user_id == current_user.id %}
+                            {{ form.button2(value="Delete request", class="btn-block btn btn-danger text-white form-control") }}
+                            <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
+                               class="btn-block btn btn-secondary form-control">Message</a>
+                        {% elif ride.driver_id == current_user.id %}
+                            {{ form.button1(value="Accept request", class="btn-block btn btn-primary text-white form-control") }}
+                            {{ form.button2(value="Reject request", class="btn-block btn btn-danger text-white form-control") }}
+                        {% else %}
+                            {# show nothing if ride is neither from passenger nor from driver #}
+                        {% endif %}
+                    {% elif ride is defined %}
                         {{ form.ride_id(type="hidden", value=ride.id) }}
                         {% if not current_user.is_authenticated %}
                             {#show nothing if user is not authenticated#}
@@ -102,19 +115,6 @@
                             {{ form.button1(value='Request ride', class="btn-block btn btn-primary text-white form-control") }}
                             <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
                                class="btn-block btn btn-secondary form-control">Message</a>
-                        {% endif %}
-                    {% elif requests is defined %}
-                        {{ form.ride_id(type="hidden", value=request.ride_id) }}
-                        {{ form.user_id(type="hidden", value=request.user_id) }}
-                        {% if request.user_id == current_user.id %}
-                            {{ form.button2(value="Delete request", class="btn-block btn btn-danger text-white form-control") }}
-                            <a href="{{ url_for('messages.send_message', recipient_id=ride.driver.id) }}"
-                               class="btn-block btn btn-secondary form-control">Message</a>
-                        {% elif request.ride.driver_id == current_user.id %}
-                            {{ form.button1(value="Accept request", class="btn-block btn btn-primary text-white form-control") }}
-                            {{ form.button2(value="Reject request", class="btn-block btn btn-danger text-white form-control") }}
-                        {% else %}
-                            {# show nothing if ride is neither from passenger nor from driver #}
                         {% endif %}
                     {% else %}
                         {# show nothing the list is either rides or requests #}
