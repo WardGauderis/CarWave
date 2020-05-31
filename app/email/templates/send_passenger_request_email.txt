@@ -1,0 +1,11 @@
+Dear {{ recipient }}
+
+You have received a new passenger request for the following drive:
+Passenger:  {{ user.username }}
+Departure adress: {{ from_adress }}
+Arrival adress: {{ to_adress }}
+Departure time: {{ dep_time }}
+Arrival time: {{ ar_time }}
+
+Sincerely,
+The CarWave Team
