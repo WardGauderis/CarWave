@@ -116,6 +116,7 @@
                         </div>
                         <input name="tags" class="form-control" id="taglist" type="text" data-role="tagsinput"
                                {% if existing_review %}value="
+
                                        {% for existing_tag in existing_review.tags %}{{ existing_tag.title }},{% endfor %}"{% endif %}>
                     </div>
 
@@ -162,7 +163,7 @@
         {% else %}
             {% for external_ride in external_rides %}
                 {% include '_external_ride.html' %}
-            {%  endfor %}
+            {% endfor %}
         {% endif %}
     {% endif %}
 
@@ -236,7 +237,11 @@
 
         let ids = [
             {% for ride in rides %}
-                {from_id: '{{ ride.departure_id }}', to_id: '{{ ride.arrival_id }}', ride_id: '{{ ride.id }}'},
+                {
+                    from_id: '{{ ride.departure_id }}',
+                    to_id: '{{ ride.arrival_id }}',
+                    ride_id: '{{ ride.id }}'
+                },
             {% endfor %}
             {% for request in requests %}
                 {
@@ -245,6 +250,13 @@
                     ride_id: '{{ request.ride.id }}'
                 },
             {% endfor %}
+            {% for external_ride in external_rides %}
+                {
+                    from_id: '{{ external_ride.departure_id }}',
+                    to_id: '{{ external_ride.arrival_id }}',
+                    ride_id: '{{ external_ride.id }}'
+                },
+            {%  endfor %}
         ];
         get_address(ids);
     </script>
