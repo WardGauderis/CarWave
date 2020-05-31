@@ -68,3 +68,14 @@ def send_passenger_request_reject_email(passenger, drive: Ride):
                                      user=passenger, driver = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time),
            html_body=render_template('send_passenger_request_reject_email.html',
                                      user=passenger, driver = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time))
+
+def send_drive_deleted_email(drive: Ride):
+    for passenger_request in drive.accepted_requests():
+        passenger = passenger_request.passenger
+        if passenger.email is None or passenger.email == '': continue
+        send_email('[Carwave] Ride cancelled.',
+           recipients=[passenger.email],
+           text_body=render_template('send_drive_deleted_email.txt',
+                                     user=passenger, driver = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time),
+           html_body=render_template('send_drive_deleted_email.html',
+                                     user=passenger, driver = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time))

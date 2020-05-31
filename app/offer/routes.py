@@ -7,13 +7,14 @@ from app.offer import bp
 from app.offer.forms import *
 from app.crud import *
 from app.email.email import send_passenger_request_accept_email, send_passenger_request_reject_email, \
-    send_passenger_request_email
+    send_passenger_request_email, send_drive_deleted_email
 
 
 def crud_logic():
     if 'button2' in request.form:
         if request.form['button2'] == "Delete ride":
             drive = read_drive_from_id(request.form['ride_id'])
+            send_drive_deleted_email(drive)
             delete_drive(drive)
             return redirect(url_for('offer.driver_rides'))
 

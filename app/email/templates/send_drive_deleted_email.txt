@@ -1,6 +1,6 @@
 Dear {{ user.username }},
 
-Your request as passenger for the following drive has been rejected.
+The following drive was unfortunately cancelled.
 Driver:  {{ driver }}
 Departure adress: {{ from_adress }}
 Arrival adress: {{ to_adress }}
