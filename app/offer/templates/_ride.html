@@ -65,9 +65,9 @@
                     {% endif %}
                 </div>
                 <div class="col-sm">
-                    {% set is_request = ride_request is defined %}
+                    {% set is_request = ride_request is defined and current_user.id != ride_request.passenger.id %}
                     {% set x_user = ride_request.passenger if is_request else ride.driver %}
-                        <span class="text-left font-weight-bold">Passenger: </span><a
+                        <span class="text-left font-weight-bold">{{ 'Passenger' if is_request else 'Driver'}}: </span><a
                             href="{{ url_for('profile.user', user_id=x_user.id) }}">{{ x_user.username }}</a>
                     {% set rating = x_user.get_rating(not is_request) %}<br>
                     <span class="font-weight-bold">Rating: </span>
