@@ -155,10 +155,10 @@
         </ul>
     </nav>
 
-    <br>
+    <hr>
     {% if external_rides is defined %}
         {% if not external_rides %}
-            <h5> No suitable rides were found on <a href="http://team4.ppdb.me"><i>Passenger</i></a></h5>
+            <h4> No suitable rides found on <a href="http://team4.ppdb.me"><i>Passenger</i></a></h4>
         {% else %}
             {% for external_ride in external_rides %}
                 {% include '_external_ride.html' %}
