@@ -1,5 +1,4 @@
 from app import mail
-from app.models import Ride
 from app.crud import *
 from flask_mail import Message
 from flask import render_template
@@ -21,6 +20,25 @@ def send_email(subject, recipients, text_body, html_body):
     msg.body = text_body
     msg.html = html_body
     mail.send(msg)
+
+
+def send_new_message_email(sender, recipient):
+    if recipient.email is None or recipient.email== '': return
+    send_email('[Carwave] You have recieved a new message!',
+               recipients=[recipient.email],
+               text_body=render_template('send_new_message_email.txt',
+                                         sender=sender, recipient=recipient),
+               html_body=render_template('send_new_message_email.html',
+                                         sender=sender, recipient=recipient))
+
+def send_new_review_email(sender, recipient):
+    if recipient.email is None or recipient.email== '': return
+    send_email('[Carwave] You have recieved a new review!',
+               recipients=[recipient.email],
+               text_body=render_template('send_new_review_email.txt',
+                                         sender=sender, recipient=recipient),
+               html_body=render_template('send_new_review_email.html',
+                                         sender=sender, recipient=recipient))
 
 
 def send_passenger_request_email(user, drive: Ride):

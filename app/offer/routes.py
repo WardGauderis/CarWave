@@ -6,7 +6,7 @@ import requests as req
 from app.offer import bp
 from app.offer.forms import *
 from app.crud import *
-from app.offer.email import *
+from app.email.email import send_passenger_request_accept_email, send_passenger_request_reject_email, send_passenger_request_email
 
 
 def crud_logic():

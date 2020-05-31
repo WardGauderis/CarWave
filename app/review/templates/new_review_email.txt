@@ -1,4 +1,0 @@
-Dear {{ recipient.username }}
-You have recieved a new review from {{ sender.username }}!
-Sincerely,
-The CarWave Team
