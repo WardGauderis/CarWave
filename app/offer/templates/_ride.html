@@ -65,16 +65,18 @@
                     {% endif %}
                 </div>
                 <div class="col-sm">
-                    <span class="text-left font-weight-bold">Driver: </span><a
-                        href="{{ url_for('profile.user', user_id=ride.driver.id) }}">{{ ride.driver.username }}</a>
-                    {% set rating = ride.driver.get_rating(True) %}<br>
+                    {% set is_request = ride_request is defined %}
+                    {% set x_user = ride_request.passenger if is_request else ride.driver %}
+                        <span class="text-left font-weight-bold">Passenger: </span><a
+                            href="{{ url_for('profile.user', user_id=x_user.id) }}">{{ x_user.username }}</a>
+                    {% set rating = x_user.get_rating(not is_request) %}<br>
                     <span class="font-weight-bold">Rating: </span>
                     {% if rating %}
                         {% include '_rating.html' %}
                     {% else %}
                         None
                     {% endif %}<br>
-                    {% set tags = ride.driver.get_tags(True) %}
+                    {% set tags = x_user.get_tags(not is_request) %}
                     <span class="font-weight-bold">Tags: </span>
                     {% if tags %}
                         <ul class="list-inline my-0" style="display: inline-block">
