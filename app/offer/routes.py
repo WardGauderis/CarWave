@@ -6,7 +6,8 @@ import requests as req
 from app.offer import bp
 from app.offer.forms import *
 from app.crud import *
-from app.email.email import send_passenger_request_accept_email, send_passenger_request_reject_email, send_passenger_request_email
+from app.email.email import send_passenger_request_accept_email, send_passenger_request_reject_email, \
+    send_passenger_request_email
 
 
 def crud_logic():
@@ -174,7 +175,7 @@ def find():
         # Currently disregards optional features
         external_rides = req.get(
             f"http://team4.ppdb.me/api/drives/search?limit=10&arrive_by={utc_string[:22]}&to={','.join(to_location)}&from={','.join(from_location)}",
-            headers= {"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json"},
         )
         external_rides: List[dict] = json.loads(external_rides.text)
         for ride in external_rides:
@@ -185,7 +186,6 @@ def find():
     except Exception as e:
         print(e)
         external_rides = None
-
 
     rides = search_drives(page_index=request.args.get('page', 1, type=int),
                           departure=from_location,
@@ -247,8 +247,8 @@ def all_rides(time):
     page = request.args.get('page', 1, type=int)
     rides = read_all_drives(time, page)
 
-    prev_url = url_for("offer.all_rides", page=rides.prev_num) if rides.has_prev else None
-    next_url = url_for("offer.all_rides", page=rides.next_num) if rides.has_next else None
+    prev_url = url_for("offer.all_rides", time=time, page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.all_rides", time=time, page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title=title, none_found="no rides found", form=form,
                            time=time, rides=rides.items, prev_url=prev_url, next_url=next_url, background=True)
@@ -273,8 +273,8 @@ def passenger_rides(time):
     page = request.args.get('page', 1, type=int)
     rides = current_user.future_or_past_passenger_requests(time, page)
 
-    prev_url = url_for("offer.passenger_rides", page=rides.prev_num) if rides.has_prev else None
-    next_url = url_for("offer.passenger_rides", page=rides.next_num) if rides.has_next else None
+    prev_url = url_for("offer.passenger_rides", time=time, page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.passenger_rides", time=time, page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title=title,
                            none_found='No drives with you as passenger found',
@@ -304,8 +304,8 @@ def driver_rides(time):
     page = request.args.get('page', 1, type=int)
     rides = read_drive_from_driver(current_user, time, page)
 
-    prev_url = url_for("offer.driver_rides", page=rides.prev_num) if rides.has_prev else None
-    next_url = url_for("offer.driver_rides", page=rides.next_num) if rides.has_next else None
+    prev_url = url_for("offer.driver_rides", time=time, page=rides.prev_num) if rides.has_prev else None
+    next_url = url_for("offer.driver_rides", time=time, page=rides.next_num) if rides.has_next else None
 
     return render_template('rides.html', title=title, none_found='No drives organised by you found',
                            rides=rides.items, form=form, time=time, prev_url=prev_url, next_url=next_url,
