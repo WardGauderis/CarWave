@@ -1,10 +1,60 @@
-<p>Dear {{ user.username }}</p>
-<p>Your request as passenger for the following drive has been accepted!</p>
-<p><strong>Passenger: </strong> {{ driver }}</p>
-<p><strong>Departure adress:</strong> {{ from_adress }}</p>
-<p><strong>Arrival adress:</strong> {{ to_adress }}</p>
-<p><strong>Departure time:</strong> {{ dep_time }}</p>
-<p><strong>Arrival time:</strong> {{ ar_time }}</p>
- <a href="http://team1.ppdb.me/passenger_rides">Check all your drives</a>
-<p>Sincerely,</p>
-<p>The CarWave Team</p>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+div.transbox {
+  margin: 30px;
+  margin-left: 50px;
+  background-color: #ffffff;
+  border: 0px;
+  opacity: 0.6;
+}
+
+div.image {
+    background-image: url("https://i.imgur.com/QMkLlXk.png");
+}
+div.transbox p {
+  font-weight: bold;
+  color: #000000;
+  border: 1px;
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+}
+
+div.plain {
+    margin: 0;
+    color: white;
+    font-size: 20px;
+    background-color: #0e0f3b;
+    font-weight: bold;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+}
+
+</style>
+</head>
+<body>
+<div style="max-width:720px">
+    <div class="plain">
+        <div style="padding: 5px; margin-left: 30px;">
+            <p>Dear {{ user.username }}</p>
+            <p>Your request as passenger for the following drive has been accepted!</p>
+        </div>
+    <div class="image">
+        <div class="transbox" style="margin: 30px; padding: 10px;">
+            <p><strong>Driver: </strong> {{ driver }}</p>
+            <p><strong>Departure adress:</strong> {{ from_adress }}</p>
+            <p><strong>Arrival adress:</strong> {{ to_adress }}</p>
+            <p><strong>Departure time:</strong> {{ dep_time }}</p>
+            <p><strong>Arrival time:</strong> {{ ar_time }}</p>
+        </div>
+    </div>
+    <div class="plain" style="padding-bottom: 30px">
+        <div style="margin-left: 30px">
+            <p>Sincerely, The CarWave Team</p>
+            <img src="https://i.imgur.com/gY3t25C.png" width="275" height="95">
+        </div>
+    </div>
+    </div>
+</div>
+</body>
+</html>

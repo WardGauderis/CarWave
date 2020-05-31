@@ -22,23 +22,23 @@ def send_email(subject, recipients, text_body, html_body):
     mail.send(msg)
 
 
-def send_new_message_email(sender, recipient):
+def send_new_message_email(sender, recipient, data):
     if recipient.email is None or recipient.email== '': return
     send_email('[Carwave] You have recieved a new message!',
                recipients=[recipient.email],
                text_body=render_template('send_new_message_email.txt',
-                                         sender=sender, recipient=recipient),
+                                         sender=sender, recipient=recipient, data=data),
                html_body=render_template('send_new_message_email.html',
-                                         sender=sender, recipient=recipient))
+                                         sender=sender, recipient=recipient, data=data))
 
-def send_new_review_email(sender, recipient):
+def send_new_review_email(sender, recipient, data):
     if recipient.email is None or recipient.email== '': return
     send_email('[Carwave] You have recieved a new review!',
                recipients=[recipient.email],
                text_body=render_template('send_new_review_email.txt',
-                                         sender=sender, recipient=recipient),
+                                         sender=sender, recipient=recipient, data=data),
                html_body=render_template('send_new_review_email.html',
-                                         sender=sender, recipient=recipient))
+                                         sender=sender, recipient=recipient, data=data))
 
 
 def send_passenger_request_email(user, drive: Ride):
@@ -49,7 +49,7 @@ def send_passenger_request_email(user, drive: Ride):
                text_body=render_template('send_passenger_request_email.txt',
                                          user=user, recipient = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time),
                html_body=render_template('send_passenger_request_email.html',
-                                         user=user, recipient = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time))
+                                         user=user, recipient = read_user_from_id(drive.driver_id).username, from_adress = address_to_location(drive.departure_id), to_adress = address_to_location(drive.arrival_id), dep_time = drive.departure_time, ar_time = drive.arrival_time, ride=drive))
 
 def send_passenger_request_accept_email(passenger, drive: Ride):
     if passenger.email is None or passenger.email== '': return
