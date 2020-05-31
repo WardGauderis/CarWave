@@ -1,0 +1,5 @@
+Dear {{ recipient.username }}
+You have recieved a new message from {{ sender.username }}!
+Check all your messages at: http://team1.ppdb.me/messages/view
+Sincerely,
+The CarWave Team

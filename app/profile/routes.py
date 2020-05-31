@@ -5,7 +5,7 @@ from app.profile import bp
 from app.crud import *
 from app.auth.forms import UserForm
 from app.profile.forms import CreateCarForm
-
+from app.email.email import send_new_review_email
 
 @bp.route('/car/update/<string:license_plate>', methods=['GET', 'POST'])
 @login_required
@@ -68,6 +68,7 @@ def user(user_id):
             create_or_update_review(existing_review, current_user, temp_user, bool(as_driver), rating,
                                     request.form.get('tags', '', str).split(','),
                                     request.form.get('review', '', str))
+            send_new_review_email(current_user, temp_user)
         except:
             abort(400, 'Invalid review form data. Please use the form on the profile page to leave a review.')
     return render_template('user.html', title=temp_user.username, user=temp_user, background=True, as_driver=as_driver,
