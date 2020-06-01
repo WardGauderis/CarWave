@@ -1,4 +1,4 @@
-Dear {{ user.username }}
+Dear {{ user.username }},
 
 Your request as passenger for the following drive has been accepted!
 Driver:  {{ driver }}

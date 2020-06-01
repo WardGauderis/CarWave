@@ -17,7 +17,7 @@ def send_message(recipient_id):
 
     if form.validate_on_submit():
         create_message(current_user, recipient, form.message.data)
-        send_new_message_email(current_user, recipient)
+        send_new_message_email(current_user, recipient, form.message.data)
         return redirect(url_for('messages.send_message', recipient_id=recipient_id))
 
     amount = request.args.get('amount', 20, type=int)
