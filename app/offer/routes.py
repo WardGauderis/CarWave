@@ -123,7 +123,7 @@ def requests():
 @bp.route('/find', methods=['POST', 'GET'])
 def find():
     form = RideDataForm(meta={'csrf': False})
-    details = FilterForm()
+    details = FilterForm(meta={'csrf': False})
 
     if (form.button1 or form.button2) and form.validate_on_submit():
         res = crud_logic()
